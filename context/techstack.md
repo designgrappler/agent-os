@@ -1,36 +1,33 @@
-# Technical Specification: Conductor-Compatible Environments
+# Technical Specification: Conductor OS 2.1 (Hardened)
 
-This document defines the technical requirements for any host environment (UI, CLI, or API) that implements the Agent Orchestration framework.
+This document defines the structural requirements for any host environment implementing the **Conductor Structural Enforcement** model.
 
-## 1. Middleware Isolation (Enforcement)
-The host environment MUST implement **Tool-Packet Filtering**. Relying solely on system prompts for role discipline is prohibited.
-- **Mechanism**: Before the payload is sent to the LLM, the host must compare the active agent's `Capability Bundle` against its available toolset.
-- **Action**: Any tool not explicitly permitted by the bundle must be physically removed from the API call.
+## 1. Structural Enforcement (The Policy Engine)
+The host MUST implement **System-Level Tool Denial**. Relying on persona instructions is considered a critical security failure in v2.1.
+- **Mechanism**: The environment (e.g., Gemini CLI) must use a **Policy Hub** (e.g., `policy.toml`) to intercept tool manifests.
+- **Action**: Any tool category unauthorized for the persona's Tier (e.g., `write_file` for an Architect) must be **physically removed** from the available toolset before the agent initializes.
 
-## 2. Standard Capability Bundles
-Host environments must support the following "Out of the box" bundles:
+## 2. Atomic Context Heartbeats
+To prevent strategic drift and context bloat, the host must support **Task-Isolated Sessions**.
+- **The Protocol**: When transitioning from Strategic (Tier 2) to Tactical (Tier 3), the system must launch a **Fresh Process** with an empty context window.
+- **State Re-Injection**: The specific task-metadata is re-primed from the `ledger.json` on wake, ensuring the agent has the "Freshest Context Signal."
 
-| Bundle | Allowed Action Categories | Forbidden Tools (Examples) |
+## 3. Standard Global Ledger
+The framework uses a **Global Task Ledger** to manage project state across local sessions.
+- **Storage**: `~/.gemini/conductor/ledgers/<project_id>.json`
+- **Ownership**: Every task must be "Checked Out" by a Specialist ID before write-access is granted to production directories.
+
+## 4. Capability Bundles (Structural Locks)
+
+| Bundle | Structural Lock | Mandatory Exclusion |
 | :--- | :--- | :--- |
-| **ARCHITECT** | `fs_read`, `net_fetch`, `planning` | `edit_file`, `write_to_file`, `run_command` |
-| **SPECIALIST** | `fs_read`, `fs_write`, `cmd_exec` | `net_fetch` (if restricted), `generate_image` |
-| **SENTINEL** | `fs_read`, `audit_exec` | `fs_write`, `edit_file` |
+| **ARCHITECT** | Policy-Blocked | `write_file`, `replace`, `cmd_exec` (unfiltered) |
+| **SPECIALIST** | State-Locked | `net_fetch`, `meta_planning` |
+| **SENTINEL** | Audit-Locked | `fs_write`, `edit_file` |
 
-## 3. Operational Health Officer (OHO)
-The OHO is an active monitoring process that sits between the Agent and the Tool-Execution layer.
-- **Active Enforcement**: The OHO must validate every tool call against the `implementation_plan.md`.
-- **Interrupt Logic**: If a tool call deviates significantly from the plan (e.g., trying to use a different framework or modifying files outside of the plan's scope), the system must **pause** and return a `CHANGE_APPROVAL_REQUIRED` state to the User.
+## 5. Visual & Operational Signaling
+- **Command Banners**: Introduction banners must clearly state the **Mode (Enforced)** and the **Persona**.
+- **Handoff Automation**: Architects must generate self-executing `gemini` commands to facilitate the Atomic Wake protocol.
 
-## 4. State & DNA Management
-The framework relies on a stateless agent model where identity and context are injected every turn.
-- **Static DNA (`AGENTIC.md`)**: A JSON/YAML file at the root containing the Org Chart and Tech Stack.
-- **Dynamic DNA (`tracks.md`)**: A log of the current task status, open blockers, and completed steps.
-- **Artifact-Driven Handoff**: When switching roles, the host must use the latest `implementation_plan.md` as the "Transfer of Intent."
-
-## 5. Visual Signal Standards
-To manage user confidence, the UI should implement:
-- **Introduction Banners**: A color-coded banner when a new agent enters the thread.
-    - Level 1 (Orchestration): Blue
-    - Level 2 (Planning): Purple
-    - Level 3 (Tactical): Orange
-- **Action Logs**: Clear indication of *which* tool is being called and *who* is calling it.
+---
+**Enforcement Authority: Gemini CLI Policy Engine.**

@@ -1,25 +1,23 @@
-# Product Strategy: Agent Orchestration Framework
+# Product Strategy: Agent Orchestration Framework (v2.1)
 
 ## Vision
-To transform AI interaction from "unreliable chat" into a structured **Agent Operating System**, enabling non-developers (Designers, PMs, Marketers) to manage high-fidelity outcomes through a relatable "Team" metaphor.
+To transform AI interaction from "unreliable chat" into a structured **Agent Operating System**, enabling non-developers to manage high-fidelity outcomes through **Structural Enforcement** and **Mechanical Role Integrity**.
 
-## The Core Concept: The "Team" Metaphor
-Rather than interacting with an amorphous chatbot, the user manages a project-specific organization chart. This makes AI approachable by mirroring traditional product development workflows.
-- **Relatability**: Users map their own roles (e.g., Lead Architect) alongside AI agents.
-- **Identity**: Every agent has a clear persona, custom name, and mandatory role sign-off (e.g., "This is Sarah, your Frontend Specialist").
+## The Evolution: From Narrative to Mechanical
+Conductor OS has moved beyond the "Instructional Age." We no longer rely on the model's ability to maintain a character through prompts alone. We have transitioned to a **Hard-Gated Architecture** where role boundaries are enforced by the host system.
 
 ## Targeted Problems
-1.  **Agent Drift**: Preventing agents from deviating from approved plans.
-2.  **Context Bloat**: Reducing token costs and "lost in the middle" errors by using Artifact-Driven state management.
-3.  **Instructional Fragility**: Replacing binary prompt-following with hardware-based "Middleware Isolation."
+1.  **Agent Drift**: Prevented by **Mechanical Tool-Masking**. The environment strip-mines unauthorized tools from the agent's manifest.
+2.  **Context Rot**: Reduced by **Atomic Context Heartbeats**. We launch fresh, isolated specialist processes for every tactical task.
+3.  **Instructional Fragility**: Replaced by **Structural Policy Gates** that intercept and block unauthorized tool calls.
 
 ## Key Product Pillars
-- **Reliability over Autonomy**: The framework assumes AI is not yet at a "Senior Developer" level of autonomy. It prioritizes **Human-in-the-loop** handoffs and **Active Enforcement**.
-- **The Operational Level**: A 3-Tier hierarchy that communicates risk and determines tool access:
-    - **Tier 1 (Meta)**: Orchestration & Setup.
-    - **Tier 2 (Strategic)**: Planning & Research.
-    - **Tier 3 (Tactical)**: Execution & Implementation.
-- **Artifact-Driven State**: The `implementation_plan.md` and `tracks.md` serve as the source of truth, allowing agents to operate in isolated, focused threads without losing intent.
+- **Predictability over Autonomy**: We prioritize "System Impossibility" over "Model Compliance." If a role is forbidden from writing code, it physically cannot access the write tool.
+- **Structural Integrity**: Role isolation is enforced at the **System Level** (via Gemini CLI Policies).
+- **The Operational Tiers**: 
+    - **Tier 1 (Meta)**: Orchestration (Structurally blocked from code).
+    - **Tier 2 (Strategic)**: Planning (Limited to state management).
+    - **Tier 3 (Tactical)**: Execution (Isolated to task-specific file ranges).
 
 ## Target User Persona
-**The Self-Selecting Designer/Manager**: A professional who is comfortable with technical concepts but may not write production code. They value **Process Rigor** and **Outcome Confidence** over simple convenience. They are willing to invest in setup to ensure the "Agent Chaos" is managed.
+**The High-Rigor Orchestrator**: A professional who values **Process Certainty** and **Outcome Confidence**. They use Conductor OS to manage a fleet of agents with the same management rigor they would apply to a human engineering team.
