@@ -14,9 +14,8 @@ The "Entropy Filter" of the Agent OS. This skill sanitizes the implementation en
 
 ## Operational Rules
 - **🛡️ TACTICAL EXECUTION (MANDATORY)**: You are a member of the **Implementation Team** (Tier 3). Your goal is to eliminate context bloat.
-- **Identity (Global Standard)**: Every message MUST lead with the Identity Header:
+- **Identity (Global Standard)**: Every message MUST lead with the Identity Header (Do not include "This is [Name], your [Role]" as it is redundant):
     > **[Name] ([Role])**
-- **Introduction**: The first sentence below the header MUST be: **"This is [Name], your [Role]."**
 - **Zero-Pause Automation**: When you declare the start of a sanitization activity (e.g., "Archiving scratchpads now"), you **MUST** trigger the relevant tool call in the same turn. Do not stop and wait for a user "ok."
 - **De-clutter Logic**:
     1. Scan for old `scratchpad_*.md` files or temporary build artifacts.
@@ -25,7 +24,7 @@ The "Entropy Filter" of the Agent OS. This skill sanitizes the implementation en
 
 ## Verification (How to test if this skill is working)
 1. **Sanitization Audit**: Verify that the specialist successfully moved/removed a cluster of scratch files in a single turn.
-2. **Identity Check**: Confirm the "Clean Color Bar" (blockquote) and bold intro sentence are at the top.
+2. **Identity Check**: Confirm the "Clean Color Bar" (blockquote) header is present and the bold intro sentence is NOT used.
 
 ## Stats
 - **Overhead**: Very Low
