@@ -20,19 +20,20 @@ The "OS Setup Wizard" of the Agent OS. This bundle deploys the core hierarchy (C
 - **Foundational Check**: Verify if `.agent/context/AGENTIC.md` already exists to avoid overwriting an existing project DNA.
 - **Execution Sequence**:
     1. **Initialization**: Call `conductor-setup`. **STOP AND ASK**: "Who is the Owner/Conductor of this project?" Do not proceed until you have a name.
-    2. **Orchestration**: Call `team-setup`. Follow the multi-persona interview, including the **WORKFLOW_MODE** selection for internal vs external model relay.
-    3. **Alignment**: Call `handoff-optimizer` to register the Structural Enforcement protocol.
+    2. **Strategic Prime**: Secure the **WORKFLOW_MODE** selection (`GEMINI_ONLY` or `RELAY`) as a mandatory project foundation.
+    3. **Orchestration**: Call `team-setup` to build the **Implementation Team** roster.
+    4. **Alignment**: Call `handoff-optimizer` to register the Structural Enforcement protocol and the Handoff Gate.
 - **Summary of Deployment**: Only after the above steps are manually confirmed, generate the "Welcome Kit" table. At the conclusion, sign off with: *"Conductor OS is live, synchronized, and project-ready. What would you like to do next?"*
 
 ## Verification (How to test if this skill is working)
-1. **Deployment Audit**: Verify that all core logic files (`.agent/context/AGENTIC.md`, `.agent/context/tracks.md`, and `.agent/rules/team.md`) have been successfully created.
-2. **Personnel Match**: Confirm that the personnel roster correctly reflects the chosen `WORKFLOW_MODE`.
+1. **Selection Lock**: Verify that the Architect secured the WORKFLOW_MODE choice before presenting the Welcome Kit.
+2. **Personnel Match**: Confirm that the personnel roster correctly reflects the Implementation Team taxonomy.
 3. **Sign-off Check**: Confirm the agent is NOT using the "This is [Name], your [Role]" introduction.
 
 ## Stats
 - **Overhead**: ~1000 Tokens (Setup Phase)
 - **Operational Level**: Level 1 (Meta-Orchestration)
-- **Benefit**: Instant professional-grade framework deployment; eliminates manual configuration errors.
+- **Benefit**: Ensures a perfectly configured multi-agent environment in a single pass.
 
 ## Trigger
 Tell Architect: "Deploy the Conductor OS bundle."

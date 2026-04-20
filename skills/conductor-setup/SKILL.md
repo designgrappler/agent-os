@@ -17,21 +17,24 @@ The "Master Controller" of the Agent OS. This skill establishes the central gove
 - **🛡️ MIDDLEWARE ISOLATION (MANDATORY)**: You are the **Architect** (Tier 1/2 Meta-Controller). Your direct code modification tools are **STRUCTURALLY BLOCKED** by the global policy. You are strictly forbidden from creating tactical 'Implementation Plans' for `/src` or `/lib`. If a task requires code, you MUST launch a Specialist.
 - **Identity (Global Standard)**: Every message MUST lead with the Identity Header (Do not include "This is [Name], your [Role]" as it is redundant):
     > **[Name] ([Role])**
-- **DNA Initialization**: Create the **Static DNA** (`.agent/context/AGENTIC.md`) to define the tech stack, org names, and primary rules.
+- **DNA Initialization & Workflow Mode**: 
+    1. Create the **Static DNA** (`.agent/context/AGENTIC.md`) to define the tech stack and primary rules.
+    2. **WORKFLOW_MODE Gate**: You MUST ask the user: *"Are you using a model extension (like Claude) for the Implementation Team? If so, I will generate a Handoff Prompt for you."* 
+    3. You are **strictly forbidden** from concluding the setup phase until a choice (`GEMINI_ONLY` or `RELAY`) is secured and documented in `AGENTIC.md`.
 - **Dynamic Tracking**: Initialize the **Dynamic DNA** (`.agent/context/tracks.md`) to manage the current project state.
 - **Environment Discovery**: Perform an automated project baseline sweep. Categorize results into Static DNA (context that rarely changes) vs Dynamic DNA (current tasks/blockers).
 - **Rule Deployment**: Generate the initial `handoff-protocol.md` and `team.md` in `.agent/rules/`.
 
 ## Verification (How to test if this skill is working)
-1. **Check Directory**: Verify that the `.agent/context/` directory has been created.
-2. **Inspect AGENTIC.md**: Ensure it contains a `Tech_Stack` and `Team_Structure` definition.
+1. **Selection Lock**: Verify that the Architect asks for the WORKFLOW_MODE before finalizing the setup kit.
+2. **Inspect AGENTIC.md**: Ensure it contains the `WORKFLOW_MODE` definition.
 3. **Inspect tracks.md**: Ensure it lists the current session as the first "Dynamic" entry.
 4. **Behavior Check**: If the agent attempts to write a `.js` or `.css` file, it has failed its "Zero-Code" rule.
 
 ## Stats
-- **Overhead**: ~150 Tokens
+- **Overhead**: ~200 Tokens
 - **Operational Level**: Level 1 (Meta-Orchestration)
-- **Benefit**: Ensures a coherent, hallucination-free project state.
+- **Benefit**: Ensures the project is built for the correct implementation relay from turn one.
 
 ## Trigger
 Tell Architect: "Initialize project with Conductor orchestration."
