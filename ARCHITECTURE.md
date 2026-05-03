@@ -75,6 +75,17 @@ Physical barriers are constraints enforced at the infrastructure level — not i
 
 **The key principle:** Physical barriers define the blast radius. If every behavioral layer fails simultaneously, the physical barriers bound the damage.
 
+**Approval discipline:** Physical barriers are only as strong as the attention paid to them. In high-volume agent workflows, a condition called **approval exhaustion** emerges: when approvals are frequent and routine, users begin approving without reading. At that point the safety guarantee collapses — the approval becomes a reflex, not a checkpoint.
+
+The solution is not fewer approvals overall, but a clear distinction between approvals that require attention and approvals that waste it:
+
+| Approval type | Examples | Policy |
+|---|---|---|
+| **Must prompt** | `git push`, schema migrations, destructive deletes, any irreversible action | Always require explicit approval — these are the checkpoints that matter |
+| **Should auto-approve** | File reads, `git status`, `git diff`, type-check runs, build commands | Pre-approve in settings — routine reads and checks create exhaustion without adding safety |
+
+Pre-approve the noise so that when a real approval appears, it gets real attention. On Claude Code, this is configured in `.claude/settings.local.json` under `permissions.allow`. On Gemini CLI, it is handled by `policy.toml` capability bundles.
+
 ---
 
 ### Layer 4: Automation (Reusable Triggered Operations)

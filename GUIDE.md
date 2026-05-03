@@ -133,6 +133,41 @@ The Architect generates a self-executing wake command: `gemini --skill generic-s
 
 **Parallel tracks** each get an isolated workspace (git worktree or equivalent) to prevent cross-track contamination.
 
+### Approval Discipline
+
+In multi-agent workflows, **approval exhaustion** is a real failure mode. When the system prompts for approval too frequently, users start approving without reading — and the safety guarantee disappears.
+
+The fix is not to disable approvals, but to sort them correctly:
+
+| Approval type | Examples | Policy |
+| :--- | :--- | :--- |
+| **Must prompt** | `git push`, schema migrations, destructive operations | Always require approval — these are the checkpoints that matter |
+| **Auto-approve** | File reads, `git status`, `git diff`, type-check runs, build commands | Pre-approve — routine operations create exhaustion without adding safety |
+
+**Claude Code** — add to `.claude/settings.local.json`:
+```json
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git branch *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(bunx tsc --noEmit)",
+      "Bash(bun run *)"
+    ]
+  }
+}
+```
+
+**Gemini CLI** — configure read-only and build operations as pre-approved capability bundles in `policy.toml`. Keep `git push` and any write operations outside the pre-approved set.
+
+The principle: pre-approve the noise so that when a real approval appears, it gets real attention.
+
 ---
 
 ## Skill Library Reference
