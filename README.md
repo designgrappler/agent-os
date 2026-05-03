@@ -25,11 +25,7 @@ This library is more than a set of prompts; it is a **Technical System Specifica
 - **[Technical Spec](./context/techstack.md)**: Requirements for **Structural Policy Gates**.
 - **[Team Hierarchy](./context/team.md)**: The **Enforceable 3-Tier model** (Orchestration, Strategic, Tactical).
 - **[Project Evolution](./EVOLUTION.md)**: The journey from "Instructional Governance" to "Hardware-Locked Roles."
-- **[Implementation Guide](./GUIDE.md)**: How to integrate the Conductor OS into your workspace.
-
-## 🎨 Knowledge Graph & Gallery
-The full library of skills is available in a vibrant, searchable dashboard.
-**[View the Live Skill Gallery →](https://designgrappler.github.io/agent-skills/)**
+- **[Implementation Guide](./GUIDE.md)**: How to integrate Agent OS into your workspace.
 
 ## 🚀 Key Architectural Pillars (v1.0)
 1.  **Structural Enforcement**: Professional-grade role discipline via physical tool locking — tools are removed from agent manifests, not just prohibited in prompts.
