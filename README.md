@@ -34,7 +34,7 @@ All skills below the Setup phase require Agent OS to be initialized first.
 | **Sprint** | Check track status | `report-track-status` | `report-track-status` |
 | **Execution** | Add specialist agent | *(built-in)* | `add-specialist` |
 | **Execution** | Optimize handoff | *(native)* | `optimize-handoff` |
-| **Execution** | Audit deliverables | `audit-deliverables` | `audit-deliverables` |
+| **Execution** | Audit deliverables | *(built-in)* | `audit-deliverables` |
 | **Maintenance** | Clean context | *(native)* | `clean-context` |
 | **Maintenance** | Compress active context | `minify-context` | `minify-context` |
 | **Maintenance** | Index memory | *(native)* | `index-memory` |
@@ -113,6 +113,7 @@ Uses **Claude Code's `.claude/agents/` system** with `tools:` frontmatter enforc
 | [open-sprint](./claude/skills/open-sprint.md) | Launch a new sprint with clean setup |
 | [report-track-status](./claude/skills/report-track-status.md) | Situational status report |
 | [minify-context](./claude/skills/minify-context.md) | Compress active context files |
+| [audit-security](./claude/skills/audit-security.md) | Security sweep — works on any project |
 
 **Agent templates** (copy to `.claude/agents/` in your project):
 | Template | Purpose |

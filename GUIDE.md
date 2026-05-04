@@ -200,7 +200,7 @@ All skills below require Agent OS to be initialized via `install-agent-scaffold`
 | :--- | :---: | :---: | :--- |
 | `add-specialist` | *(built-in)* | ✓ | Add a specialist agent to an existing team |
 | `optimize-handoff` | *(native)* | ✓ | Handoff Bridge generation |
-| `audit-deliverables` | ✓ | ✓ | Binary PASS/BLOCKED verdict — dev and non-dev |
+| `audit-deliverables` | *(built-in)* | ✓ | Binary PASS/BLOCKED verdict — dev and non-dev |
 
 **Maintenance**
 
