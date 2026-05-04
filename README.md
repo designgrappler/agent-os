@@ -10,10 +10,10 @@ A curated library of surgical, high-fidelity capabilities for an **Agent Operati
 
 | Situation | Action |
 |---|---|
-| **New project** (no existing files) | Run `conductor-bundle` (Gemini) or `/agent-orchestration-setup` (Claude Code) |
+| **New project** (no existing files) | Run `install-agent-scaffold` (Gemini) or `/install-agent-scaffold` (Claude Code) |
 | **Existing project** (code already written) | Run `project-adopt` (Gemini) or `/project-adopt` (Claude Code) — reads your project first |
 
-> ⚠️ **Existing project?** Run `project-adopt` *before* any other setup skill. It discovers your stack, pre-fills the interview with what it finds, and will not overwrite existing files without your approval. Starting with `conductor-bundle` on an existing project will treat it as a blank slate.
+> ⚠️ **Existing project?** Run `project-adopt` *before* any other setup skill. It discovers your stack, pre-fills the interview with what it finds, and will not overwrite existing files without your approval. Starting with `install-agent-scaffold` on an existing project will treat it as a blank slate.
 
 ---
 
@@ -34,6 +34,27 @@ This library is more than a set of prompts; it is a **Technical System Specifica
 
 ---
 
+## 🗺️ Cross-Platform Skill Map
+
+| Goal | Claude Code | Gemini CLI |
+| :--- | :--- | :--- |
+| Scaffold new project + team | `install-agent-scaffold` | `install-agent-scaffold` |
+| Onboard existing project | `project-adopt` | `project-adopt` |
+| Add specialist agent | *(built-in)* | `add-specialist` |
+| Open a sprint | `sprint-open` | `sprint-open` |
+| Check track status | `track-status` | `track-status` |
+| Optimize handoff | *(native)* | `optimize-handoff` |
+| Clean context | *(native)* | `clean-context` |
+| Compress active context | `minify-context` | `minify-context` |
+| Long-term archival | *(native)* | `memory-indexer` |
+| Security sweep | `security-audit` | `security-audit` |
+| Design token audit | `design-sync` | `design-sync` |
+| Quality gate | `quality-gate` | `quality-gate` |
+
+> **Claude Code** handles handoff generation, context cleanup, and specialist onboarding natively — no skill file required. **Gemini CLI** uses explicit skills for each operation via `gemini skills install`.
+
+---
+
 ## 📦 Platform Implementations
 
 The Conductor architecture is implemented for two runtimes. The concepts are identical; the enforcement mechanisms differ.
@@ -43,14 +64,13 @@ Uses the **Gemini CLI Policy Engine** (`policy.toml`) for structural tool maskin
 
 | Skill | Tier | Mission |
 | :--- | :--- | :--- |
-| [Conductor Bundle](./skills/conductor-bundle/SKILL.md) | 1 | One-click OS initialization — **new projects** |
+| [install-agent-scaffold](./skills/install-agent-scaffold/SKILL.md) | 1 | One-click OS initialization — **new projects** |
 | [Project Adopt](./skills/project-adopt/SKILL.md) | 1 | Onboard an **existing project** — reads first, never blindly overwrites |
-| [Conductor Setup](./skills/conductor-setup/SKILL.md) | 1 | Establish project baseline and DNA |
-| [Team Setup](./skills/team-setup/SKILL.md) | 2 | Standardize Org Chart — dev and non-dev roles |
-| [Handoff Optimizer](./skills/handoff-optimizer/SKILL.md) | 2 | Structured Handoff Bridge generation |
+| [add-specialist](./skills/add-specialist/SKILL.md) | 1 | Add a new specialist agent to an existing team |
+| [optimize-handoff](./skills/optimize-handoff/SKILL.md) | 2 | Structured Handoff Bridge generation |
 | [Sprint Open](./skills/sprint-open/SKILL.md) | 2 | Launch a new sprint with clean setup |
 | [Track Status](./skills/track-status/SKILL.md) | 2 | Situational status report — all active tracks |
-| [Context Cleaner](./skills/context-cleaner/SKILL.md) | 3 | Archive stale and completed items |
+| [clean-context](./skills/clean-context/SKILL.md) | 3 | Archive stale and completed items |
 | [Minify Context](./skills/minify-context/SKILL.md) | 2 | Compress verbose active context files |
 | [Memory Indexer](./skills/memory-indexer/SKILL.md) | 3 | Long-term decision and milestone archival |
 | [Security Audit](./skills/security-audit/SKILL.md) | 3 | Security sweeps and structural policy audit |
@@ -60,7 +80,7 @@ Uses the **Gemini CLI Policy Engine** (`policy.toml`) for structural tool maskin
 **Setup:**
 ```bash
 # Install Gemini CLI, then deploy the full bundle:
-gemini skills install https://github.com/designgrappler/agent-skills --path skills/conductor-bundle
+gemini skills install https://github.com/designgrappler/agent-skills --path skills/install-agent-scaffold
 ```
 
 ---
@@ -70,7 +90,7 @@ Uses **Claude Code's `.claude/agents/` system** for agent definitions with `tool
 
 | Component | Purpose |
 | :--- | :--- |
-| [agent-orchestration-setup](./claude/skills/agent-orchestration-setup.md) | Bootstraps a full Claude Code project from scratch — **new projects** |
+| [install-agent-scaffold](./claude/skills/install-agent-scaffold.md) | Bootstraps a full Claude Code project from scratch — **new projects** |
 | [project-adopt](./claude/skills/project-adopt.md) | Onboard an **existing project** — reads first, never blindly overwrites |
 | [architect](./claude/agents/architect.md) | Lead Architect template — zero-code, Opus model |
 | [specialist](./claude/agents/specialist.md) | Generic Specialist template — rename per domain |
@@ -79,7 +99,7 @@ Uses **Claude Code's `.claude/agents/` system** for agent definitions with `tool
 | [CLAUDE.md template](./claude/templates/CLAUDE.md) | Fill-in-the-blanks orchestrator config starter |
 
 **Setup:**
-Copy `claude/skills/agent-orchestration-setup.md` to `.claude/skills/agent-orchestration-setup.md` in your project, then run `/agent-orchestration-setup`. The skill prompts for project details and generates all files.
+Copy `claude/skills/install-agent-scaffold.md` to `.claude/skills/install-agent-scaffold.md` in your project, then run `/install-agent-scaffold`. The skill prompts for project details and generates all files.
 
 **Existing project?** Copy `claude/skills/project-adopt.md` to `.claude/skills/project-adopt.md` and run `/project-adopt` instead.
 

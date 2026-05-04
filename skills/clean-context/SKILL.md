@@ -1,5 +1,5 @@
 ---
-name: context-cleaner
+name: clean-context
 description: The "Entropy Filter" that sanitizes the environment and prepares a clean context for the next strategic turn.
 Abbreviation: Cc
 Category: Maintenance

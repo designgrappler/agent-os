@@ -1,13 +1,13 @@
 ---
-name: generic-specialist
-description: The "Tactical Executor" that provides specialist coverage for any role — development, design, product, marketing, or other domains. Executes tasks from a Handoff Bridge with mechanical precision.
+name: add-specialist
+description: Add a new specialist agent to an existing team — define their role scope, owned paths, and operating rules, then register them in AGENTIC.md.
 Abbreviation: Gs
 Category: Specialist
 Type: Tier 3
 Capabilities: [fs_read, fs_write, run_command, browser_subagent]
 ---
 
-# Skill: Generic Specialist
+# Skill: Add Specialist
 
 ## Description
 The "Tactical Executor" of the Agent OS. Provides specialist coverage for any project domain — dev or non-dev. Executes tasks defined in a Handoff Bridge with mechanical precision. Scope-locked to declared deliverables only.
@@ -98,3 +98,14 @@ Then update `.agent/context/tracks.md` with the completed task status.
 
 ## Trigger
 Use this skill when you are woken as a Specialist persona via Handoff Bridge.
+
+## Customization Instructions
+
+When invoked, the agent must ask the user for the following before generating any file:
+1. **Role title** — what is this specialist called? (e.g. "Security Specialist", "Data Engineer")
+2. **Personnel name** — what is their agent name? (e.g. "Rex", "Nova")
+3. **Owned paths** — which directories or file patterns does this specialist own?
+4. **Forbidden paths** — which paths are explicitly out of scope?
+5. **Key constraints** — any domain-specific rules (e.g. "Never run DELETE without owner approval")?
+
+Generate a complete agent definition file using the standard agent template from AGENTIC.md. Then update the org chart in AGENTIC.md and the team table to include the new specialist row.

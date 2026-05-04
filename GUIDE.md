@@ -10,8 +10,8 @@ The Conductor OS architecture is implemented for two runtimes. The concepts are 
 
 | Platform | Tool Enforcement | Skills Format | Setup Path |
 | :--- | :--- | :--- | :--- |
-| **Gemini CLI** | `policy.toml` via CLI Policy Engine | `SKILL.md` in `skills/` | `conductor-bundle` skill |
-| **Claude Code** | `tools:` frontmatter in `.claude/agents/` | Markdown in `claude/skills/` | `/agent-orchestration-setup` skill |
+| **Gemini CLI** | `policy.toml` via CLI Policy Engine | `SKILL.md` in `skills/` | `install-agent-scaffold` skill |
+| **Claude Code** | `tools:` frontmatter in `.claude/agents/` | Markdown in `claude/skills/` | `/install-agent-scaffold` skill |
 
 For a platform-agnostic explanation of why the architecture works, see [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
@@ -20,11 +20,11 @@ For a platform-agnostic explanation of why the architecture works, see [`ARCHITE
 > **If your project already has code, files, or history — stop here.**
 > Run `project-adopt` (Gemini) or `/project-adopt` (Claude Code) **before** any other setup skill.
 > It reads your project first, pre-fills the interview from what it finds, and will not overwrite existing files without your approval.
-> The standard setup skills (`conductor-bundle` / `agent-orchestration-setup`) are greenfield-first — they assume an empty slate.
+> The standard setup skill (`install-agent-scaffold`) is greenfield-first — it assumes an empty slate.
 
 | Situation | Gemini CLI | Claude Code |
 | :--- | :--- | :--- |
-| **New project** | `conductor-bundle` | `/agent-orchestration-setup` |
+| **New project** | `install-agent-scaffold` | `/install-agent-scaffold` |
 | **Existing project** | `project-adopt` | `/project-adopt` |
 
 ---
@@ -69,9 +69,9 @@ All roles — dev and non-dev — map to the same three tiers.
 ### Gemini CLI
 ```bash
 # Deploy the full setup bundle in one pass:
-gemini skills install https://github.com/designgrappler/agent-skills --path skills/conductor-bundle
+gemini skills install https://github.com/designgrappler/agent-skills --path skills/install-agent-scaffold
 ```
-Then trigger: *"Deploy the Conductor OS bundle."*
+Then trigger: *"Install the agent scaffold for this project."*
 
 The bundle runs a **Pre-Flight Interview** — all questions are gathered first, no files created until the interview is complete:
 1. Project name and description
@@ -81,7 +81,7 @@ The bundle runs a **Pre-Flight Interview** — all questions are gathered first,
 5. Workflow mode (`GEMINI_ONLY` or `RELAY`)
 
 ### Claude Code
-Copy `claude/skills/agent-orchestration-setup.md` to `.claude/skills/` in your project, then run `/agent-orchestration-setup`. Same pre-flight interview, same output.
+Copy `claude/skills/install-agent-scaffold.md` to `.claude/skills/` in your project, then run `/install-agent-scaffold`. Same pre-flight interview, same output.
 
 ---
 
@@ -97,9 +97,9 @@ Sprint Open → Plan → Handoff Bridge → Execute → Quality Gate → Sprint 
 | :--- | :--- | :--- |
 | Open sprint | `sprint-open` | "Start planning" / "New sprint" |
 | Check status | `track-status` | "Catch me up" / "Status check" |
-| Generate handoff | `handoff-optimizer` | "Generate handoff for [specialist]" |
+| Generate handoff | `optimize-handoff` (Gemini) / *(native)* (Claude) | "Generate handoff for [specialist]" |
 | Review output | `quality-gate` | "Run quality gate on [specialist]'s output" |
-| Archive completed | `context-cleaner` | "Clean context" |
+| Archive completed | `clean-context` (Gemini) / *(native)* (Claude) | "Clean context" |
 | Compress active files | `minify-context` | "Minify context" |
 
 `sprint-open` and `track-status` **auto-trigger** on natural language phrases — no explicit command needed when configured via the `CLAUDE.md` Auto-Invocations table (Claude Code) or the Trigger section of each skill (Gemini).
@@ -108,7 +108,7 @@ Sprint Open → Plan → Handoff Bridge → Execute → Quality Gate → Sprint 
 
 ## Step 5: Handoff Protocol
 
-Before any Tier 3 Specialist begins work, the Architect generates a **Handoff Bridge** via `handoff-optimizer`. The bridge contains:
+Before any Tier 3 Specialist begins work, the Architect generates a **Handoff Bridge** via `optimize-handoff` (Gemini) or natively in Claude Code. The bridge contains:
 
 - **Role Identity** — who is waking and what domain they own
 - **Execution Deliverables** — the exact files or documents to produce/modify
@@ -120,7 +120,7 @@ Before any Tier 3 Specialist begins work, the Architect generates a **Handoff Br
 The Architect generates a fenced code block. Copy it into your external model to wake the Specialist with full context.
 
 ### GEMINI_ONLY Mode
-The Architect generates a self-executing wake command: `gemini --skill generic-specialist`
+The Architect generates a self-executing wake command: `gemini --skill add-specialist`
 
 ---
 
@@ -172,24 +172,20 @@ The principle: pre-approve the noise so that when a real approval appears, it ge
 
 ## Skill Library Reference
 
-| Skill | Tier | Platform | Purpose |
-| :--- | :--- | :--- | :--- |
-| `conductor-bundle` | 1 | Gemini | Full one-pass setup — **new projects** |
-| `agent-orchestration-setup` | 1 | Claude Code | Full one-pass setup — **new projects** |
-| `project-adopt` | 1 | Both | Onboard an **existing project** — reads first |
-| `conductor-setup` | 1 | Gemini | DNA initialization |
-| `team-setup` | 2 | Gemini | Org chart and personnel |
-| `handoff-optimizer` | 2 | Both | Handoff Bridge generation |
-| `sprint-open` | 2 | Both | Sprint launch |
-| `track-status` | 2 | Both | Situational status report |
-| `minify-context` | 2 | Both | Compress active context files |
-| `context-cleaner` | 3 | Gemini | Archive stale/completed items |
-| `clean-context` | 3 | Claude Code | Archive completed tracks |
-| `quality-gate` | 3 | Both | Binary PASS/BLOCKED verdict |
-| `memory-indexer` | 3 | Gemini | Long-term knowledge archival |
-| `security-audit` | 3 | Both | Security sweep |
-| `design-sync` | 3 | Both | Visual design audit |
-| `generic-specialist` | 3 | Gemini | Tactical executor (any domain) |
+| Skill | Tier | Claude Code | Gemini CLI | Purpose |
+| :--- | :--- | :---: | :---: | :--- |
+| `install-agent-scaffold` | 1 | ✓ | ✓ | Full one-pass setup — **new projects** |
+| `project-adopt` | 1 | ✓ | ✓ | Onboard an **existing project** — reads first |
+| `add-specialist` | 1 | *(built-in)* | ✓ | Add a specialist agent to an existing team |
+| `optimize-handoff` | 2 | *(native)* | ✓ | Handoff Bridge generation |
+| `sprint-open` | 2 | ✓ | ✓ | Sprint launch |
+| `track-status` | 2 | ✓ | ✓ | Situational status report |
+| `minify-context` | 2 | ✓ | ✓ | Compress active context files |
+| `clean-context` | 3 | *(native)* | ✓ | Archive stale/completed items |
+| `quality-gate` | 3 | ✓ | ✓ | Binary PASS/BLOCKED verdict |
+| `memory-indexer` | 3 | *(native)* | ✓ | Long-term knowledge archival |
+| `security-audit` | 3 | ✓ | ✓ | Security sweep |
+| `design-sync` | 3 | ✓ | ✓ | Visual design audit |
 
 ---
 

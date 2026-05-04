@@ -1,5 +1,5 @@
 ---
-name: handoff-optimizer
+name: optimize-handoff
 description: The "Intent Link" that ensures seamless transition of strategy and context between specialized agents via a structured Handoff Bridge.
 Abbreviation: Ho
 Category: Orchestration

@@ -1,4 +1,4 @@
-# Scaffold Workflow
+# Install Agent Scaffold
 Bootstraps a complete Claude Code Conductor orchestration project from scratch. Prompts for project details, then generates all required files: AGENTIC.md, CLAUDE.md, agent definitions, docs/context/, and settings.json hooks.
 
 > **Existing project?** Stop. Use `/project-adopt` instead. This skill assumes a blank slate — running it on an existing project will treat your current files as conflicts.
