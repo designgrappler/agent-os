@@ -142,5 +142,4 @@ Uses **Claude Code's `.claude/agents/` system** with `tools:` frontmatter enforc
 
 ---
 
-**Inspired by Google Conductor.**
 *(c) 2026 DZNR VENTURES®*
