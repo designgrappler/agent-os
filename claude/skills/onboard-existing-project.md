@@ -1,10 +1,10 @@
-# Project Adopt
+# Onboard Existing Project
 Onboards an existing project into the Claude Code orchestration system. Reads the current project structure first, pre-fills the setup interview with what it finds, and generates all required files without overwriting anything without your approval.
 
-> **New project?** Use `/agent-orchestration-setup` instead. This skill is only for projects that already have files and history.
+> **New project?** Use `/install-agent-scaffold` instead. This skill is only for projects that already have files and history.
 
 ## Trigger
-When the user runs `/project-adopt`, execute the following phases in order.
+When the user runs `/onboard-existing-project`, execute the following phases in order.
 
 ---
 
@@ -69,11 +69,11 @@ After all answers are confirmed, create or update the following. For each file:
 
 ### 4a. `AGENTIC.md` (root)
 
-Use the same template as `agent-orchestration-setup` Step 2a. Replace all placeholders with confirmed values. No `[PLACEHOLDER]` may remain.
+Use the same template as `install-agent-scaffold` Step 2a. Replace all placeholders with confirmed values. No `[PLACEHOLDER]` may remain.
 
 ### 4b. `CLAUDE.md` (root)
 
-Use the same template as `agent-orchestration-setup` Step 2b. Include the Auto-Invocations table for sprint-open and track-status.
+Use the same template as `install-agent-scaffold` Step 2b. Include the Auto-Invocations table for open-sprint and report-track-status.
 
 ### 4c. `docs/context/plan.md`
 
@@ -110,7 +110,7 @@ If `.claude/settings.json` already exists:
 - Merge the pre-push build hook and Stop hook into the existing config.
 - Do not remove any hooks already present.
 
-If it does not exist, create it with the standard hooks from `agent-orchestration-setup`.
+If it does not exist, create it with the standard hooks from `install-agent-scaffold`.
 
 ### 4j. `.gitignore` additions
 

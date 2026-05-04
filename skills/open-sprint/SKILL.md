@@ -1,5 +1,5 @@
 ---
-name: sprint-open
+name: open-sprint
 description: The "Sprint Launcher" that opens a new sprint with a clean setup — archives completed work, sets the objective, creates the first track, and orients the team.
 Abbreviation: So
 Category: Orchestration
@@ -8,10 +8,10 @@ Bundle: ARCHITECT
 Capabilities: [fs_read, fs_write]
 ---
 
-# Skill: Sprint Open
+# Skill: Open Sprint
 
 ## Description
-The "Sprint Launcher" of the Agent OS. Opens a new sprint cleanly — confirms prior work is resolved, sets the sprint objective, creates the first track, and ensures the team is oriented before any execution begins. The counterpart to `context-cleaner`.
+The "Sprint Launcher" of the Agent OS. Opens a new sprint cleanly — confirms prior work is resolved, sets the sprint objective, creates the first track, and ensures the team is oriented before any execution begins. The counterpart to `clean-context`.
 
 **Auto-trigger:** This skill should be invoked automatically when the user says phrases like "start planning," "new sprint," "let's plan," "begin planning," "what are we working on next," or "ready to start a new sprint."
 
@@ -35,7 +35,7 @@ Wait for the Conductor's decision before proceeding.
 Ask once:
 > *"Would you like to archive completed tracks before opening the new sprint? This keeps your active context lean. (Recommended: yes)"*
 
-If yes: run the archival steps from `context-cleaner` (move completed tracks from `tracks.md` to `.agent/archives/`). If no: proceed.
+If yes: run the archival steps from `clean-context` (move completed tracks from `tracks.md` to `.agent/archives/`). If no: proceed.
 
 ### Step 3 — Sprint Interview
 Ask the following as a single message. Wait for all answers before proceeding.
@@ -82,7 +82,7 @@ Produce a clean orientation summary:
 **Team:** [List from AGENTIC.md org chart]
 **Context Health:** [Clean / N archived tracks / N stale fields flagged]
 
-Ready. Call handoff-optimizer when you're ready to brief [Owner].
+Ready. Call optimize-handoff when you're ready to brief [Owner].
 ```
 
 ## Verification

@@ -1,5 +1,5 @@
 ---
-name: track-status
+name: report-track-status
 description: The "Situation Report" that produces a quick, scannable summary of all active tracks — what's in progress, blocked, awaiting review, or needs approval. Ideal after a break or at session start.
 Abbreviation: Ts2
 Category: Maintenance
@@ -8,7 +8,7 @@ Bundle: ARCHITECT
 Capabilities: [fs_read]
 ---
 
-# Skill: Track Status
+# Skill: Report Track Status
 
 ## Description
 The "Situation Report" of the Agent OS. Reads the current project state and produces a structured, scannable summary in seconds. No modifications — read-only. Designed for returning after a break, starting a new session, or quickly orienting before a handoff.
@@ -70,7 +70,7 @@ Output the following structure. Keep each item to one line.
 ### Step 3 — Suggest Next Action
 
 After the table, always end with a single concrete suggestion:
-> *"Recommended next step: [specific action — e.g., 'Run handoff-optimizer for Track 6' or 'Resolve the blocker on Track 3 before proceeding']."*
+> *"Recommended next step: [specific action — e.g., 'Run optimize-handoff for Track 6' or 'Resolve the blocker on Track 3 before proceeding']."*
 
 ## Verification
 1. **Read-Only**: Confirm no files were modified during the report.

@@ -1,5 +1,5 @@
 ---
-name: security-audit
+name: audit-security
 description: The "Safety Firewall" that ensures the implementation team’s output is secure and adheres to project-specific privacy standards.
 Abbreviation: Sa
 Category: Security
@@ -7,7 +7,7 @@ Type: Tier 3
 Capabilities: [fs_read, fs_write, grep_search]
 ---
 
-# Skill: Security Audit
+# Skill: Audit Security
 
 ## Description
 The "Safety Firewall" of the Agent OS. This skill ensures that the implementation team’s code and workflows are scrutinized for vulnerabilities, hardcoded secrets, and logical flaws before any strategic sign-off occurs.

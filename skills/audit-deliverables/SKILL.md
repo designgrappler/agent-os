@@ -1,5 +1,5 @@
 ---
-name: quality-gate
+name: audit-deliverables
 description: The "Structural Critic" that audits specialist output and issues a binary PASS or BLOCKED verdict. No track is complete until the Quality Gate approves. Read-only — never fixes, only judges.
 Abbreviation: Qg
 Category: Sentinel
@@ -8,7 +8,7 @@ Bundle: SENTINEL
 Capabilities: [fs_read, run_command]
 ---
 
-# Skill: Quality Gate
+# Skill: Audit Deliverables
 
 ## Description
 The "Structural Critic" of the Agent OS. Reviews specialist output against the Handoff Bridge and issues a binary **PASS** or **BLOCKED** verdict. Works for both dev and non-dev deliverables. Never fixes what it reviews — its only job is to judge.

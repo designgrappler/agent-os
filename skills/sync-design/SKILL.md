@@ -1,5 +1,5 @@
 ---
-name: design-sync
+name: sync-design
 description: The "Visual Auditor" that ensures the implementation matches the design system and high-end aesthetic standards.
 Abbreviation: Dy
 Category: Design
@@ -7,7 +7,7 @@ Type: Tier 3
 Capabilities: [fs_read, fs_write, browser_subagent]
 ---
 
-# Skill: Design Sync
+# Skill: Sync Design
 
 ## Description
 The "Visual Auditor" of the Agent OS. This skill ensures that the implementation team’s output (UI/UX) aligns perfectly with the established design patterns, typography, and premium aesthetics of the project.

@@ -60,7 +60,7 @@ Generate a self-executing wake command and display it as a clickable block:
 
 > *"Strategic task approved. Run the command below to wake the Specialist."*
 ```
-gemini --skill generic-specialist
+gemini --skill add-specialist
 ```
 Include the Handoff Bridge as the first message content for the Specialist session.
 

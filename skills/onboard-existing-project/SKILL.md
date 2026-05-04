@@ -1,5 +1,5 @@
 ---
-name: project-adopt
+name: onboard-existing-project
 description: Onboards an existing project into Conductor OS by discovering the current structure, pre-populating the setup interview, and generating the DNA files without overwriting what's already there.
 Abbreviation: Pa
 Category: Orchestration
@@ -8,12 +8,12 @@ Bundle: ARCHITECT
 Capabilities: [fs_read, fs_write, net_fetch]
 ---
 
-# Skill: Project Adopt
+# Skill: Onboard Existing Project
 
 ## Description
 The onboarding path for **existing projects**. Instead of asking for details you already have, this skill reads your project first — README, package.json, existing docs, folder structure — and pre-fills the setup interview with what it finds. You confirm or correct; it generates the DNA files. Nothing is overwritten without your approval.
 
-> **New project?** Use `conductor-bundle` instead. This skill is only for projects that already have files and history.
+> **New project?** Use `install-agent-scaffold` instead. This skill is only for projects that already have files and history.
 
 ## Operational Rules
 - **Read First, Write Second**: Run the full discovery phase before asking any questions or creating any files.
@@ -115,9 +115,8 @@ After all files are created, output:
 
 **Next steps:**
 1. Review AGENTIC.md — confirm the protocols match your project's conventions.
-2. Call team-setup to register the full org chart.
-3. Review any migrated docs and update stale content.
-4. Call [ARCHITECT NAME] to open your first sprint.
+2. Review any migrated docs and update stale content.
+3. Call [ARCHITECT NAME] to open your first sprint.
 ```
 
 ---

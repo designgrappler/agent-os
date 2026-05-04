@@ -18,14 +18,14 @@ For a platform-agnostic explanation of why the architecture works, see [`ARCHITE
 ### New project or existing project?
 
 > **If your project already has code, files, or history — stop here.**
-> Run `project-adopt` (Gemini) or `/project-adopt` (Claude Code) **before** any other setup skill.
+> Run `onboard-existing-project` (Gemini) or `/onboard-existing-project` (Claude Code) **before** any other setup skill.
 > It reads your project first, pre-fills the interview from what it finds, and will not overwrite existing files without your approval.
-> The standard setup skill (`install-agent-scaffold`) is greenfield-first — it assumes an empty slate.
+> The standard setup skill (`install-agent-scaffold`) is greenfield-first — it assumes an empty slate. Run `onboard-existing-project` instead if your project already has files.
 
 | Situation | Gemini CLI | Claude Code |
 | :--- | :--- | :--- |
 | **New project** | `install-agent-scaffold` | `/install-agent-scaffold` |
-| **Existing project** | `project-adopt` | `/project-adopt` |
+| **Existing project** | `onboard-existing-project` | `/onboard-existing-project` |
 
 ---
 
@@ -95,14 +95,14 @@ Sprint Open → Plan → Handoff Bridge → Execute → Quality Gate → Sprint 
 
 | Step | Skill / Command | Trigger |
 | :--- | :--- | :--- |
-| Open sprint | `sprint-open` | "Start planning" / "New sprint" |
-| Check status | `track-status` | "Catch me up" / "Status check" |
+| Open sprint | `open-sprint` | "Start planning" / "New sprint" |
+| Check status | `report-track-status` | "Catch me up" / "Status check" |
 | Generate handoff | `optimize-handoff` (Gemini) / *(native)* (Claude) | "Generate handoff for [specialist]" |
-| Review output | `quality-gate` | "Run quality gate on [specialist]'s output" |
+| Review output | `audit-deliverables` | "Run quality gate on [specialist]'s output" |
 | Archive completed | `clean-context` (Gemini) / *(native)* (Claude) | "Clean context" |
 | Compress active files | `minify-context` | "Minify context" |
 
-`sprint-open` and `track-status` **auto-trigger** on natural language phrases — no explicit command needed when configured via the `CLAUDE.md` Auto-Invocations table (Claude Code) or the Trigger section of each skill (Gemini).
+`open-sprint` and `report-track-status` **auto-trigger** on natural language phrases — no explicit command needed when configured via the `CLAUDE.md` Auto-Invocations table (Claude Code) or the Trigger section of each skill (Gemini).
 
 ---
 
@@ -175,17 +175,17 @@ The principle: pre-approve the noise so that when a real approval appears, it ge
 | Skill | Tier | Claude Code | Gemini CLI | Purpose |
 | :--- | :--- | :---: | :---: | :--- |
 | `install-agent-scaffold` | 1 | ✓ | ✓ | Full one-pass setup — **new projects** |
-| `project-adopt` | 1 | ✓ | ✓ | Onboard an **existing project** — reads first |
+| `onboard-existing-project` | 1 | ✓ | ✓ | Onboard an **existing project** — reads first |
 | `add-specialist` | 1 | *(built-in)* | ✓ | Add a specialist agent to an existing team |
 | `optimize-handoff` | 2 | *(native)* | ✓ | Handoff Bridge generation |
-| `sprint-open` | 2 | ✓ | ✓ | Sprint launch |
-| `track-status` | 2 | ✓ | ✓ | Situational status report |
+| `open-sprint` | 2 | ✓ | ✓ | Sprint launch |
+| `report-track-status` | 2 | ✓ | ✓ | Situational status report |
 | `minify-context` | 2 | ✓ | ✓ | Compress active context files |
 | `clean-context` | 3 | *(native)* | ✓ | Archive stale/completed items |
-| `quality-gate` | 3 | ✓ | ✓ | Binary PASS/BLOCKED verdict |
-| `memory-indexer` | 3 | *(native)* | ✓ | Long-term knowledge archival |
-| `security-audit` | 3 | ✓ | ✓ | Security sweep |
-| `design-sync` | 3 | ✓ | ✓ | Visual design audit |
+| `audit-deliverables` | 3 | ✓ | ✓ | Binary PASS/BLOCKED verdict |
+| `index-memory` | 3 | *(native)* | ✓ | Long-term knowledge archival |
+| `audit-security` | 3 | ✓ | ✓ | Security sweep |
+| `sync-design` | 3 | ✓ | ✓ | Visual design audit |
 
 ---
 

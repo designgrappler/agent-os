@@ -1,5 +1,5 @@
 ---
-name: memory-indexer
+name: index-memory
 description: The "Long-Term Knowledge" specialist that curates the persistent memory (KIs) of the project.
 Abbreviation: Mi
 Category: Knowledge
@@ -7,7 +7,7 @@ Type: Tier 3
 Capabilities: [fs_read, fs_write, grep_search]
 ---
 
-# Skill: Memory Indexer
+# Skill: Index Memory
 
 ## Description
 The "Long-Term Knowledge" specialist of the Agent OS. This skill ensures that tactical breakthroughs, resolved bugs, and architectural patterns are elevated from the ephemeral `tracks.md` into the persistent Knowledge Item (KI) system.
