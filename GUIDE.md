@@ -1,6 +1,10 @@
-# Conductor OS: Implementation Guide
+# Agent OS: Implementation Guide
 
-This guide provides the technical and operational framework for deploying the **Conductor-compatible Agent Orchestration** system across supported platforms.
+This guide covers how to deploy and operate **Agent OS** — a multi-agent workflow system where agents share a common state and hand work off to each other in a defined sequence. It also covers the **Standalone Skill Library**, a separate collection of utilities that work on any project regardless of whether Agent OS is installed.
+
+**Two things in this repo:**
+- **Agent OS** — scaffold installer + workflow skills that read from shared DNA files (`AGENTIC.md`, `plan.md`, `tracks.md`). Workflow skills require Agent OS to be installed first.
+- **Standalone Skill Library** — general-purpose utilities that work on any project. Currently: `audit-security`. New skills that don't depend on Agent OS state belong here.
 
 ---
 
@@ -172,20 +176,52 @@ The principle: pre-approve the noise so that when a real approval appears, it ge
 
 ## Skill Library Reference
 
-| Skill | Tier | Claude Code | Gemini CLI | Purpose |
-| :--- | :--- | :---: | :---: | :--- |
-| `install-agent-scaffold` | 1 | ✓ | ✓ | Full one-pass setup — **new projects** |
-| `onboard-existing-project` | 1 | ✓ | ✓ | Onboard an **existing project** — reads first |
-| `add-specialist` | 1 | *(built-in)* | ✓ | Add a specialist agent to an existing team |
-| `optimize-handoff` | 2 | *(native)* | ✓ | Handoff Bridge generation |
-| `open-sprint` | 2 | ✓ | ✓ | Sprint launch |
-| `report-track-status` | 2 | ✓ | ✓ | Situational status report |
-| `minify-context` | 2 | ✓ | ✓ | Compress active context files |
-| `clean-context` | 3 | *(native)* | ✓ | Archive stale/completed items |
-| `audit-deliverables` | 3 | ✓ | ✓ | Binary PASS/BLOCKED verdict |
-| `index-memory` | 3 | *(native)* | ✓ | Long-term knowledge archival |
-| `audit-security` | 3 | ✓ | ✓ | Security sweep |
-| `sync-design` | 3 | ✓ | ✓ | Visual design audit |
+### Agent OS Skills
+
+All skills below require Agent OS to be initialized via `install-agent-scaffold` or `onboard-existing-project` first.
+
+**Setup**
+
+| Skill | Claude Code | Gemini CLI | Purpose |
+| :--- | :---: | :---: | :--- |
+| `install-agent-scaffold` | ✓ | ✓ | Full one-pass setup — new projects |
+| `onboard-existing-project` | ✓ | ✓ | Reads first, generates DNA — existing projects |
+
+**Sprint**
+
+| Skill | Claude Code | Gemini CLI | Purpose |
+| :--- | :---: | :---: | :--- |
+| `open-sprint` | ✓ | ✓ | Launch a sprint, set objective, create first track |
+| `report-track-status` | ✓ | ✓ | Situational status report across all active tracks |
+
+**Execution**
+
+| Skill | Claude Code | Gemini CLI | Purpose |
+| :--- | :---: | :---: | :--- |
+| `add-specialist` | *(built-in)* | ✓ | Add a specialist agent to an existing team |
+| `optimize-handoff` | *(native)* | ✓ | Handoff Bridge generation |
+| `audit-deliverables` | ✓ | ✓ | Binary PASS/BLOCKED verdict — dev and non-dev |
+
+**Maintenance**
+
+| Skill | Claude Code | Gemini CLI | Purpose |
+| :--- | :---: | :---: | :--- |
+| `clean-context` | *(native)* | ✓ | Archive stale and completed items |
+| `minify-context` | ✓ | ✓ | Compress verbose active context files |
+| `index-memory` | *(native)* | ✓ | Long-term decision and milestone archival |
+| `sync-design` | ✓ | ✓ | UI alignment with design tokens |
+
+---
+
+### Standalone Skill Library
+
+These skills work on any project — no Agent OS installation required.
+
+| Skill | Claude Code | Gemini CLI | Purpose |
+| :--- | :---: | :---: | :--- |
+| `audit-security` | ✓ | ✓ | Security sweep — vulnerabilities, secrets, policy violations |
+
+> New skills that don't depend on `AGENTIC.md`, `tracks.md`, or the Handoff Bridge workflow belong in this library.
 
 ---
 
