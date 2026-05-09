@@ -1,39 +1,75 @@
 # Agent OS: Implementation Guide
 
-This guide covers how to deploy and operate **Agent OS** — a multi-agent workflow system where agents share a common state and hand work off to each other in a defined sequence. It also covers the **Standalone Skill Library**, a separate collection of utilities that work on any project regardless of whether Agent OS is installed.
+This guide covers how to set up and operate Agent OS across different environments. For an overview of what Agent OS is and why it exists, start with the [README](./README.md).
 
 **Two things in this repo:**
 - **Agent OS** — scaffold installer + workflow skills that read from shared DNA files (`AGENTIC.md`, `plan.md`, `tracks.md`). Workflow skills require Agent OS to be installed first.
 - **Standalone Skill Library** — general-purpose utilities that work on any project. Currently: `audit-security`. New skills that don't depend on Agent OS state belong here.
 
+For a platform-agnostic explanation of the architecture, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+
+## Step 0: Which Tools Are You Using?
+
+Agent OS is tool-agnostic at its core — the DNA files are plain Markdown, the roles are defined in text, and the workflow runs in any environment. Two patterns cover most setups: single model (one tool handles everything) and split model (one tool plans, another executes). We provide specific instructions for one validated example of each.
+
 ---
 
-## Step 0: Choose Your Platform
+### Single Model — One Tool Handles Everything
+*Example: VS Code + Claude Code*
 
-The Conductor OS architecture is implemented for two runtimes. The concepts are identical; the enforcement mechanisms differ.
+Claude Code handles planning, execution, and review within a single IDE.
 
-| Platform | Tool Enforcement | Skills Format | Setup Path |
-| :--- | :--- | :--- | :--- |
-| **Gemini CLI** | `policy.toml` via CLI Policy Engine | `SKILL.md` in `skills/` | `install-agent-scaffold` skill |
-| **Claude Code** | `tools:` frontmatter in `.claude/agents/` | Markdown in `claude/skills/` | `/install-agent-scaffold` skill |
+**How Agent OS maps:**
+- Agent definitions (`architect.md`, `specialist.md`, `critic.md`) live in `.claude/agents/` and are loaded via the chat interface
+- `AGENTIC.md`, `plan.md`, and `tracks.md` are read automatically at session start
+- The worktree protocol runs via the VS Code terminal
 
-For a platform-agnostic explanation of why the architecture works, see [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+**Conversation hygiene:**
+VS Code Copilot agents enforce fresh context by design — each agent is a new chat. Let it work: don't continue an Architect planning thread into execution. Switch agents, which switches conversations.
 
-### New project or existing project?
+**Known gap:** There's no programmatic enforcement of when a user switches agents in the workflow. That discipline is on the user.
 
-> **If your project already has code, files, or history — stop here.**
-> Run `onboard-existing-project` (Gemini) or `/onboard-existing-project` (Claude Code) **before** any other setup skill.
-> It reads your project first, pre-fills the interview from what it finds, and will not overwrite existing files without your approval.
-> The standard setup skill (`install-agent-scaffold`) is greenfield-first — it assumes an empty slate. Run `onboard-existing-project` instead if your project already has files.
+---
+
+### Split Model — Planning Tool + Execution Tool
+*Example: Antigravity (Gemini) + Claude Extension*
+
+Gemini (via Antigravity's Agent Manager) owns planning and orchestration. Claude (via VS Code's Claude Extension) owns execution.
+
+**How Agent OS maps:**
+- Antigravity's Agent Manager is the visual equivalent of Agent OS's orchestration layer — spawn an Architect in one workspace, a Specialist in another
+- The Handoff Bridge moves between the two tools — write it in Antigravity, paste it into Claude Extension to start execution
+- `AGENTIC.md`, `plan.md`, and `tracks.md` live in the repo and are read by both agents from the same source
+- Antigravity's parallel workspaces map directly to the worktree protocol — one workspace per active track
+- Antigravity's inline artifact feedback works natively on Handoff Bridges and plan documents
+
+**Conversation hygiene:**
+Antigravity's Agent Manager enforces context isolation architecturally — each spawned agent runs in its own workspace. This is the strongest conversation hygiene of any setup described here.
+
+**Why this combination works:**
+Gemini's strength is planning, architecture, and structured reasoning across large context. Claude's strength is precise execution with strong instruction-following. Agent OS's role separation — Architect plans, Specialist executes, Critic gates — maps cleanly onto this model split.
+
+**Known gaps:**
+- AI tools evolve quickly — always check current documentation for the tools you're using, as features may have changed since this was written.
+- Running the Critic role as a Gemini agent in Antigravity vs. Claude Extension is untested. Contributions welcome.
+- Integration between Antigravity's knowledge base and Agent OS's DNA files is undocumented. Likely high-value — flagged as a gap pending exploration.
+
+---
+
+### Other Environments
+
+Agent OS applies to any tool that supports: (1) reading Markdown files at session start, (2) role-scoped agents with tool restrictions, and (3) structured handoff artifacts. The two examples above cover the single model and split model patterns — use them as a reference for adapting to other combinations. If you validate a new setup, contributions are welcome via [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+---
+
+## Step 1: Prerequisite Audit
+
+> **New project or existing project?** If your project already has code, files, or history — run `onboard-existing-project` (Gemini) or `/onboard-existing-project` (Claude Code) before anything else. It reads what you already have and won't overwrite files without your approval. `install-agent-scaffold` assumes a blank slate.
 
 | Situation | Gemini CLI | Claude Code |
 | :--- | :--- | :--- |
 | **New project** | `install-agent-scaffold` | `/install-agent-scaffold` |
 | **Existing project** | `onboard-existing-project` | `/onboard-existing-project` |
-
----
-
-## Step 1: Prerequisite Audit
 
 Ensure your environment meets the following before initializing.
 
@@ -59,10 +95,10 @@ All roles — dev and non-dev — map to the same three tiers.
 
 | Tier | Role | Responsibility | Tool Access |
 | :--- | :--- | :--- | :--- |
-| **Tier 1 (Blue)** | **Orchestration / Conductor** | Establishes project DNA and base context | Blocked from write/exec on source |
-| **Tier 2 (Purple)** | **Strategic / Architect** | Plans, schedules, generates Handoff Bridges | Limited to context/docs writes |
-| **Tier 3 (Orange)** | **Tactical / Specialist** | Executes declared deliverables | Scoped to Handoff Bridge deliverables |
-| **Tier 3 (Red)** | **Sentinel / Quality Gate** | Audits output, issues PASS/BLOCKED verdict | Read-only |
+| **Tier 1** | **Orchestration / Conductor** | Establishes project DNA and base context | Blocked from write/exec on source |
+| **Tier 2** | **Strategic / Architect** | Plans, schedules, generates Handoff Bridges | Limited to context/docs writes |
+| **Tier 3** | **Tactical / Specialist** | Executes declared deliverables | Scoped to Handoff Bridge deliverables |
+| **Tier 3** | **Sentinel / Quality Gate** | Audits output, issues PASS/BLOCKED verdict | Read-only |
 
 **Non-dev roles** (product manager, designer, marketing manager, etc.) use the same tier structure. The difference is the *type of deliverable* — documents, briefs, and designs instead of source files. The scope lock, Technical Handshake, and Quality Gate all apply equally.
 
@@ -107,6 +143,36 @@ Sprint Open → Plan → Handoff Bridge → Execute → Quality Gate → Sprint 
 | Compress active files | `minify-context` | "Minify context" |
 
 `open-sprint` and `report-track-status` **auto-trigger** on natural language phrases — no explicit command needed when configured via the `CLAUDE.md` Auto-Invocations table (Claude Code) or the Trigger section of each skill (Gemini).
+
+---
+
+## Conversation Hygiene
+
+Agent OS is designed to survive context decay — but it doesn't eliminate the need to manage conversations deliberately.
+
+A long conversation accumulates drift. The model's earlier context gets compressed over time. Instructions read at session start carry less weight by message 40. This is a property of all LLMs, not a failure of Agent OS.
+
+**Start a new conversation when:**
+- Switching agents — Architect to Specialist, or any agent to the Critic for review
+- A track closes and a new one opens
+- You notice the agent referencing outdated state or contradicting earlier outputs
+- After a circuit breaker fires — always start fresh after an escalation
+
+**The Handoff Bridge as a reset mechanism**
+The Handoff Bridge is not just a communication format — it's a context compression tool. A well-written Bridge contains everything the next agent needs to start clean. In Claude Code, handoffs are handled natively. In Antigravity, copy the Bridge into the new agent's workspace manually. In other environments, paste it into a new conversation rather than continuing the same thread.
+
+**How different environments handle this**
+
+| Environment | How context boundaries work |
+| :--- | :--- |
+| **VS Code (Copilot agents)** | Each agent is a new chat window — fresh context by design. Switch agents and you get a clean slate automatically. |
+| **Antigravity (Agent Manager)** | Each spawned agent runs in its own workspace with its own context. The strongest isolation of any setup described here. |
+| **Claude Code / Gemini CLI** | No automatic boundary. Start new conversations manually. Use Handoff Bridges when handing off between agents. |
+
+**Practical hygiene (any environment)**
+- Name conversations explicitly: "Track 2 — Planning", "Track 2 — Execution", "Track 2 — Review"
+- One agent, one conversation. Never mix planning and execution in the same thread.
+- If a conversation exceeds ~30 exchanges, treat it as a signal to close and start fresh with a Handoff Bridge.
 
 ---
 
