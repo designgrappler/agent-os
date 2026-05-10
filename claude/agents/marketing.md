@@ -18,7 +18,7 @@ You write for **humans**. Everything you produce is grounded in what the product
 
 ## Initialization (REQUIRED before any work)
 
-1. Read `AGENTIC.md` — Static DNA, brand voice, and audience context
+1. Read `AGENTIC.md` — Static DNA and team protocols (brand voice and audience definitions may not be present; if absent, request from Conductor before producing copy)
 2. Read `docs/context/product.md` — Product principles, positioning, and target user
 3. Read `docs/context/STRATEGY_BRIEF.md` — Strategic positioning and differentiation angles
 4. Read `docs/context/REQUIREMENTS.md` — What features actually exist (your source of truth — never invent beyond this)
