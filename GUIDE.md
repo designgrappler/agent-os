@@ -20,7 +20,7 @@ Agent OS is tool-agnostic at its core — the DNA files are plain Markdown, the 
 Claude Code handles planning, execution, and review within a single IDE.
 
 **How Agent OS maps:**
-- Agent definitions (`architect.md`, `specialist.md`, `critic.md`) live in `.claude/agents/` and are loaded via the chat interface
+- Agent definitions live in `.claude/agents/` and are loaded via the chat interface — see [Agent Library](#agent-library) for the full role set
 - `AGENTIC.md`, `plan.md`, and `tracks.md` are read automatically at session start
 - The worktree protocol runs via the VS Code terminal
 
@@ -97,7 +97,7 @@ All roles — dev and non-dev — map to the same three tiers.
 | :--- | :--- | :--- | :--- |
 | **Tier 1** | **Orchestration / Conductor** | Establishes project DNA and base context | Blocked from write/exec on source |
 | **Tier 2** | **Strategic / Architect** | Plans, schedules, generates Handoff Bridges | Limited to context/docs writes |
-| **Tier 3** | **Tactical / Specialist** | Executes declared deliverables | Scoped to Handoff Bridge deliverables |
+| **Tier 3** | **Tactical / Specialist** | Executes declared deliverables — dev roles: `frontend`, `backend`, `database`, `fullstack`; non-dev: `designer`, `pm`, `marketing` | Scoped to Handoff Bridge deliverables |
 | **Tier 3** | **Sentinel / Quality Gate** | Audits output, issues PASS/BLOCKED verdict | Read-only |
 
 **Non-dev roles** (product manager, designer, marketing manager, etc.) use the same tier structure. The difference is the *type of deliverable* — documents, briefs, and designs instead of source files. The scope lock, Technical Handshake, and Quality Gate all apply equally.
@@ -181,8 +181,11 @@ The Handoff Bridge is not just a communication format — it's a context compres
 Before any Tier 3 Specialist begins work, the Architect generates a **Handoff Bridge** via `optimize-handoff` (Gemini) or natively in Claude Code. The bridge contains:
 
 - **Role Identity** — who is waking and what domain they own
+- **Specialist** — which domain specialist is assigned (frontend / backend / database / fullstack / designer / pm / marketing)
 - **Execution Deliverables** — the exact files or documents to produce/modify
-- **Upstream Verified** — confirmation the Technical Handshake was completed
+- **Migration Safety** — N/A / Reversible / Irreversible; Conductor sign-off required if irreversible
+- **Security Review** — N/A / Auth / Payments / Schema; Conductor sign-off required if any
+- **Worktree Setup** — isolated git worktree command if 2+ tracks are active in parallel
 - **Acceptance Criteria** — how to verify the work is complete
 - **Circuit Breaker** — escalation threshold (3 same-cause failures → Architect)
 
@@ -237,6 +240,45 @@ The fix is not to disable approvals, but to sort them correctly:
 **Gemini CLI** — configure read-only and build operations as pre-approved capability bundles in `policy.toml`. Keep `git push` and any write operations outside the pre-approved set.
 
 The principle: pre-approve the noise so that when a real approval appears, it gets real attention.
+
+---
+
+## Agent Library
+
+The template library ships 11 roles across four categories. Copy the files you need into `.claude/agents/` and customize the persona names to fit your team.
+
+**Strategic & Planning**
+
+| File | Role | Tier | Function |
+| :--- | :--- | :---: | :--- |
+| `strategist.md` | Strategist | 2 | Pre-planning — validates assumptions, stress-tests framing before work is scheduled |
+| `architect.md` | Lead Architect | 2 | Plans, Red Flag Analysis, Handoff Bridges — zero code |
+
+**Quality Gates**
+
+| File | Role | Tier | Function |
+| :--- | :--- | :---: | :--- |
+| `critic.md` | QA Critic | 3 | Conformance gate — PASS / BLOCKED verdict against declared acceptance criteria |
+| `blackhat.md` | Black Hat Critic | 3 | Adversarial review — APPROVED / CHALLENGED / BLOCKED verdict on ideas, plans, and content |
+
+**Execution — Dev**
+
+| File | Role | Tier | Function |
+| :--- | :--- | :---: | :--- |
+| `fullstack.md` | Fullstack Specialist | 3 | All layers in one track — mutually exclusive with domain specialists on overlapping tracks |
+| `frontend.md` | Frontend Specialist | 3 | Presentation layer only |
+| `backend.md` | Backend Specialist | 3 | Server-side logic and API routes only |
+| `database.md` | Database Specialist | 3 | Schema, migrations, and queries only |
+
+**Execution — Non-Dev**
+
+| File | Role | Tier | Function |
+| :--- | :--- | :---: | :--- |
+| `pm.md` | Product Manager | 3 | Requirements, user stories, acceptance criteria |
+| `designer.md` | Design Specialist | 3 | UI/UX, design tokens, component specs |
+| `marketing.md` | Marketing Specialist | 3 | Copy, positioning, campaign briefs |
+
+> **Fullstack vs. domain specialists:** a user picks one or the other per track — not both. If a project uses individual domain specialists and a layer is uncovered, the Architect opens a new track for that layer rather than expanding an existing specialist's scope.
 
 ---
 

@@ -16,7 +16,7 @@ Agent OS is our take on making that reliable. It's a workflow that gives every a
 Agent OS creates a set of plain Markdown files — your project description, active work, and team setup — that every agent reads at the start of each session. This is what keeps agents consistent across conversations. Context lives in files, not in conversation history.
 
 **2. Roles with real constraints**
-Each agent has a defined role and can only use the tools that role allows. An Architect plans but cannot touch your files. A Critic reviews but cannot write. This isn't a rule you ask them to follow — it's enforced at the runtime level. Roles don't drift because they structurally can't.
+Each agent has a defined role and can only use the tools that role allows. An Architect plans but cannot touch your files. A Critic reviews but cannot write. This isn't a rule you ask them to follow — it's enforced at the runtime level. Roles don't drift because they structurally can't. The template library covers both dev and non-dev team functions: planning, execution, QA, design, product, strategy, and marketing. See [Agent Library](./GUIDE.md#agent-library) in the Implementation Guide.
 
 **3. A quality gate before work ships**
 No task is complete until a dedicated Critic reviews it and issues a binary verdict: approved or blocked. The Critic is adversarial by design — it's looking for a reason to block, not confirm. This is the checkpoint that stops bad work from compounding.

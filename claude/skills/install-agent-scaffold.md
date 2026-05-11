@@ -1,38 +1,111 @@
 # Install Agent Scaffold
-Bootstraps a complete Claude Code Conductor orchestration project from scratch. Prompts for project details, then generates all required files: AGENTIC.md, CLAUDE.md, agent definitions, docs/context/, and settings.json hooks.
+Bootstraps a new project with the full Agent OS structure. Drops a setup template for the user to fill in — no files are generated until it's complete.
 
-> **Existing project?** Stop. Use `/onboard-existing-project` instead. This skill assumes a blank slate — running it on an existing project will treat your current files as conflicts.
+> **Existing project?** Stop. Use `/onboard-existing-project` instead. This skill assumes a blank slate.
 
 ## Trigger
-When the user runs `/scaffold-workflow`, execute the following steps in order.
+When the user runs `/install-agent-scaffold`.
 
 ---
 
-## Step 1: Gather Project Details
+## Step 1: Pre-flight
 
-Ask the user the following questions. Wait for all answers before proceeding. Do not use placeholders — collect real values.
-
-1. **Project name** — What is this project called?
-2. **One-sentence description** — What does it do?
-3. **Tech stack** — Brief summary (e.g., "React + Node.js + PostgreSQL" or "Python + FastAPI + Supabase"). Frontend framework, backend runtime/framework, database.
-4. **Conductor name** — What is the human owner/approver's name? (This is the person, not an agent.)
-5. **Architect agent name** — What should the Lead Architect agent be called? (e.g., "Peaches", "Atlas", "Architect")
-6. **Specialist roles** — How many specialist agents are needed, and what are their names and domains? (e.g., "3 specialists: Max for frontend, Rusty for backend, Lucy for database")
-7. **Critic agent name** — What should the QA Critic agent be called? (e.g., "Bandit", "Sentinel", "Critic")
-8. **Build/type-check command** — What command verifies a clean build? (e.g., `bunx tsc --noEmit && bun run build` or `npm run typecheck && npm run build` or `python -m pytest`)
+1. If `AGENTIC.md` exists → stop. Tell the user this project is already initialized. Suggest `/onboard-existing-project` to update an existing setup.
+2. If `SETUP.md` does **not** exist → go to Step 2.
+3. If `SETUP.md` exists → go to Step 3.
 
 ---
 
-## Step 2: Generate Files
+## Step 2: Create Setup Template
 
-Create the following files using the gathered values. Replace all `[PLACEHOLDERS]` with actual values from Step 1.
+Write the following file to `SETUP.md`, then stop and tell the user:
 
-### 2a. `AGENTIC.md` (root)
+> "**SETUP.md created.** Fill in your project details, then run `/install-agent-scaffold` again to generate all files."
+
+```markdown
+# Agent OS Setup
+# Fill in the values below, then run /install-agent-scaffold again.
+
+## Project
+Name:
+Description:
+Owner:
+
+## Build
+Build command:
+Type-check command:
+
+## Stack
+Tech stack:
+
+## Roles
+# Keep the specialists you want, delete the rest.
+# architect and critic are always included.
+roles:
+  - fullstack
+  # - frontend
+  # - backend
+  # - database
+  # - designer
+  # - pm
+  # - marketing
+
+## Names (optional — leave blank to use role names)
+Architect name:
+Critic name:
+
+## Optional
+# These can be filled in later — they don't block generation.
+Brand color:
+Primary font:
+```
+
+Stop here. Do not generate any other files.
+
+---
+
+## Step 3: Validate SETUP.md
+
+Read `SETUP.md`. Check that all required fields are filled (not blank):
+
+- `Name:`
+- `Description:`
+- `Owner:`
+- `Build command:`
+- `Tech stack:`
+- At least one role is uncommented under `roles:`
+
+If any required field is empty → list what's missing and stop. Tell the user to complete `SETUP.md` and re-run.
+
+If all required fields are present → extract values and proceed to Step 4.
+
+**Extracted values:**
+- `NAME` = value of `Name:`
+- `DESCRIPTION` = value of `Description:`
+- `OWNER` = value of `Owner:`
+- `BUILD_CMD` = value of `Build command:`
+- `TYPECHECK_CMD` = value of `Type-check command:` — if blank, use `# none configured`
+- `STACK` = value of `Tech stack:`
+- `ROLES` = all uncommented entries under `roles:` (always add `architect` and `critic`)
+- `ARCHITECT` = value of `Architect name:` if set, else `architect`
+- `CRITIC` = value of `Critic name:` if set, else `critic`
+- `BRAND_COLOR` = value of `Brand color:` — may be blank
+- `FONT` = value of `Primary font:` — may be blank
+
+---
+
+## Step 4: Generate Files
+
+Create all files below using the extracted values.
+
+---
+
+### 4a. `AGENTIC.md`
 
 ```markdown
 # AGENTIC DNA (Static DNA)
 
-This document contains the foundational constraints, identities, and protocols for [PROJECT NAME]. It is the root "Source of Truth" and must be ingested by all agents before any actions are taken.
+This document contains the foundational constraints, identities, and protocols for [NAME]. It is the root "Source of Truth" and must be ingested by all agents before any actions are taken.
 
 ---
 
@@ -44,18 +117,40 @@ This document contains the foundational constraints, identities, and protocols f
 
 ## 2. Tech Stack (Static DNA)
 
-[Insert tech stack details from user input — backend runtime/framework, frontend framework, database, and any transport/protocol constraints]
+[STACK]
+
+### Quality & Automation
+- **Build Command:** `[BUILD_CMD]`
+- **Type-check:** `[TYPECHECK_CMD]`
 
 ---
 
 ## 3. Team Architecture
 
-### Core Org Chart
-- **[CONDUCTOR NAME] (Conductor):** Vision & Approval.
+### Org Chart
+- **[OWNER] (Conductor):** Vision & Approval.
 - **Claude (Orchestrator):** Coordinates specialists.
-- **[ARCHITECT NAME] (Lead Architect):** Context Owner. Zero-code. Plans and produces Handoff Bridges.
-[For each specialist: - **[SPECIALIST NAME] ([Domain] Specialist):** Owns [domain scope].]
-- **[CRITIC NAME] (Quality Critic):** QA and build verification.
+- **[ARCHITECT] (Lead Architect):** Context Owner. Zero-code. Plans and produces Handoff Bridges.
+[For each specialist role selected: - **[ROLE] Specialist:** Owns [role] domain.]
+- **[CRITIC] (QA Critic):** Read-only quality gate.
+
+### Execution Chain
+[ARCHITECT] → Specialist(s) → [CRITIC]
+
+### Specialist Selection
+
+[Generate the appropriate subset of this table based on selected roles:]
+
+| Scenario | Specialist |
+|---|---|
+| Solo project or single-track cross-layer feature | `fullstack` |
+| UI / presentation layer only | `frontend` |
+| API routes / services / business logic only | `backend` |
+| Schema / migrations / queries only | `database` |
+
+**Mutual exclusivity:** `fullstack` cannot run concurrently with `frontend`, `backend`, or `database` on overlapping tracks.
+
+**Uncovered layers:** If a feature requires a layer with no active specialist, [ARCHITECT] opens a new track. Specialists never expand scope to cover gaps.
 
 ---
 
@@ -67,36 +162,36 @@ Each Track gets an isolated git worktree:
 git worktree add .worktrees/track-N track/N-short-description
 \`\`\`
 
-- Worktrees live in `.worktrees/` (add to `.gitignore`)
+- Worktrees live in `.worktrees/` (gitignored)
 - Branch naming: `track/N-short-description`
-- Never work directly on the main branch when 2+ tracks are active in parallel
-- Worktree removed only after Critic issues PASS verdict
+- Never work directly on main when 2+ tracks are active in parallel
+- Worktree removed only after [CRITIC] issues APPROVED verdict
 
 ---
 
 ## 5. Conductor Protocols
 
 ### Stability Rules
-- **Circuit Breaker:** 3 consecutive failures with the **same root cause** → STOP and escalate to [CONDUCTOR NAME]. Different error types reset the counter. Any single destructive or security-related failure triggers an immediate stop.
-- **Git Hygiene:** No commits unless directed. Use `git add` for staging only.
-- **Sentinel Proof:** Never trust an agent summary. Verify with `git diff` or direct file reads.
+- **Circuit Breaker:** 3 consecutive failures with the **same root cause** → STOP and escalate to [OWNER]. Different error types reset the counter. Any single destructive or security-related failure triggers immediate stop.
+- **Git Hygiene:** No commits unless directed. Stage only.
+- **Sentinel Proof:** Never trust a verbal summary. Verify with `git diff` or file reads.
 
-### Execution Chain
-Work flows in dependency order: [Database Specialist] → [Backend Specialist] → [Frontend Specialist]
-(Adapt to your stack's dependency graph.)
+### Handoff Logic
+1. **Verify** — confirm interfaces match before implementation begins.
+2. **Align** — sync with AGENTIC.md and tracks.md.
+3. **Draft** — [ARCHITECT] drafts implementation plan.
+4. **Bridge** — [ARCHITECT] compresses Dynamic DNA into a Handoff Bridge. Before issuing: evaluate Migration Safety and Security Review. Both fields must be explicitly set — never left as placeholders.
 
 ---
 
 ## 6. Commit Convention
 
-All commits must follow Conventional Commits:
+All commits must follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 \`\`\`
-<type>(<scope>): <description>
-
 feat(auth): add OAuth redirect handler
-fix(items): correct rounding on calculation
-chore(deps): upgrade dependency version
+fix(api): correct pagination offset
+chore(deps): upgrade dependencies
 \`\`\`
 
 **Types:** `feat` · `fix` · `chore` · `refactor` · `docs` · `style` · `perf` · `test`
@@ -107,12 +202,12 @@ chore(deps): upgrade dependency version
 
 A track is **Done** only when ALL of the following are true:
 
-- [ ] `[BUILD COMMAND]` exits with zero errors
+- [ ] `[BUILD_CMD]` exits with zero errors
 - [ ] All changes are within the declared track scope (no scope drift)
 - [ ] No `console.log`, `debugger`, or hardcoded secrets in the diff
 - [ ] `docs/context/plan.md` and `tracks.md` updated to reflect the completed track
-- [ ] [CRITIC NAME] has issued a **PASS** verdict
-- [ ] [CONDUCTOR NAME] has given final approval (for tracks touching auth, schema, or payments)
+- [ ] [CRITIC] has issued an **APPROVED** verdict
+- [ ] [OWNER] has given final approval for tracks touching auth, schema, or payments — this approval happens at Bridge issuance, not after [CRITIC]
 
 ---
 
@@ -122,35 +217,42 @@ A track is **Done** only when ALL of the following are true:
 ### HANDOFF BRIDGE
 **Topic:** [Feature/Bug Name]
 **Track:** [ID from tracks.md]
+**Specialist:** [role]
 **Static DNA Check:** [Confirm alignment with AGENTIC.md]
 **Dynamic DNA State:**
 - **Product Context:** [1-sentence requirement]
 - **Current Plan:** [step in plan.md]
 - **Execution Files:** [files to modify]
+**Migration Safety:** [N/A / Reversible / Irreversible — Conductor acceptance: YES (date) if irreversible]
+**Security Review:** [N/A / Auth / Payments / Schema — Conductor acceptance: YES (date) if any]
 **Worktree Setup:** [git worktree command or "N/A — single active track"]
 **Verification:** [command or URL]
 **Next Step:** [specific task for the Specialist]
 \`\`\`
+
+---
+
+*Last Refined: [TODAY'S DATE]*
 ```
 
 ---
 
-### 2b. `CLAUDE.md` (root)
+### 4b. `CLAUDE.md`
 
 ```markdown
-# [PROJECT NAME] — Claude Code Configuration
+# [NAME] — Claude Code Configuration
 
 ## Team Architecture
 
 | Role | Agent | Scope |
 |---|---|---|
-| **[CONDUCTOR NAME]** | Conductor | Vision & Approval |
+| **[OWNER]** | Conductor | Vision & Approval |
 | **Claude** | Orchestrator | Coordinates specialists |
-| **[ARCHITECT NAME]** | Lead Architect | Plans, Handoff Bridges — zero code |
-[For each specialist: | **[SPECIALIST NAME]** | [Domain] Specialist | [scope] |]
-| **[CRITIC NAME]** | QA Critic | Read-only quality gate |
+| **[ARCHITECT]** | Lead Architect | Plans, Handoff Bridges — zero code |
+[For each specialist: | **[ROLE]** | [Role] Specialist | [domain scope] |]
+| **[CRITIC]** | QA Critic | Read-only quality gate |
 
-Agents are defined in `.claude/agents/`. Invoke via `@[architect-name]`, `@[critic-name]`, etc.
+Agents are defined in `.claude/agents/`. Invoke via `@[ARCHITECT]`, `@[CRITIC]`, etc.
 
 ---
 
@@ -169,7 +271,7 @@ Before any work, read:
 
 All work flows through:
 ```
-[CONDUCTOR NAME] → [ARCHITECT NAME] → Specialist → [CRITIC NAME]
+[OWNER] → [ARCHITECT] → Specialist → [CRITIC]
 ```
 
 ---
@@ -180,44 +282,35 @@ All work flows through:
 git worktree add .worktrees/track-N track/N-description
 ```
 
-Worktrees live in `.worktrees/` (gitignored). Never work directly on the main branch for multi-track sprints.
-
----
-
-## Hooks
-
-| Hook | Trigger | Action |
-|---|---|---|
-| **Stop** | Session ends | DNA hygiene reminder |
-| **PreToolUse(Bash)** | `git push` | Blocks if `[BUILD COMMAND]` fails |
+Worktrees live in `.worktrees/` (gitignored). Never work directly on main for multi-track sprints.
 
 ---
 
 ## Stability Rules
 
-- **Circuit Breaker:** 3 consecutive failures with the same root cause → STOP. Call [ARCHITECT NAME] for Red Flag Analysis.
-- **Git Hygiene:** No commits unless [CONDUCTOR NAME] directs.
+- **Circuit Breaker:** 3 consecutive failures with the same root cause → STOP. Call [ARCHITECT] for Red Flag Analysis.
+- **Git Hygiene:** No commits unless [OWNER] directs.
 - **Sentinel Proof:** Never trust a verbal summary. Verify with `git diff` or file reads.
 ```
 
 ---
 
-### 2c. `docs/context/plan.md`
+### 4c. `docs/context/plan.md`
 
 ```markdown
-# [PROJECT NAME] — Active Plan
+# [NAME] — Active Plan
 
 ## Current Sprint: Initial Setup
 
-### Sprint Goals:
-- [ ] Complete project scaffolding and verify all agents are configured correctly.
+- [ ] Review AGENTIC.md and verify team configuration.
+- [ ] Open first sprint with @[ARCHITECT].
 
 ---
 
 *Last updated: [TODAY'S DATE]*
 ```
 
-### 2d. `docs/context/tracks.md`
+### 4d. `docs/context/tracks.md`
 
 ```markdown
 # Active Tracks
@@ -229,13 +322,13 @@ No active tracks. Add tracks as work begins.
 *Last updated: [TODAY'S DATE]*
 ```
 
-### 2e. `docs/context/product.md`
+### 4e. `docs/context/product.md`
 
 ```markdown
 # Product Context
 
 ## Vision
-[PROJECT NAME]: [ONE-SENTENCE DESCRIPTION]
+[NAME]: [DESCRIPTION]
 
 ## Current Focus
 [To be filled in by the Conductor.]
@@ -247,57 +340,71 @@ No active tracks. Add tracks as work begins.
 
 ---
 
-### 2f. `.claude/agents/[architect-name].md`
+### 4f. `.claude/agents/[ARCHITECT].md`
 
-Use the architect template from `claude/agents/architect.md` in the agent-skills-private repo. Update:
-- `name:` frontmatter → architect's name
-- `description:` → include the project name
-- Tech stack reference section → paste from AGENTIC.md
+Generate an architect agent definition using the standard architect template structure:
 
----
-
-### 2g. `.claude/agents/[specialist-name].md` (one per specialist)
-
-Use the specialist template from `claude/agents/specialist.md`. For each specialist:
-- `name:` → specialist's name
-- `description:` → include domain and project name
-- Update the scope section to describe their specific domain
+- `name:` → ARCHITECT (lowercase, hyphen-separated if multi-word)
+- `description:` → "Lead Architect for [NAME]. Zero-code planner — owns plans, Red Flag Analysis, and Handoff Bridges."
+- `model: claude-opus-4-7`
+- `tools: Read, Write, Edit, Bash`
+- Body: Initialization (read 5 files: the 4 DNA files plus `INSTALL_CHECKLIST.md` — if any required checklist items are unchecked, surface them to the Conductor before proceeding with planning), Core Identity (zero-code planner), Capabilities (Red Flag Analysis, Implementation Plan, Handoff Bridge with the template from AGENTIC.md, Sprint Housekeeping), Hard Constraints (no source files; writes to `docs/context/` and `docs/archive/` only; read-only Bash; never issue Bridge with unfilled safety fields), Sign-Off Protocol, Circuit Breaker.
+- Replace "Tim" with OWNER throughout.
 
 ---
 
-### 2h. `.claude/agents/[critic-name].md`
+### 4g. `.claude/agents/[CRITIC].md`
 
-Use the critic template from `claude/agents/critic.md`. Update:
-- `name:` → critic's name
-- Replace the example build command with the actual build command from Step 1
+Generate a critic agent definition using the standard critic template structure:
+
+- `name:` → CRITIC (lowercase, hyphen-separated if multi-word)
+- `description:` → "QA Critic for [NAME]. Zero-write quality gate — issues APPROVED or BLOCKED verdict."
+- `model: claude-sonnet-4-6`
+- `tools: Read, Bash`
+- Body: Initialization, Core Identity (zero-write), Spec Gate (must receive Handoff Bridge before auditing), Quality Gate checks (scope, build, secrets, format), Context Gate (track hygiene), Hard Constraints (never write or edit files; verdict is APPROVED or BLOCKED only), Circuit Breaker.
+- Set build command to BUILD_CMD in the Quality Gate section.
 
 ---
 
-### 2i. `.claude/settings.json`
+### 4h. `.claude/agents/[ROLE].md` (one per selected specialist)
+
+For each specialist role in ROLES (excluding architect and critic), generate the appropriate agent definition:
+
+- Use the domain-specific template for the role: `frontend`, `backend`, `database`, `fullstack`, `designer`, `pm`, or `marketing`
+- `name:` → role name (lowercase)
+- `description:` → "[Role] Specialist for [NAME]."
+- `model: claude-sonnet-4-6`
+- `tools:` → `Read, Write, Edit, Bash` for dev roles; `Read, Write, Edit` for non-dev roles
+- Body: follow the standard domain specialist structure — Initialization (read DNA files), Core Identity (scope and domain), Capabilities, Technical Handshake, Hard Constraints (Bridge is only scope boundary; STOP if safety fields unpopulated for relevant changes), Sign-Off Protocol.
+
+---
+
+### 4i. `.claude/settings.json`
 
 ```json
 {
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo '$CLAUDE_TOOL_INPUT' | grep -q '\"git push\"' && ([BUILD COMMAND] || (echo 'Build failed — push blocked.' && exit 1)) || exit 0"
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'Session ended. Reminder: archive completed tracks, verify plan.md is current, and confirm no uncommitted changes on staging.'"
+            "command": "echo 'Session ended. Reminder: archive completed tracks, verify plan.md is current, confirm no uncommitted changes.'"
           }
         ]
       }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Read",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git branch *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(grep *)"
     ]
   }
 }
@@ -305,7 +412,7 @@ Use the critic template from `claude/agents/critic.md`. Update:
 
 ---
 
-### 2j. `.gitignore` additions
+### 4j. `.gitignore` additions
 
 Append to `.gitignore` if not already present:
 ```
@@ -315,25 +422,55 @@ Append to `.gitignore` if not already present:
 
 ---
 
-## Step 3: Confirm and Orient
+### 4k. `INSTALL_CHECKLIST.md`
 
-After creating all files, report:
+Write this file to the project root. Pre-check the scaffold item. Pre-check brand color and font only if those values were provided in SETUP.md.
+
+```markdown
+# Install Checklist
+
+## Required
+Complete these before opening the first sprint.
+
+- [x] Agent OS scaffold generated — [TODAY'S DATE]
+- [ ] Confirm `[BUILD_CMD]` exits with zero errors
+- [ ] Review AGENTIC.md — verify team configuration is correct
+
+## Optional
+Complete at any time. [ARCHITECT] will surface unchecked items here at the start of each session.
+
+- [PRE-CHECK IF BRAND_COLOR PROVIDED, ELSE LEAVE UNCHECKED] Brand color — add to AGENTIC.md Tech Stack: `[BRAND_COLOR or #______]`
+- [PRE-CHECK IF FONT PROVIDED, ELSE LEAVE UNCHECKED] Primary font — add to AGENTIC.md Tech Stack: `[FONT or ______]`
+- [ ] Product focus — fill in Current Focus in `docs/context/product.md`
+- [ ] Team conventions — update AGENTIC.md §5 with project-specific workflow rules
+```
+
+---
+
+### 4l. Delete `SETUP.md`
+
+After all files are created successfully, delete `SETUP.md`.
+
+---
+
+## Step 5: Confirm
+
+Report:
 
 ```
-## Scaffold Complete
+## Agent OS Installed
 
-**Project:** [PROJECT NAME]
-**Files created:** [count] files across AGENTIC.md, CLAUDE.md, docs/context/, .claude/agents/, .claude/settings.json
+**Project:** [NAME]
+**Files created:** [count]
 
 **Your team:**
-- [ARCHITECT NAME] — invoke with @[architect-name]
-- [SPECIALIST NAMES] — invoke with @[name]
-- [CRITIC NAME] — invoke with @[critic-name]
+- @[ARCHITECT] — Lead Architect (planning + Handoff Bridges)
+- @[CRITIC] — QA Critic (quality gate)
+[For each specialist: - @[ROLE] — [role] specialist]
 
 **Next steps:**
-1. Review AGENTIC.md and fill in any remaining tech stack details.
-2. Add your first track to docs/context/tracks.md.
-3. Call @[architect-name] to begin planning your first sprint.
+1. Review AGENTIC.md — verify the team configuration is correct.
+2. Call @[ARCHITECT] to open your first sprint.
 
-**Verification:** Run [BUILD COMMAND] to confirm the build environment is clean before starting work.
+**Verification:** Run [BUILD_CMD] to confirm the build environment is clean.
 ```
