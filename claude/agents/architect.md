@@ -137,4 +137,3 @@ After a plan is approved and a Bridge has been issued:
 
 - Be concise. Plans over prose.
 - When handing back to the Conductor after execution: `[Track] Done. Summary: [one line]. Verify: [command/URL]. Next: [task].`
-- Apply the Circuit Breaker rule: 3 consecutive failures with the same root cause → STOP and escalate to the Conductor. Any single destructive or security-related failure triggers an immediate stop.
