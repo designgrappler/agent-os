@@ -27,11 +27,12 @@ Scan recent transcripts across the user's full projects dir — not just the cur
 ### Step 2 — Extract tool-call frequencies
 - **Bash calls:** parse `input.command`, take the leading command token (handling `sudo`, `timeout`, pipes, `&&`, env-var prefixes). Record the command + first subcommand pair (e.g. `git status`, `gh pr view`, `ls`).
 - **MCP calls:** record the full tool name (e.g. `mcp__slack__slack_read_thread`).
+- **Built-in tool calls:** record other tool names that aren't Bash or MCP — specifically `WebFetch`.
 
 Count occurrences across all scanned transcripts.
 
 ### Step 3 — Filter to read-only
-Keep only commands that don't mutate state. Examples of safe read-only commands: `git status/log/diff/show/branch`, `gh pr view/list/diff`, `gh issue view/list`, `gh run view/list`, `rg`, `grep`, `find`, `bun run typecheck`, `bun run lint`, `docker ps/logs`, `kubectl get/describe`, `ps`, `env`, `printenv`, any MCP tool with `read`/`get`/`list`/`search`/`view` in its name.
+Keep only commands that don't mutate state. Examples of safe read-only commands: `git status/log/diff/show/branch`, `gh pr view/list/diff`, `gh issue view/list`, `gh run view/list`, `rg`, `grep`, `find`, `bun run typecheck`, `bun run lint`, `docker ps/logs`, `kubectl get/describe`, `ps`, `env`, `printenv`, `WebFetch`, any MCP tool with `read`/`get`/`list`/`search`/`view`/`retrieval` in its name.
 
 ### Step 4 — Drop auto-allowed commands
 These never prompt in Claude Code — skip them:
@@ -46,24 +47,32 @@ These never prompt in Claude Code — skip them:
 
 ### Step 5 — Pick the pattern form
 Use the narrowest pattern that covers observed usage:
-- Many variants of the same command (`git log`, `git log --oneline`, `git log main..HEAD`) → `Bash(git log *)` (space before `*` is required for prefix matching)
-- Single exact invocation → `Bash(foo)` with no wildcard
-- MCP tools → full tool name verbatim, no wildcard needed
+- Many variants of the same Bash command (`git log`, `git log --oneline`, `git log main..HEAD`) → `Bash(git log *)` (space before `*` is required for prefix matching)
+- Single exact Bash invocation → `Bash(foo)` with no wildcard
+- **MCP tools — prefer server-level entries.** If multiple tools from the same server appear (e.g. `mcp__figma__get_file` and `mcp__figma__get_component`), use the server prefix `mcp__figma` — it covers all tools from that server and avoids a growing list of individual entries. Use a specific full tool name only if you want to allow one tool from a server while leaving others unapproved.
+- **`WebFetch`** — use the bare tool name verbatim.
 
-### Step 6 — Prioritize
-Rank by count descending. Drop anything that appeared fewer than ~3 times. Cap the list at the top ~20 entries.
+### Step 6 — Cross-reference current allowlist
+Read `~/.claude/settings.json` and extract the current `permissions.allow` entries. For each candidate pattern from Steps 3–5, mark it as one of:
+- **Already covered** — an existing allowlist entry already matches it (exact or prefix). Skip entirely — don't re-add or surface.
+- **Approved manually** — the pattern appears in transcripts, is not auto-allowed, and is not in the current allowlist. This means the user has been approving it via prompt every time. These are the highest-priority entries to add.
+- **New suggestion** — a read-only pattern that appears frequently but hasn't been explicitly encountered as a prompt yet.
 
-### Step 7 — Present to user
-Show the prioritized list as a markdown table before writing anything:
+### Step 7 — Prioritize
+1. **Approved manually** entries first (sorted by count descending) — these directly eliminate recurring prompts.
+2. **New suggestions** second (sorted by count descending). Drop anything with fewer than ~3 occurrences. Cap the combined list at ~20 entries.
 
-| # | Pattern | Count | Notes |
-|---|---------|-------|-------|
-| 1 | `Bash(git status *)` | 142 | repo status checks |
-| 2 | `Bash(gh pr view *)` | 87 | PR inspection |
-| 3 | `mcp__slack__slack_read_thread` | 54 | Slack thread reads |
+### Step 8 — Present to user
+Show the prioritized list as a markdown table before writing anything, with a tier label:
 
-### Step 8 — Merge into `~/.claude/settings.json`
+| # | Pattern | Count | Tier | Notes |
+|---|---------|-------|------|-------|
+| 1 | `Bash(npx tsc --noEmit)` | 34 | Approved manually | TS type-check |
+| 2 | `mcp__figma` | 18 | Approved manually | Figma reads |
+| 3 | `Bash(curl -s *)` | 12 | New suggestion | API reads |
+
+### Step 9 — Merge into `~/.claude/settings.json`
 Create the file if it doesn't exist. Preserve existing keys and `permissions.allow` entries; de-duplicate; don't remove anything; don't touch `permissions.deny` or `permissions.ask` or any other field.
 
-### Step 9 — Report back
+### Step 10 — Report back
 Tell the user: what was added (count + examples), what was already in the allowlist, and what was skipped and why (e.g. "dropped `rm` and `git push` — not read-only; dropped `cat`/`ls`/`git status` — already auto-allowed").
