@@ -41,23 +41,31 @@ Before asking any questions, evaluate:
 
 ---
 
-## Phase 3: Pre-Populated Interview
+## Phase 3: Focused Interview
 
-Present the following as a **single numbered list**. Pre-fill discovered values as proposals in parentheses. **Wait for all answers before creating any files.**
+**Rule: Only ask about what is genuinely missing or ambiguous.** For each value below, if it was found in an existing file (`AGENTIC.md`, `CLAUDE.md`, `README.md`, `package.json`, `.claude/agents/`), mark it ✓ CONFIRMED — do not ask again. Only present questions where the answer was not found or is incomplete.
 
-> I've read your project. Here's what I found — please confirm or correct each value:
+Present confirmed values as a silent summary block first:
+
+> **Already established (no changes needed):**
+> - Project name: [value from AGENTIC.md or README]
+> - Tech stack: [value from AGENTIC.md]
+> - Build command: [value from AGENTIC.md or package.json]
+> - Conductor: [value from AGENTIC.md]
+> - Architect: [name from .claude/agents/]
+> - Critic: [name from .claude/agents/]
+
+Then present **only the gaps** as a numbered list. **Wait for all answers before creating any files.**
+
+> **What I still need from you:**
 >
-> 1. **Project name** — *(Proposed: [discovered name or "Not found — please provide"])*
-> 2. **One-sentence description** — *(Proposed: [discovered description or "Not found"])*
-> 3. **Tech stack** — Backend runtime/framework, frontend framework, database. *(Proposed: [inferred stack or "Not found"])*
-> 4. **Team type** — **Dev team** (building software), **creative/business team** (documents/designs/campaigns), or **mixed**? *(Proposed: [inferred — "Dev team" if package.json found])*
-> 5. **Conductor name** — Your name as the human owner/approver. *(No default — required)*
-> 6. **Architect agent name** — What should the Lead Architect be called? *(No default — required)*
-> 7. **Specialist roles** — How many specialists, and what are their names and domains? *(Proposed: [inferred from folder structure — e.g., "Frontend (src/), Backend (api/), Database (supabase/)"])*
-> 8. **Critic agent name** — What should the QA Critic be called? *(No default — required)*
-> 9. **Build / type-check command** — Command that confirms a clean build. *(Proposed: [inferred from package.json scripts — e.g., "npm run build" or "Not found — please provide"])*
+> [Only include items below that were not found. If all are found, skip this block entirely and proceed to Phase 4.]
 >
-> **Existing docs** (if found): I'll list any docs I found and propose how they map to `docs/context/`. Confirm or reject each mapping.
+> - **Specialist roles** — What specialist agent(s) should be added? What are their names and domains? *(Proposed: [inferred from folder structure, or "Not found — please provide"])*
+> - **One-sentence description** — *(Only if not found in README or AGENTIC.md)*
+> - **Team type** — Dev team, creative/business team, or mixed? *(Only if genuinely ambiguous)*
+>
+> **Existing docs** (if found and not yet mapped): I'll list any docs found and propose how they map to `docs/context/`. Confirm or reject each mapping. *(Skip if docs/context/ already has plan.md, tracks.md, product.md.)*
 
 ---
 
@@ -99,9 +107,9 @@ Use the architect template. Update name, description, and tech stack reference s
 
 Use the specialist template. Update name, domain, and scope section.
 
-### 4h. `.claude/agents/[critic-name].md`
+### 4h. `.claude/agents/[qa-name].md`
 
-Use the critic template. Update name and build command.
+Use the QA template. Update name and build command.
 
 ### 4i. `.claude/settings.json`
 
@@ -136,7 +144,7 @@ After all files are generated, output:
 **Your team:**
 - [ARCHITECT NAME] — invoke with @[architect-name]
 - [SPECIALIST NAMES] — invoke with @[name]
-- [CRITIC NAME] — invoke with @[critic-name]
+- [QA NAME] — invoke with @[qa-name]
 
 **Next steps:**
 1. Review AGENTIC.md — confirm the protocols match your project's conventions.

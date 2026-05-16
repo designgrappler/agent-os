@@ -29,7 +29,8 @@ claude/
 ├── agents/
 │   ├── architect.md              ← Lead Architect template (zero-code, Opus)
 │   ├── specialist.md             ← Generic Specialist template (rename for each domain)
-│   └── critic.md                 ← QA Critic template (read-only, binary gate)
+│   ├── qa.md                     ← QA template (read-only, binary gate)
+│   └── critic.md                 ← Critic template (adversarial review, ideas and plans)
 ├── skills/
 │   ├── agent-orchestration-setup.md  ← Bootstraps a full Claude Code project from scratch
 │   ├── sprint-open.md            ← Opens a new sprint (auto-triggers on planning prompts)
@@ -52,7 +53,7 @@ Copy `skills/conductor-setup.md` to `.claude/skills/agent-orchestration-setup.md
 1. Copy `templates/AGENTIC.md` → `AGENTIC.md` at your project root. Fill in placeholders.
 2. Copy `templates/CLAUDE.md` → `CLAUDE.md` at your project root. Fill in placeholders.
 3. Create `docs/context/plan.md`, `docs/context/tracks.md`, `docs/context/product.md`.
-4. Copy `agents/architect.md`, `agents/specialist.md`, `agents/critic.md` → `.claude/agents/`. Rename and customize each.
+4. Copy `agents/architect.md`, `agents/specialist.md`, `agents/qa.md` → `.claude/agents/`. Rename and customize each.
 5. Create `.claude/settings.json` with a pre-push build hook.
 
 ---

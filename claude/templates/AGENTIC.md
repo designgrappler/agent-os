@@ -1,7 +1,60 @@
-# AGENTIC DNA (Static DNA)
-*Fill in all [PLACEHOLDERS] before using. Delete this line when done.*
+# AGENTIC DNA — [PROJECT NAME]
 
-This document contains the foundational constraints, identities, and protocols for **[PROJECT NAME]**. It is the root "Source of Truth" (Static DNA) and must be ingested by all agents before any actions are taken.
+[PROJECT DESCRIPTION]
+
+This document is the root source of truth for this project. All agents read it before any work begins. Edit via your primary agent — do not edit directly.
+
+---
+
+## 2. Tech Stack
+
+### Backend
+- **Runtime:** [RUNTIME]
+- **Framework:** [FRAMEWORK]
+- **Database:** [DATABASE]
+- **Transport:** [TRANSPORT]
+
+### Frontend
+- **Framework:** [FRONTEND FRAMEWORK]
+- **Styling:** [STYLING]
+- **Design System:** [DESIGN SYSTEM]
+
+### Quality & Automation
+- **Type Checking:** [TYPE CHECK COMMAND]
+- **Build:** [BUILD COMMAND]
+- **Linting:** [LINTER]
+
+---
+
+## 3. Project Team
+
+- **[CONDUCTOR NAME] (Conductor):** Vision & Approval.
+- **Claude (Orchestrator):** Coordinates specialists, no direct execution.
+- **[ARCHITECT NAME] (Lead Architect):** Context Owner. Zero-code. Plans and produces Handoff Bridges.
+- **[SPECIALIST 1 NAME] ([Domain 1] Specialist):** Owns [scope].
+- **[SPECIALIST 2 NAME] ([Domain 2] Specialist):** Owns [scope].
+- **[SPECIALIST 3 NAME] ([Domain 3] Specialist):** Owns [scope].
+- **[QA NAME] (QA):** Build verification and quality gate. Read-only.
+
+---
+
+## 7. Definition of Done
+
+A track is **Done** only when ALL of the following are true:
+
+- [ ] `[BUILD COMMAND]` exits with zero errors
+- [ ] All changes are within the declared track scope (no scope drift)
+- [ ] No `console.log`, `debugger`, or hardcoded secrets in the diff
+- [ ] `docs/context/plan.md` and `tracks.md` updated to reflect the completed track
+- [ ] [QA NAME] has issued a **PASS** verdict
+- [ ] [CONDUCTOR NAME] has given final approval (for tracks touching auth, schema, or payments)
+
+---
+---
+
+# How Your Agents Operate
+
+> **For reference only.** The sections below describe how your agents behave.
 
 ---
 
@@ -11,65 +64,30 @@ This document contains the foundational constraints, identities, and protocols f
 
 ---
 
-## 2. Tech Stack (Static DNA)
-
-### Backend
-- **Runtime:** [YOUR RUNTIME — e.g., Bun, Node.js, Python, Go]
-- **Framework:** [YOUR FRAMEWORK — e.g., Hono, Express, FastAPI, Gin]
-- **Database:** [YOUR DATABASE — e.g., Supabase PostgreSQL, PlanetScale, MongoDB]
-- **Transport:** [PROTOCOL CONSTRAINTS — e.g., "JSON only, no multipart/form-data"]
-
-### Frontend
-- **Framework:** [YOUR FRONTEND FRAMEWORK — e.g., React 19 + Vite, Next.js, SvelteKit]
-- **Styling:** [YOUR CSS APPROACH — e.g., Tailwind CSS 4, CSS Modules, Styled Components]
-- **Design System:** [YOUR DESIGN SYSTEM — e.g., shadcn/ui, Material UI, "Custom — see FIGMA_URL"]
-
-### Quality & Automation
-- **Type Checking:** [e.g., TypeScript strict mode via `bunx tsc --noEmit`]
-- **Build:** [e.g., `bun run build` or `npm run build`]
-- **Linting:** [e.g., ESLint, Biome, Ruff]
-
----
-
-## 3. Team Architecture
-
-### Core Org Chart
-- **[CONDUCTOR NAME] (Conductor):** Vision & Approval.
-- **Claude (Orchestrator):** Coordinates specialists, no direct execution.
-- **[ARCHITECT NAME] (Lead Architect):** Context Owner. Zero-code. Plans and produces Handoff Bridges.
-- **[SPECIALIST 1 NAME] ([Domain 1] Specialist):** Owns [scope — e.g., "src/components/, src/pages/, src/hooks/"].
-- **[SPECIALIST 2 NAME] ([Domain 2] Specialist):** Owns [scope — e.g., "api/, server.ts, auth flow"].
-- **[SPECIALIST 3 NAME] ([Domain 3] Specialist):** Owns [scope — e.g., "supabase/migrations/, src/types/"].
-- **[CRITIC NAME] (Quality Critic):** QA, build verification. Read-only.
-
-*Add or remove specialists as needed for your team.*
-
----
-
 ## 4. Worktree Protocol
 
-Each Track gets an isolated git worktree to prevent cross-track contamination:
+Each track gets an isolated git worktree to prevent cross-track contamination:
 
 ```bash
 # Open a new track
 git worktree add .worktrees/track-N track/N-short-description
 
 # Specialist works inside that worktree only
-# Critic reviews the diff before merge back to main branch
+# QA reviews the diff before merge back to main branch
 git worktree remove .worktrees/track-N
 ```
 
 - Worktrees live in `.worktrees/` (add to `.gitignore`)
 - Branch naming: `track/N-short-description`
 - Never work directly on the main branch when 2+ tracks are active in parallel
-- Worktree removed only after Critic issues PASS verdict
+- Worktree removed only after QA issues PASS verdict
 
 ---
 
 ## 5. Conductor Protocols
 
 ### Stability Rules
-- **Circuit Breaker:** 3 consecutive failures with the **same root cause** → STOP and escalate to [CONDUCTOR NAME]. Different error types reset the counter. Any single destructive or security-related failure triggers an immediate stop regardless of count.
+- **Circuit Breaker:** 3 consecutive failures with the same root cause → STOP and escalate to the Conductor. Any single destructive or security-related failure triggers an immediate stop regardless of count.
 - **Git Hygiene:** No commits unless directed. Use `git add` for staging only.
 - **Sentinel Proof:** Never trust an agent's verbal summary. Verify with `git diff` or direct file reads.
 
@@ -99,19 +117,6 @@ refactor(ui): extract component into standalone file
 
 ---
 
-## 7. Definition of Done
-
-A track is **Done** only when ALL of the following are true:
-
-- [ ] `[BUILD COMMAND]` exits with zero errors
-- [ ] All changes are within the declared track scope (no scope drift)
-- [ ] No `console.log`, `debugger`, or hardcoded secrets in the diff
-- [ ] `docs/context/plan.md` and `tracks.md` updated to reflect the completed track
-- [ ] [CRITIC NAME] has issued a **PASS** verdict
-- [ ] [CONDUCTOR NAME] has given final approval (for tracks touching auth, schema, or payments)
-
----
-
 ## 8. Handoff Bridge Template
 
 ```markdown
@@ -127,7 +132,3 @@ A track is **Done** only when ALL of the following are true:
 **Verification:** [specific command or URL]
 **Next Step:** [specific task for the Specialist]
 ```
-
----
-
-*Fill in all placeholders before your first session. This file rarely changes after initial setup.*

@@ -1,26 +1,9 @@
 # [PROJECT NAME] — Claude Code Configuration
-*Fill in all [PLACEHOLDERS] before using. Delete this line when done.*
-
-## Team Architecture
-
-| Role | Agent | Scope |
-|---|---|---|
-| **[CONDUCTOR NAME]** | Conductor | Vision & Approval |
-| **Claude** | Orchestrator | Coordinates specialists, no direct execution |
-| **[ARCHITECT NAME]** | Lead Architect | Plans, Red Flag Analysis, Handoff Bridges — zero code |
-| **[SPECIALIST 1 NAME]** | [Domain 1] Specialist | `[file scope — e.g., src/components/]` |
-| **[SPECIALIST 2 NAME]** | [Domain 2] Specialist | `[file scope — e.g., api/, server.ts]` |
-| **[SPECIALIST 3 NAME]** | [Domain 3] Specialist | `[file scope — e.g., supabase/migrations/]` |
-| **[CRITIC NAME]** | QA Critic | Read-only quality gate — no code writes |
-
-Agents are defined in `.claude/agents/`. Invoke via `@[architect-name]`, `@[critic-name]`, etc.
-
----
 
 ## Initialization Loop (Every Session)
 
 Before any work, read:
-1. `AGENTIC.md` — Static DNA (tech stack, protocols, hard constraints)
+1. `AGENTIC.md` — Static DNA (tech stack, team, protocols, hard constraints)
 2. `docs/context/plan.md` — Current sprint objective
 3. `docs/context/tracks.md` — Active tracks and their status
 
@@ -32,7 +15,7 @@ Before any work, read:
 
 All work must flow through:
 ```
-[CONDUCTOR NAME] (approval) → [ARCHITECT NAME] (plan + Handoff Bridge) → Specialist (execute) → [CRITIC NAME] (QA gate)
+Conductor (approval) → Architect (plan + Handoff Bridge) → Specialist (execute) → QA (quality gate)
 ```
 
 A Handoff Bridge looks like:
@@ -68,20 +51,14 @@ Worktrees live in `.worktrees/` (gitignored). Never work directly on the main br
 | Hook | Trigger | Action |
 |---|---|---|
 | **Stop** | Session ends | Prints DNA hygiene reminder |
-| **PreToolUse(Bash)** | `git push` | Blocks if `[BUILD COMMAND]` fails |
-
----
-
-## Tech Stack (from AGENTIC.md — non-negotiable)
-
-[Copy your tech stack summary from AGENTIC.md here for quick reference.]
+| **PreToolUse(Bash)** | `git push` | Blocks if build command fails (see AGENTIC.md §2) |
 
 ---
 
 ## Stability Rules
 
-- **Circuit Breaker:** 3 consecutive failures with the same root cause → STOP. Call [ARCHITECT NAME] for Red Flag Analysis. Any destructive or irreversible failure triggers an immediate stop.
-- **Git Hygiene:** No commits unless [CONDUCTOR NAME] directs.
+- **Circuit Breaker:** 3 consecutive failures with the same root cause → STOP. Call the Architect for Red Flag Analysis. Any destructive or irreversible failure triggers an immediate stop.
+- **Git Hygiene:** No commits unless the Conductor directs.
 - **Sentinel Proof:** Never trust a verbal summary. Verify with `git diff` or file reads.
 
 ---

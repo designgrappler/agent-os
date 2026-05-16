@@ -25,7 +25,16 @@ Session transcripts live at `~/.claude/projects/<sanitized-cwd>/*.jsonl`. Each l
 Scan recent transcripts across the user's full projects dir — not just the current project — so the allowlist reflects actual usage. Cap at the 50 most-recently-modified JSONL files.
 
 ### Step 2 — Extract tool-call frequencies
-- **Bash calls:** parse `input.command`, take the leading command token (handling `sudo`, `timeout`, pipes, `&&`, env-var prefixes). Record the command + first subcommand pair (e.g. `git status`, `gh pr view`, `ls`).
+- **Bash calls:** parse `input.command` with the following normalizations before recording:
+
+  1. **Env-var prefixes** — if the command starts with `KEY=value` assignments (e.g. `GH_HOST=github.com gh run list`), strip the prefix to identify the base command, but record the original prefix separately. The base command is used for read-only classification; the prefix is preserved in the generated pattern (e.g. `Bash(GH_HOST=github.com gh *)`).
+
+  2. **`git -C <path> <subcommand>`** — if the command matches `git -C <path> <subcommand> ...`, extract `<subcommand>` as the operative token. Record as `git -C * <subcommand>` for classification. These are NOT auto-allowed by Claude Code even when the subcommand is read-only — they need explicit allowlist entries.
+
+  3. **Compound commands** (`&&`, `||`, `|`, `;`, `for`/`while` loops, subshells) — flag these separately as "compound — cannot allowlist." Do not attempt to parse constituent commands. Collect them in a separate list for the Step 10 gap report.
+
+  4. **Everything else** — take the leading command token (handling `sudo`, `timeout`). Record the command + first subcommand pair (e.g. `git status`, `gh pr view`, `ls`).
+
 - **MCP calls:** record the full tool name (e.g. `mcp__slack__slack_read_thread`).
 - **Built-in tool calls:** record other tool names that aren't Bash or MCP — specifically `WebFetch`.
 
@@ -40,6 +49,7 @@ These never prompt in Claude Code — skip them:
 - **Always auto-allowed (any args):** `cat`, `head`, `tail`, `wc`, `stat`, `ls`, `cd`, `find`, `diff`, `echo`, `printf`, `date`, `which`, `file`, `grep`, `egrep`, `fgrep`, `rg`, `jq`, `sort`, `uniq`, `tree`, `ps`, `du`, `df`, and most other standard read-only Unix utilities.
 - **Auto-allowed with zero args only:** `pwd`, `whoami`, `alias`.
 - **All git read-only subcommands:** `git status`, `git log`, `git diff`, `git show`, `git blame`, `git branch`, `git tag`, `git remote`, `git ls-files`, `git stash list`, `git reflog`, etc.
+- **`git -C <path> <subcommand>` — NOT auto-allowed.** Even when the subcommand is read-only, Claude Code does not auto-allow `git -C` variants (the `-C` flag shifts the subcommand to the third token position). Do not drop these — let them flow through as allowlist candidates with pattern `Bash(git -C * <subcommand> *)`.
 - **All gh read-only subcommands:** `gh pr view/list/diff/checks/status`, `gh issue view/list`, `gh run view/list`, `gh repo view`, `gh release view/list`, `gh auth status`, etc.
 - **Docker read-only:** `docker ps`, `docker images`, `docker logs`, `docker inspect`.
 
@@ -49,6 +59,8 @@ These never prompt in Claude Code — skip them:
 Use the narrowest pattern that covers observed usage:
 - Many variants of the same Bash command (`git log`, `git log --oneline`, `git log main..HEAD`) → `Bash(git log *)` (space before `*` is required for prefix matching)
 - Single exact Bash invocation → `Bash(foo)` with no wildcard
+- **Env-var prefixed commands** — preserve the prefix in the pattern. `GH_HOST=github.com gh run list` → `Bash(GH_HOST=github.com gh *)`. Use a wildcard after the base command if multiple variants appear; use an exact form if only one invocation was observed.
+- **`git -C` variants** — use `Bash(git -C * <subcommand> *)`. One entry per distinct read-only subcommand observed (e.g. `Bash(git -C * status *)`, `Bash(git -C * log *)`).
 - **MCP tools — prefer server-level entries.** If multiple tools from the same server appear (e.g. `mcp__figma__get_file` and `mcp__figma__get_component`), use the server prefix `mcp__figma` — it covers all tools from that server and avoids a growing list of individual entries. Use a specific full tool name only if you want to allow one tool from a server while leaving others unapproved.
 - **`WebFetch`** — use the bare tool name verbatim.
 
@@ -76,3 +88,21 @@ Create the file if it doesn't exist. Preserve existing keys and `permissions.all
 
 ### Step 10 — Report back
 Tell the user: what was added (count + examples), what was already in the allowlist, and what was skipped and why (e.g. "dropped `rm` and `git push` — not read-only; dropped `cat`/`ls`/`git status` — already auto-allowed").
+
+**Known gaps — commands that cannot be allowlisted:**
+
+If compound commands were detected in Step 2, report them here:
+
+```
+CANNOT ALLOWLIST (compound commands):
+  These commands triggered prompts but cannot be safely pattern-matched:
+  - `ls ~/.claude/skills/ && cat CLAUDE.md | grep skill`
+  - `git remote -v && GH_HOST=github.com gh auth status 2>&1 | head -10`
+
+  Fix: extract into a named script and allowlist the script instead.
+  Example:
+    scripts/check-skills.sh  →  Bash(bash scripts/check-skills.sh)
+
+  Compound constructs (&&, ||, |, ;, for/while loops) always prompt
+  regardless of whether the constituent commands are safe.
+```

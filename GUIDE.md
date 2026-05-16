@@ -258,8 +258,8 @@ The template library ships 11 roles across four categories. Copy the files you n
 
 | File | Role | Tier | Function |
 | :--- | :--- | :---: | :--- |
-| `critic.md` | QA Critic | 3 | Conformance gate — PASS / BLOCKED verdict against declared acceptance criteria |
-| `blackhat.md` | Black Hat Critic | 3 | Adversarial review — APPROVED / CHALLENGED / BLOCKED verdict on ideas, plans, and content |
+| `qa.md` | QA | 3 | Conformance gate — PASS / BLOCKED verdict against declared acceptance criteria |
+| `critic.md` | Critic | 3 | Adversarial review — APPROVED / CHALLENGED / BLOCKED verdict on ideas, plans, and content |
 
 **Execution — Dev**
 
