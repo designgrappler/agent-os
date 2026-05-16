@@ -43,7 +43,8 @@ The key principle is **cognitive specialization through narrow context.** The Ar
 - **Orchestrator** (AI) — Coordinates specialists; never executes directly
 - **Architect** (AI) — Plans, analyzes risk, produces Handoff Bridges; zero-code
 - **Specialists** (AI) — Execute within a declared scope; one domain each
-- **Critic** (AI) — Audits results; read-only; issues binary verdicts
+- **QA** (AI) — Audits execution diffs; read-only; issues PASS or BLOCKED
+- **Critic** (AI) — Adversarial reviewer of ideas and plans; read-only; issues APPROVED, CHALLENGED, or BLOCKED
 
 ---
 
@@ -113,7 +114,7 @@ Conductor (approval)
   → Specialist opens isolated workspace for the track   [Physical: isolation]
   → Specialist verifies upstream interface              [Behavioral: Technical Handshake]
   → Specialist implements, scope-locked to declared files [Behavioral + Physical: tool scope]
-  → Critic reads diff — cannot write, issues PASS/BLOCKED [Physical: tool lock + binary gate]
+  → QA reads diff — cannot write, issues PASS/BLOCKED [Physical: tool lock + binary gate]
   → Automated gate validates build before merge         [Physical: pre-merge check]
   → Conductor approves merge                            [Human: final checkpoint]
 ```
@@ -178,7 +179,7 @@ This isn't about hierarchy — it's about what can exist without what. The schem
 | Risk | Layer That Catches It |
 |---|---|
 | Broken build ships | Automated pre-merge gate |
-| Critic writes code | Tool scope lock |
+| QA writes code | Tool scope lock |
 | Cross-track contamination | Workspace isolation |
 | Agent drifts out of role | Behavioral rules + narrow tool set |
 | Context bloat causes hallucination | Dynamic DNA archiving |
@@ -198,7 +199,7 @@ In order of importance, if components are missing:
 4. **Without automation/skills** — Recurring operations must be performed manually.
 5. **Without persistence** — Knowledge resets each session; teams re-discover things they've already learned.
 
-**Minimum viable setup:** One root Static DNA file + a context directory + at least one Architect (zero-code) + one Specialist + one Critic (read-only) + a pre-merge build gate.
+**Minimum viable setup:** One root Static DNA file + a context directory + at least one Architect (zero-code) + one Specialist + one QA (read-only) + a pre-merge build gate.
 
 ---
 

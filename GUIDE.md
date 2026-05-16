@@ -121,7 +121,13 @@ The bundle runs a **Pre-Flight Interview** — all questions are gathered first,
 5. Workflow mode (`GEMINI_ONLY` or `RELAY`)
 
 ### Claude Code
-Copy `claude/skills/install-agent-scaffold.md` to `.claude/skills/` in your project, then run `/install-agent-scaffold`. Same pre-flight interview, same output.
+Run `/install-agent-scaffold` in your project. The skill runs in two steps:
+
+1. **Step 1** — Creates `AgentOS-Setup.md` at your project root and stops.
+2. **Fill in `AgentOS-Setup.md`** — Set your project name, fill in the team table with agent names, and confirm your tech stack (defaults are pre-selected; replace any value you want to change).
+3. **Step 2** — Run `/install-agent-scaffold` again. The skill reads your form, generates all files (`AGENTIC.md`, `CLAUDE.md`, agent definitions, `docs/context/` files, `.claude/settings.json`), then deletes `AgentOS-Setup.md`.
+
+No interview questions — the form captures everything up front so generation runs in one clean pass.
 
 ---
 
