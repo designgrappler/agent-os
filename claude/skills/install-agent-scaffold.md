@@ -53,7 +53,7 @@ Agents can be invoked by typing their name via `@[architect-name]`, `@[qa-name]`
 | Agent Name | Role | Scope and Responsibilities |
 |---|---|---|
 | **[YOUR NAME]** | Conductor | Vision & Approval |
-| **Claude** | Orchestrator | Coordinates specialists, no direct execution |
+| **[YOUR AI]** | Orchestrator | Coordinates specialists, no direct execution | <!-- e.g., Claude, Gemini -->
 | **[ARCHITECT NAME]** | Lead Architect | Plans, Red Flag Analysis, Handoff Bridges — zero code |
 | **[SPECIALIST 1 NAME]** | [Domain 1] Specialist | `[file scope — e.g., src/components/]` |
 | **[SPECIALIST 2 NAME]** | [Domain 2] Specialist | `[file scope — e.g., api/, server.ts]` |
@@ -99,8 +99,9 @@ Read `AgentOS-Setup.md`. Extract values as follows.
 
 **Project fields** — read `**Project name:**` and `**Short description:**`, take the value after the colon.
 
-**Team table** — parse each row (skip the header row and the Claude/Orchestrator row):
+**Team table** — parse each row (skip the header row and the Orchestrator row):
 - Row with Role = "Conductor" → `OWNER` = Agent Name value (strip `**`)
+- Row with Role = "Orchestrator" → `ORCHESTRATOR` = Agent Name value (strip `**`)
 - Row with Role = "Lead Architect" → `ARCHITECT` = Agent Name value (strip `**`)
 - Row with Role = "QA" → `QA` = Agent Name value (strip `**`)
 - All remaining rows → `SPECIALISTS` list, each with name, domain (from Role column, strip " Specialist"), and scope (from Scope column, strip backticks)
@@ -113,6 +114,7 @@ Read `AgentOS-Setup.md`. Extract values as follows.
 - `NAME` = Project name
 - `DESCRIPTION` = Short description
 - `OWNER` = Conductor agent name
+- `ORCHESTRATOR` = Orchestrator agent name
 - `ARCHITECT` = Lead Architect agent name
 - `QA` = QA agent name
 - `SPECIALISTS` = list of specialist rows (may be empty)
@@ -164,7 +166,7 @@ This document is the root source of truth for this project. All agents read it b
 ## 3. Project Team
 
 - **[OWNER] (Conductor):** Vision & Approval.
-- **Claude (Orchestrator):** Coordinates specialists, no direct execution.
+- **[ORCHESTRATOR] (Orchestrator):** Coordinates specialists, no direct execution.
 - **[ARCHITECT] (Lead Architect):** Context Owner. Zero-code. Plans and produces Handoff Bridges.
 [For each specialist: - **[NAME] ([DOMAIN] Specialist):** Owns [SCOPE].]
 - **[QA] (QA):** Build verification and quality gate. Read-only.

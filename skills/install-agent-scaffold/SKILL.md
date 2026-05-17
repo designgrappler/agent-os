@@ -33,9 +33,10 @@ Uses a form-fill pattern — no Q&A interview. The user fills in the form at the
   - `NAME` = value of `**Project name:**`
   - `DESCRIPTION` = value of `**Short description:**`
   - `OWNER` = Agent Name from Conductor row (strip `**`)
+  - `ORCHESTRATOR` = Agent Name from Orchestrator row (strip `**`)
   - `ARCHITECT` = Agent Name from Lead Architect row (strip `**`)
   - `QA` = Agent Name from QA row (strip `**`)
-  - `SPECIALISTS` = all remaining rows (not Conductor, not Claude/Orchestrator, not Lead Architect, not QA) — each with name, domain (Role column minus " Specialist"), and scope (Scope column)
+  - `SPECIALISTS` = all remaining rows (not Conductor, not Orchestrator, not Lead Architect, not QA) — each with name, domain (Role column minus " Specialist"), and scope (Scope column)
   - For each tech stack field (`**Runtime:**`, `**Framework:**`, etc.): take value between `:` and `<!--`, trim whitespace; if blank use the default shown in the comment
   - `MIGRATIONS` = rows in doc migration table where Current file is not a placeholder
 - **Generation sequence**: `AGENTIC.md` → `CLAUDE.md` (or tool-equivalent) → `docs/context/` stubs → agent definitions (architect, QA, each specialist) → settings/hook config → `INSTALL_CHECKLIST.md` → `.gitignore` additions → delete `AgentOS-Setup.md`.
@@ -71,7 +72,7 @@ Agents can be invoked by typing their name via `@[architect-name]`, `@[qa-name]`
 | Agent Name | Role | Scope and Responsibilities |
 |---|---|---|
 | **[YOUR NAME]** | Conductor | Vision & Approval |
-| **Claude** | Orchestrator | Coordinates specialists, no direct execution |
+| **[YOUR AI]** | Orchestrator | Coordinates specialists, no direct execution | <!-- e.g., Claude, Gemini -->
 | **[ARCHITECT NAME]** | Lead Architect | Plans, Red Flag Analysis, Handoff Bridges — zero code |
 | **[SPECIALIST 1 NAME]** | [Domain 1] Specialist | `[file scope — e.g., src/components/]` |
 | **[SPECIALIST 2 NAME]** | [Domain 2] Specialist | `[file scope — e.g., api/, server.ts]` |

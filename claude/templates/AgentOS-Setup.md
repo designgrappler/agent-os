@@ -21,7 +21,7 @@ Agents can be invoked by typing their name via `@[architect-name]`, `@[qa-name]`
 | Agent Name | Role | Scope and Responsibilities |
 |---|---|---|
 | **[YOUR NAME]** | Conductor | Vision & Approval |
-| **Claude** | Orchestrator | Coordinates specialists, no direct execution |
+| **[YOUR AI]** | Orchestrator | Coordinates specialists, no direct execution | <!-- e.g., Claude, Gemini -->
 | **[ARCHITECT NAME]** | Lead Architect | Plans, Red Flag Analysis, Handoff Bridges — zero code |
 | **[SPECIALIST 1 NAME]** | [Domain 1] Specialist | `[file scope — e.g., src/components/]` |
 | **[SPECIALIST 2 NAME]** | [Domain 2] Specialist | `[file scope — e.g., api/, server.ts]` |
