@@ -41,12 +41,11 @@ For a one-line fix, skip the protocol. For anything that touches multiple areas,
 
 ## 🚀 Quick Start
 
-| Situation | Action |
-|---|---|
-| **New project** | Run `install-agent-scaffold` (Gemini) or `/install-agent-scaffold` (Claude Code) |
-| **Existing project** | Run `onboard-existing-project` (Gemini) or `/onboard-existing-project` (Claude Code) — reads your project first |
+Tell your AI:
 
-> ⚠️ **Existing project?** Run `onboard-existing-project` before anything else. It reads what you already have, pre-fills the setup from what it finds, and won't overwrite files without your approval.
+> "Install Agent OS on this project: https://github.com/designgrappler/agent-skills"
+
+That's it. Your AI fetches the install skill from the repo and runs it. For new projects it scaffolds everything from scratch; for existing projects it reads what you already have and won't overwrite files without your approval.
 
 For setup details and IDE-specific paths, see the [Implementation Guide](./GUIDE.md).
 

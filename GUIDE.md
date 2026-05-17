@@ -121,7 +121,11 @@ The bundle runs a **Pre-Flight Interview** — all questions are gathered first,
 5. Workflow mode (`GEMINI_ONLY` or `RELAY`)
 
 ### Claude Code
-Run `/install-agent-scaffold` in your project. The skill runs in two steps:
+Tell Claude:
+
+> "Install Agent OS on this project: https://github.com/designgrappler/agent-skills"
+
+Claude fetches the install skill from the repo and runs it. The skill runs in two steps:
 
 1. **Step 1** — Creates `AgentOS-Setup.md` at your project root and stops.
 2. **Fill in `AgentOS-Setup.md`** — Set your project name, fill in the team table with agent names, and confirm your tech stack (defaults are pre-selected; replace any value you want to change).
