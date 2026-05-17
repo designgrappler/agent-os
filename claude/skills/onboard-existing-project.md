@@ -35,7 +35,7 @@ Assemble a Discovery Report internally — do not display it yet.
 
 Before asking any questions, evaluate:
 
-1. **Already initialized?** If `AGENTIC.md` exists at root and contains "Static DNA" → warn: "This project already has Conductor OS initialized. Do you want to re-initialize, or just add missing pieces?"
+1. **Already initialized?** If `AGENTIC.md` exists at root and contains "Static DNA" → warn: "This project already has Agent OS initialized. Do you want to re-initialize, or just add missing pieces?"
 2. **Partial setup?** If some files exist but others are missing (e.g., no `.claude/agents/`) → note which files will be created vs. which already exist.
 3. **Existing docs to migrate?** If `docs/` or a `context/` folder exists → identify files that could serve as `plan.md`, `tracks.md`, or `product.md` and propose the mapping.
 
@@ -53,7 +53,7 @@ Present confirmed values as a silent summary block first:
 > - Build command: [value from AGENTIC.md or package.json]
 > - Conductor: [value from AGENTIC.md]
 > - Architect: [name from .claude/agents/]
-> - Critic: [name from .claude/agents/]
+> - QA: [name from .claude/agents/]
 
 Then present **only the gaps** as a numbered list. **Wait for all answers before creating any files.**
 
@@ -93,7 +93,7 @@ Otherwise create the standard blank template.
 
 ### 4d. `docs/context/tracks.md`
 
-Initialize with: `Project adoption — Conductor OS initialized.`
+Initialize with: `Project adoption — Agent OS initialized.`
 
 ### 4e. `docs/context/product.md`
 
