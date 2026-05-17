@@ -23,9 +23,9 @@ Agents can be invoked by typing their name via `@[architect-name]`, `@[qa-name]`
 | **[YOUR NAME]** | Conductor | Vision & Approval |
 | **[YOUR AI]** | Orchestrator | Coordinates specialists, no direct execution | <!-- e.g., Claude, Gemini -->
 | **[ARCHITECT NAME]** | Lead Architect | Plans, Red Flag Analysis, Handoff Bridges — zero code |
-| **[SPECIALIST 1 NAME]** | [Domain 1] Specialist | `[file scope — e.g., src/components/]` |
-| **[SPECIALIST 2 NAME]** | [Domain 2] Specialist | `[file scope — e.g., api/, server.ts]` |
-| **[SPECIALIST 3 NAME]** | [Domain 3] Specialist | `[file scope — e.g., supabase/migrations/]` |
+| **[SPECIALIST 1 NAME]** | Frontend Specialist | UI components, pages, and styling |
+| **[SPECIALIST 2 NAME]** | Backend Specialist | API routes, server logic, and integrations |
+| **[SPECIALIST 3 NAME]** | Database Specialist | Schema, migrations, and queries |
 | **[QA NAME]** | QA | Read-only quality gate — no code writes |
 
 ---
