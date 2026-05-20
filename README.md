@@ -116,7 +116,7 @@ These skills work on any project — no Agent OS installation required.
 
 | Skill | Claude Code | Gemini CLI | Purpose |
 | :--- | :---: | :---: | :--- |
-| `audit-security` | ✓ | ✓ | Security sweep — scans for vulnerabilities, hardcoded secrets, and policy violations |
+| [`audit-security`](./skills/audit-security/SKILL.md) | ✓ | ✓ | Security sweep — scans for vulnerabilities, hardcoded secrets, and policy violations |
 | [`streamline-approvals`](./skills/streamline-approvals/SKILL.md) | ✓ | — | Scans transcripts, builds a read-only allowlist, writes it to `.claude/settings.json`, enables VS Code Auto mode |
 
 > This library grows independently of Agent OS. Skills that don't depend on shared DNA state belong here.
