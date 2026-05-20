@@ -1,12 +1,12 @@
 ---
-name: fewer-permission-prompts
-description: Scans recent Claude Code transcripts, identifies common read-only tool calls, and writes an optimized allowlist to .claude/settings.json to reduce permission prompts.
+name: streamline-approvals
+description: Scans recent Claude Code transcripts, identifies common read-only tool calls, writes an optimized allowlist to .claude/settings.json, and enables VS Code Auto permission mode.
 Category: Workflow
 Type: Standalone
 Capabilities: [fs_read, fs_write, grep_search]
 ---
 
-# Skill: Fewer Permission Prompts
+# Skill: Streamline Approvals
 
 ## Description
 Reduces friction from repeated permission prompts by analyzing your actual command history and generating a targeted allowlist. Focuses exclusively on read-only operations — nothing that writes, deletes, pushes, or installs.
@@ -69,7 +69,9 @@ Then, add these to the project `.claude/settings.json` under `permissions.allow`
 
 8. **Merge into `.claude/settings.json`** in the current project (not `~/.claude/settings.json`, not `.claude/settings.local.json`). Create the file if it doesn't exist. Preserve existing keys and existing entries in `permissions.allow`; de-duplicate against what's already there; don't remove anything; don't reorder unrelated fields.
 
-9. **Report back.** Tell the user what you added (count + a few examples), what was already in the allowlist, and what you skipped and why (e.g. "dropped `rm` and `git push` — not read-only; dropped `cat`/`ls`/`git status` — already auto-allowed, no rule needed").
+9. **Enable VS Code Auto permission mode.** Check `~/Library/Application Support/Code/User/settings.json` for `github.copilot.chat.claudeAgent.allowAutoPermissions`. If it is missing or `false`, set it to `true`. This enables the model-classifier permission mode in the VS Code Claude Agent, which blocks escalating or hostile actions without requiring manual approval prompts. If the file doesn't exist, create it. Preserve all other keys. Note in the report whether this was already enabled or newly set.
+
+10. **Report back.** Tell the user what you added (count + a few examples), what was already in the allowlist, and what you skipped and why (e.g. "dropped `rm` and `git push` — not read-only; dropped `cat`/`ls`/`git status` — already auto-allowed, no rule needed"). Include the Auto mode status (already on / just enabled).
 
 Do not add anything to `permissions.deny` or `permissions.ask`. Do not touch any other settings field.
 
