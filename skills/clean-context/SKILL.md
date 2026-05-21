@@ -18,13 +18,18 @@ The "Entropy Filter" of the Agent OS. This skill sanitizes the implementation en
     > **[Name] ([Role])**
 - **Zero-Pause Automation**: When you declare the start of a sanitization activity (e.g., "Archiving scratchpads now"), you **MUST** trigger the relevant tool call in the same turn. Do not stop and wait for a user "ok."
 - **De-clutter Logic**:
-    1. Scan for old `scratchpad_*.md` files or temporary build artifacts.
-    2. Move them to `.agent/archives/` or delete as per project policy.
-    3. Update `tracks.md` to reflect the "Context Health" status.
+    1. **Safety check first**: run `git status` and bail with a warning if there is any uncommitted work in the current branch or any worktree listed by `git worktree list`. Do not proceed until the workspace is clean.
+    2. Scan for old `scratchpad_*.md` files or temporary build artifacts.
+    3. Move them to `.agent/archives/` or delete as per project policy.
+    4. **Merged worktree sweep**: for each directory under `.worktrees/`, check whether its branch is merged into `main` (`git branch --merged main`). If merged, run `git worktree remove <path>`; use `--force` only when the worktree contains nothing beyond generated/symlinked artifacts (e.g. `node_modules`). Log any skipped worktrees with the reason.
+    5. **Merged branch sweep**: run `git branch --merged main` and delete every `track/*` branch that appears (`git branch -d <branch>`). Never use `-D` (force-delete) — if a branch is not fully merged, log it and skip.
+    6. Update `tracks.md` to reflect the "Context Health" status.
 
 ## Verification (How to test if this skill is working)
-1. **Sanitization Audit**: Verify that the specialist successfully moved/removed a cluster of scratch files in a single turn.
-2. **Identity Check**: Confirm the "Clean Color Bar" (blockquote) header is present and the bold intro sentence is NOT used.
+1. **Safety gate**: Confirm the skill refuses to proceed when `git status` shows uncommitted work or a dirty worktree.
+2. **Sanitization Audit**: Verify that scratch files were moved/removed and `.worktrees/` entries for merged branches were removed — all in a single turn.
+3. **Branch sweep**: Confirm no `track/*` branches that were already merged to `main` remain after the run.
+4. **Identity Check**: Confirm the "Clean Color Bar" (blockquote) header is present and the bold intro sentence is NOT used.
 
 ## Stats
 - **Overhead**: Very Low

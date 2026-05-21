@@ -40,15 +40,18 @@ Scan recent transcripts across the user's full projects dir — not just the cur
 
 Count occurrences across all scanned transcripts.
 
-### Step 3 — Filter to read-only
-Keep only commands that don't mutate state. Examples of safe read-only commands: `git status/log/diff/show/branch`, `gh pr view/list/diff`, `gh issue view/list`, `gh run view/list`, `rg`, `grep`, `find`, `bun run typecheck`, `bun run lint`, `docker ps/logs`, `kubectl get/describe`, `ps`, `env`, `printenv`, `WebFetch`, any MCP tool with `read`/`get`/`list`/`search`/`view`/`retrieval` in its name.
+### Step 3 — Filter to read-only (plus workspace management)
+Keep commands that don't mutate state, **plus** workspace management operations that are safe to allowlist even though they touch the filesystem. Examples of safe read-only commands: `git status/log/diff/show/branch`, `gh pr view/list/diff`, `gh issue view/list`, `gh run view/list`, `rg`, `grep`, `find`, `bun run typecheck`, `bun run lint`, `docker ps/logs`, `kubectl get/describe`, `ps`, `env`, `printenv`, `WebFetch`, any MCP tool with `read`/`get`/`list`/`search`/`view`/`retrieval` in its name.
+
+Workspace management operations to include: `git worktree add/remove/list/prune/move/lock/unlock` — these manage local working trees and are safe to allowlist as `Bash(git worktree *)`.
 
 ### Step 4 — Drop auto-allowed commands
 These never prompt in Claude Code — skip them:
 
 - **Always auto-allowed (any args):** `cat`, `head`, `tail`, `wc`, `stat`, `ls`, `cd`, `find`, `diff`, `echo`, `printf`, `date`, `which`, `file`, `grep`, `egrep`, `fgrep`, `rg`, `jq`, `sort`, `uniq`, `tree`, `ps`, `du`, `df`, and most other standard read-only Unix utilities.
 - **Auto-allowed with zero args only:** `pwd`, `whoami`, `alias`.
-- **All git read-only subcommands:** `git status`, `git log`, `git diff`, `git show`, `git blame`, `git branch`, `git tag`, `git remote`, `git ls-files`, `git stash list`, `git reflog`, etc.
+- **All git read-only subcommands:** `git status`, `git log`, `git diff`, `git show`, `git blame`, `git branch`, `git tag`, `git remote`, `git ls-files`, `git stash list`, `git reflog`, `git worktree list`, etc.
+- **`git worktree add/remove/prune/move/lock/unlock` — NOT auto-allowed.** Even though worktree management is safe to allowlist, only `git worktree list` is auto-allowed. All other `git worktree` subcommands prompt and should be suggested as `Bash(git worktree *)`.
 - **`git -C <path> <subcommand>` — NOT auto-allowed.** Even when the subcommand is read-only, Claude Code does not auto-allow `git -C` variants (the `-C` flag shifts the subcommand to the third token position). Do not drop these — let them flow through as allowlist candidates with pattern `Bash(git -C * <subcommand> *)`.
 - **All gh read-only subcommands:** `gh pr view/list/diff/checks/status`, `gh issue view/list`, `gh run view/list`, `gh repo view`, `gh release view/list`, `gh auth status`, etc.
 - **Docker read-only:** `docker ps`, `docker images`, `docker logs`, `docker inspect`.
