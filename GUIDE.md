@@ -329,6 +329,13 @@ All skills below require Agent OS to be initialized via `install-agent-scaffold`
 | `index-memory` | *(native)* | ✓ | Long-term decision and milestone archival |
 | `sync-design` | ✓ | ✓ | UI alignment with design tokens |
 
+**Lifecycle**
+
+| Skill | Claude Code | Gemini CLI | Purpose |
+| :--- | :---: | :---: | :--- |
+| `check-agent-os` | ✓ | — | Health check — verifies skills, CLAUDE.md refs, docs, and model names; emits PASS/FAIL |
+| `refresh-agent-os` | ✓ | — | Diffs installed skills against canonical manifest; installs, renames, or removes on confirmation |
+
 ---
 
 ### Standalone Skill Library

@@ -106,6 +106,14 @@ Keep the system healthy. Archive completed work, compress context files, and syn
 | Index memory             | *(native)*                    | `index-memory`               |
 | Sync design              | `/sync-design`                | `sync-design`                |
 
+### Lifecycle
+Keep your Agent OS installation healthy and up to date.
+
+| Goal                     | Claude Code                   | Gemini CLI                   |
+| :----------------------- | :---------------------------- | :--------------------------- |
+| Health check             | `/check-agent-os`             | —                            |
+| Refresh installed skills | `/refresh-agent-os`           | —                            |
+
 > **Claude Code** handles handoff generation, context cleanup, and specialist onboarding natively. **Gemini CLI** uses explicit skills for each operation.
 
 ---
