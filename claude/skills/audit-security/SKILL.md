@@ -1,3 +1,7 @@
+---
+name: audit-security
+description: Scans a project for security vulnerabilities, hardcoded secrets, insecure patterns, and dependency risks.
+---
 # Audit Security
 Scans a project for security vulnerabilities, hardcoded secrets, insecure patterns, and dependency risks. Works on any project — no Agent OS installation required. If Agent OS is present, findings are written to `tracks.md` and block further handoffs until critical issues are resolved.
 

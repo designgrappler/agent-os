@@ -1,3 +1,7 @@
+---
+name: refresh-agent-os
+description: Synchronizes your local `~/.claude/skills/` installation against the canonical Agent OS skill library.
+---
 # Refresh Agent OS
 Synchronizes your local `~/.claude/skills/` installation against the canonical Agent OS skill library. Reads the canonical manifest from a remote URL stored in `AGENTIC.md` (with a local clone fallback), diffs your installed skills against the canonical set, and presents a per-row action table for you to approve before anything is changed. Nothing is written, renamed, or removed without your explicit confirmation.
 
@@ -17,7 +21,7 @@ When the user runs `/refresh-agent-os`, execute the following phases in order.
 3. **If the line is present:** attempt to fetch the JSON from the URL.
 4. **Fallback:** if the URL fetch fails (network unavailable, 404, or any HTTP error), fall back to the local canonical clone:
    - Manifest: `~/Developer/agent-os-private/skills-manifest.json`
-   - Skill files: `~/Developer/agent-os-private/claude/skills/`
+   - Skill files: `~/Developer/agent-os-private/claude/skills/` (each skill lives at `~/Developer/agent-os-private/claude/skills/<name>/SKILL.md`)
    - Notify the user: "Could not reach the canonical URL — using local clone at `~/Developer/agent-os-private/` as fallback."
 5. **If neither the URL nor the local clone resolves:** stop and ask the user to supply a path or URL. Do not proceed to Phase 2 until a canonical source is confirmed.
 
@@ -25,7 +29,7 @@ When the user runs `/refresh-agent-os`, execute the following phases in order.
 
 ## Phase 2: Inventory
 
-1. List all filenames in `~/.claude/skills/` (strip the `.md` extension to get bare skill names). This is the **installed set**.
+1. List all `<name>/` subdirectories in `~/.claude/skills/` that contain a `SKILL.md` file (i.e. `~/.claude/skills/<name>/SKILL.md` exists). Strip the directory name to get bare skill names. This is the **installed set**.
 2. Read the `skills` array from the resolved manifest. This is the **canonical set**.
 3. Display neither list yet — hold both for Phase 3.
 
@@ -43,7 +47,7 @@ For each removed name:
 - First, check the manifest `renames` array. If an entry `{ "from": "<name>", "to": "<new-name>" }` matches, surface it as a **confirmed rename** (no guessing required).
 - For removed names not covered by any `renames` entry, apply a name-similarity heuristic (e.g. Levenshtein distance, shared prefix/suffix) as a **suggestion only**. Label it clearly as "possible rename" and require explicit user confirmation before treating it as a rename.
 
-**c. Drifted** — names present in both `~/.claude/skills/` and the canonical set, but whose file contents differ (a `diff` of the two files is non-empty). These are installed skills that have diverged from the canonical version.
+**c. Drifted** — names present in both `~/.claude/skills/` and the canonical set, but whose file contents differ (a `diff` of the two `SKILL.md` files is non-empty). These are installed skills that have diverged from the canonical version.
 
 ---
 
@@ -52,13 +56,13 @@ For each removed name:
 Display a single table summarizing all findings. One row per skill name affected. If there are no differences, state: "Your installation is up to date — no changes needed." and stop.
 
 ```
-| Skill name              | Status   | Proposed action                          |
-|-------------------------|----------|------------------------------------------|
-| refresh-agent-os        | New      | Install → ~/.claude/skills/              |
-| start-sprint            | Removed  | Confirmed rename → open-sprint (manifest)|
-| old-skill               | Removed  | Possible rename → new-skill (suggestion) |
-| onboard-existing-project| Drifted  | Update → overwrite with canonical        |
-| audit-security          | Current  | Skip (no changes)                        |
+| Skill name              | Status   | Proposed action                                    |
+|-------------------------|----------|----------------------------------------------------|
+| refresh-agent-os        | New      | Install → ~/.claude/skills/refresh-agent-os/       |
+| start-sprint            | Removed  | Confirmed rename → open-sprint (manifest)          |
+| old-skill               | Removed  | Possible rename → new-skill (suggestion)           |
+| onboard-existing-project| Drifted  | Update → overwrite with canonical SKILL.md         |
+| audit-security          | Current  | Skip (no changes)                                  |
 ```
 
 Ask: "Approve all actions, a subset (list the names), or decline?"
@@ -71,11 +75,11 @@ Wait for the user's response before proceeding to Phase 5. Do not apply any chan
 
 For each action the user approved, execute it one at a time:
 
-- **Install:** copy the canonical skill file to `~/.claude/skills/<name>.md`. Print: `installed ~/.claude/skills/<name>.md`
-- **Rename (confirmed from manifest):** rename `~/.claude/skills/<old-name>.md` to `~/.claude/skills/<new-name>.md` and, if the new name is in the canonical set, overwrite with the canonical version. Print: `renamed ~/.claude/skills/<old-name>.md → ~/.claude/skills/<new-name>.md`
+- **Install:** create the directory `~/.claude/skills/<name>/` and copy the canonical `SKILL.md` into it. Print: `installed ~/.claude/skills/<name>/SKILL.md`
+- **Rename (confirmed from manifest):** rename `~/.claude/skills/<old-name>/` to `~/.claude/skills/<new-name>/` and, if the new name is in the canonical set, overwrite `~/.claude/skills/<new-name>/SKILL.md` with the canonical version. Print: `renamed ~/.claude/skills/<old-name>/ → ~/.claude/skills/<new-name>/`
 - **Rename (user-confirmed suggestion):** same as above, but only after the user has explicitly confirmed the suggestion in Phase 4.
-- **Remove:** delete `~/.claude/skills/<name>.md`. Print: `removed ~/.claude/skills/<name>.md`
-- **Update:** overwrite `~/.claude/skills/<name>.md` with the canonical version. Print: `updated ~/.claude/skills/<name>.md`
+- **Remove:** delete the `~/.claude/skills/<name>/` directory (including its `SKILL.md`). Print: `removed ~/.claude/skills/<name>/`
+- **Update:** overwrite `~/.claude/skills/<name>/SKILL.md` with the canonical version. Print: `updated ~/.claude/skills/<name>/SKILL.md`
 - **Skip:** take no action. Print: `skipped <name>`
 
 Never apply an action the user did not explicitly approve.
@@ -95,7 +99,7 @@ Refresh complete: N installed, N renamed, N removed, N updated, N skipped.
 ## Hard Constraints
 
 - **Never write outside `~/.claude/skills/`**, with the **single** documented exception of adding the `Canonical skills manifest URL:` line to `AGENTIC.md` on first run — and only after explicit user confirmation.
-- **Never delete a file the user has not explicitly approved for removal.** A file in the Removed list is not deleted until the user says so.
+- **Never delete a directory the user has not explicitly approved for removal.** A skill in the Removed list is not deleted until the user says so.
 - **If neither the canonical URL nor the local clone resolves**, stop and ask the user to supply a path or URL. Do not proceed without a confirmed source.
 - **Phase 3 Diff must prefer the manifest's `renames` array over any name-similarity heuristic.** The heuristic is suggestion-only and requires user confirmation before any rename action is taken.
 

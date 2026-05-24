@@ -1,3 +1,7 @@
+---
+name: check-agent-os
+description: Runs a read-only health check on the current project's Agent OS installation.
+---
 # Check Agent OS
 Runs a read-only health check on the current project's Agent OS installation. Compares your installed skills against the canonical manifest, verifies every skill reference in `CLAUDE.md` resolves, confirms required `docs/context/` files exist and are non-empty, and checks that all agent frontmatter uses canonical short model names. On a clean pass, writes a `.agent-os-checked` timestamp to the project root so the 30-day session-start reminder knows the check is current. Nothing is auto-fixed — every fail row includes a remediation hint and action is left to you.
 
@@ -14,8 +18,8 @@ When the user runs `/check-agent-os`, execute the following phases in order.
    - **Fallback:** if the URL fetch fails (network unavailable, 404, or any HTTP error), fall back to the local canonical clone at `~/Developer/agent-os-private/skills-manifest.json`. Notify the user that the fallback was used.
    - **If neither the URL nor the local clone resolves:** stop and ask the user to supply a path or URL. Do not proceed to Phase 2.
 2. Use the manifest's `renames` array to recognize legitimate renames: if a skill name in `~/.claude/skills/` matches a `"to"` value in `renames`, it is correctly installed under the new name — do not flag it as missing.
-3. Compare the canonical `skills` array against filenames in `~/.claude/skills/` (strip `.md` extensions when comparing).
-4. **Pass:** every canonical skill name is present in `~/.claude/skills/` (accounting for renames).
+3. Compare the canonical `skills` array against subdirectory names in `~/.claude/skills/` that contain a `SKILL.md` file (i.e. `~/.claude/skills/<name>/SKILL.md` exists).
+4. **Pass:** every canonical skill name has a corresponding `~/.claude/skills/<name>/SKILL.md` (accounting for renames).
 5. **Fail rows:** list each canonical skill name that is absent or present only under a stale name. For each fail row, include the remediation hint:
    > Remediation: Run `/refresh-agent-os` to install missing or stale-named skills.
 
@@ -27,9 +31,9 @@ When the user runs `/check-agent-os`, execute the following phases in order.
    - Auto-trigger table rows (e.g. `| User says … | Invoke … |` rows)
    - Inline `/skill-name` mentions anywhere in prose or comments
    - Agent invocation blocks
-   - Explicit `~/.claude/skills/<name>.md` path literals
-2. For each referenced skill name found, verify that `~/.claude/skills/<name>.md` exists.
-3. **Pass:** every referenced skill name resolves to a file at `~/.claude/skills/<name>.md`.
+   - Explicit `~/.claude/skills/<name>/SKILL.md` path literals
+2. For each referenced skill name found, verify that `~/.claude/skills/<name>/SKILL.md` exists.
+3. **Pass:** every referenced skill name resolves to a file at `~/.claude/skills/<name>/SKILL.md`.
 4. **Fail rows:** list each broken reference with its line number and the surrounding context (the full line or row where it appears). For each fail row, include the remediation hint:
    > Remediation: Edit `CLAUDE.md` to remove or rename the reference, or run `/refresh-agent-os` if the skill should be installed.
 
@@ -57,7 +61,7 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 2. For each file, parse the frontmatter `model:` line.
 3. **Pass:** every `model:` value is one of the canonical short forms: `opus`, `sonnet`, or `haiku`.
 4. **Fail rows:** list each agent file where `model:` contains a long-form name (e.g. `claude-opus-4-7`, `claude-sonnet-4-6`) rather than the short alias. For each fail row, include the remediation hint:
-   > Remediation: Edit `.claude/agents/<name>.md` and change `model:` to the short form (`opus`, `sonnet`, or `haiku`). See `install-agent-scaffold.md` Step 4 for the role→tier guidance table.
+   > Remediation: Edit `.claude/agents/<name>.md` and change `model:` to the short form (`opus`, `sonnet`, or `haiku`). See `install-agent-scaffold` Step 4 for the role→tier guidance table.
 
 ---
 
@@ -72,7 +76,7 @@ Example structure:
 All canonical skills are installed.
 
 ### Phase 2: Auto-Trigger / Skill-Reference Check — FAILED
-- Line 14: `/start-sprint` → ~/.claude/skills/start-sprint.md not found
+- Line 14: `/start-sprint` → ~/.claude/skills/start-sprint/SKILL.md not found
   Remediation: Edit `CLAUDE.md` to remove or rename the reference, or run `/refresh-agent-os` if the skill should be installed.
 
 ### Phase 3: Required docs/context/ Check — PASSED

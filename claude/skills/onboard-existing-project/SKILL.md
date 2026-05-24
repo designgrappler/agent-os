@@ -1,3 +1,7 @@
+---
+name: onboard-existing-project
+description: Onboards an existing project into the Claude Code orchestration system.
+---
 # Onboard Existing Project
 Onboards an existing project into the Claude Code orchestration system. Reads the current project structure first, pre-fills the setup interview with what it finds, and generates all required files without overwriting anything without your approval.
 
@@ -96,14 +100,14 @@ This sub-flow fires whenever `CLAUDE.md` already exists (regardless of whether t
 - Auto-trigger table rows (`| User says... | Invoke |` pattern — extract the skill name from the Invoke column)
 - Inline `/skill-name` mentions anywhere in prose
 - Agent invocation blocks that name a skill
-- Explicit `~/.claude/skills/<name>.md` paths
+- Explicit `~/.claude/skills/<name>/SKILL.md` paths
 
 Build a deduplicated list of skill names with their line numbers and surrounding context.
 
-**Step 2 — Resolve each reference.** For each collected skill name, check whether `~/.claude/skills/<name>.md` exists.
+**Step 2 — Resolve each reference.** For each collected skill name, check whether `~/.claude/skills/<name>/SKILL.md` exists.
 
 - Skills that resolve: silently pass.
-- Skills **not** present in `~/.claude/skills/`: add to the unresolvable list.
+- Skills **not** present in `~/.claude/skills/<name>/SKILL.md`: add to the unresolvable list.
 - Skills present in `~/.claude/skills/` but absent from the canonical Agent OS repo (`agent-os-private/claude/skills/`) are **NOT flagged** — they may have been installed outside Agent OS and are intentionally kept.
 
 **Step 3 — Report.** If no unresolvable references were found, state: "All skill references in `CLAUDE.md` resolve — no drift detected." and proceed.
@@ -216,5 +220,5 @@ After all files are generated, output:
 - [ ] No `[PLACEHOLDER]` values remain in any generated file
 - [ ] Migrated docs include the `<!-- Migrated from -->` header
 - [ ] `.claude/settings.json` merge preserved any pre-existing hooks
-- [ ] If CLAUDE.md was preserved, every skill reference in the file resolved to ~/.claude/skills/, or the user was offered a targeted patch for each unresolvable reference.
+- [ ] If CLAUDE.md was preserved, every skill reference in the file resolved to `~/.claude/skills/<name>/SKILL.md`, or the user was offered a targeted patch for each unresolvable reference.
 - [ ] Phase 4e produced a non-empty docs/context/product.md (created, synthesized, or pre-existing — never absent).

@@ -1,3 +1,7 @@
+---
+name: report-track-status
+description: Produces a quick, scannable summary of all active tracks — what's in progress, blocked, awaiting review, or needs approval.
+---
 # Track Status
 Produces a quick, scannable summary of all active tracks — what's in progress, blocked, awaiting review, or needs approval. Read-only. Designed for returning after a break or orienting at session start.
 

@@ -1,3 +1,7 @@
+---
+name: open-sprint
+description: Opens a new sprint with a clean setup — surfaces unresolved prior work, sets the sprint objective, creates the first track entry, and orients the team.
+---
 # Sprint Open
 Opens a new sprint with a clean setup — surfaces unresolved prior work, sets the sprint objective, creates the first track entry, and orients the team. The counterpart to `clean-context`.
 

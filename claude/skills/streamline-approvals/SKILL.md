@@ -1,3 +1,7 @@
+---
+name: streamline-approvals
+description: Scans recent Claude Code transcripts, identifies common read-only tool calls, and writes an optimized allowlist to `~/.claude/settings.json` (global) to reduce permission prompts across all projects.
+---
 # Streamline Approvals
 Scans recent Claude Code transcripts, identifies common read-only tool calls, and writes an optimized allowlist to `~/.claude/settings.json` (global) to reduce permission prompts across all projects. Focuses exclusively on read-only operations — nothing that writes, deletes, pushes, or installs.
 

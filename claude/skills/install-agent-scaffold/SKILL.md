@@ -1,3 +1,7 @@
+---
+name: install-agent-scaffold
+description: Bootstraps a new project with the full Agent OS structure.
+---
 # Install Agent Scaffold
 Bootstraps a new project with the full Agent OS structure. Drops a setup file for the user to fill in — no files are generated until it's complete.
 

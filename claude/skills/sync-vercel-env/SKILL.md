@@ -1,3 +1,7 @@
+---
+name: sync-vercel-env
+description: Reads the local `.env` file, presents all keys found, lets you confirm an exclude list, then pushes the remaining keys to Vercel (Production + Preview) using the Vercel CLI.
+---
 # Sync Vercel Env
 Reads the local `.env` file, presents all keys found, lets you confirm an exclude list, then pushes the remaining keys to Vercel (Production + Preview) using the Vercel CLI. Safe by default — never pushes access tokens, local-only vars, or anything you exclude.
 

@@ -1,3 +1,7 @@
+---
+name: minify-context
+description: Compresses verbose active context files into token-efficient form without losing meaning.
+---
 # Minify Context
 Compresses verbose active context files into token-efficient form without losing meaning. Distinct from `clean-context` (which archives completed items) — this skill compresses *active* content that has grown wordy.
 
