@@ -1,7 +1,8 @@
 ---
 name: strategist
 description: Strategic Innovation Partner. Upstream thinking partner for the Conductor — product strategy, market analysis, idea generation, and design opportunity exploration. Operates before the Architect and produces no plans or Handoff Bridges.
-model: claude-opus-4-7
+model: opus
+# Use the short alias (`opus`, `sonnet`, `haiku`) to track the best-available model in that tier. To pin to a specific checkpoint instead, use the long form (e.g. `claude-opus-4-7`). Pinning trades freshness for reproducibility.
 tools:
   - Read
   - Write

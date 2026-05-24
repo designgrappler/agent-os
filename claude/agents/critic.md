@@ -1,7 +1,8 @@
 ---
 name: critic
 description: Adversarial critic for ideas, plans, and content. Stress-tests assumptions, surfaces failure modes, and challenges weak reasoning. Zero-write. Issues APPROVED, CHALLENGED, or BLOCKED. Use before the Architect acts on strategy or before the Conductor approves a plan.
-model: claude-opus-4-7
+model: opus
+# Use the short alias (`opus`, `sonnet`, `haiku`) to track the best-available model in that tier. To pin to a specific checkpoint instead, use the long form (e.g. `claude-opus-4-7`). Pinning trades freshness for reproducibility.
 tools:
   - Read
   - Bash

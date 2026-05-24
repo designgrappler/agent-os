@@ -117,4 +117,4 @@ Update the paths below to match your actual files. Delete rows that don't apply.
 6. No `.js`, `.ts`, `.css`, or source files were written.
 
 ## Trigger
-"Install Agent OS on this project: https://github.com/designgrappler/agent-skills" or `install-agent-scaffold`
+"Install Agent OS on this project: https://github.com/designgrappler/agent-os" or `install-agent-scaffold`

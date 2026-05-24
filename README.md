@@ -43,7 +43,7 @@ For a one-line fix, skip the protocol. For anything that touches multiple areas,
 
 Tell your AI:
 
-> "Install Agent OS on this project: https://github.com/designgrappler/agent-skills"
+> "Install Agent OS on this project: https://github.com/designgrappler/agent-os"
 
 That's it. Your AI fetches the install skill from the repo and runs it. For new projects it scaffolds everything from scratch; for existing projects it reads what you already have and won't overwrite files without your approval.
 

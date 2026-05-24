@@ -1,7 +1,8 @@
 ---
 name: fullstack
 description: Full Stack Specialist. Implements across all layers from a Handoff Bridge — UI, API, and data. For solo projects or features that span the stack. Applies domain judgment from all three layers. Scope-locked to declared files.
-model: claude-sonnet-4-6
+model: sonnet
+# Use the short alias (`opus`, `sonnet`, `haiku`) to track the best-available model in that tier. To pin to a specific checkpoint instead, use the long form (e.g. `claude-opus-4-7`). Pinning trades freshness for reproducibility.
 tools:
   - Read
   - Write

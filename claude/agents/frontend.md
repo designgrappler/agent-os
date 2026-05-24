@@ -1,7 +1,8 @@
 ---
 name: frontend
 description: Frontend Specialist. Implements UI components, interaction flows, and presentation logic from a Handoff Bridge. Scope-locked to declared files. Never touches backend logic, API routes, or database layers.
-model: claude-sonnet-4-6
+model: sonnet
+# Use the short alias (`opus`, `sonnet`, `haiku`) to track the best-available model in that tier. To pin to a specific checkpoint instead, use the long form (e.g. `claude-opus-4-7`). Pinning trades freshness for reproducibility.
 tools:
   - Read
   - Write

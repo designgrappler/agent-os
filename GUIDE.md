@@ -109,7 +109,7 @@ All roles — dev and non-dev — map to the same three tiers.
 ### Gemini CLI
 ```bash
 # Deploy the full setup bundle in one pass:
-gemini skills install https://github.com/designgrappler/agent-skills --path skills/install-agent-scaffold
+gemini skills install https://github.com/designgrappler/agent-os --path skills/install-agent-scaffold
 ```
 Then trigger: *"Install the agent scaffold for this project."*
 
@@ -123,7 +123,7 @@ The bundle runs a **Pre-Flight Interview** — all questions are gathered first,
 ### Claude Code
 Tell Claude:
 
-> "Install Agent OS on this project: https://github.com/designgrappler/agent-skills"
+> "Install Agent OS on this project: https://github.com/designgrappler/agent-os"
 
 Claude fetches the install skill from the repo and runs it. The skill runs in two steps:
 

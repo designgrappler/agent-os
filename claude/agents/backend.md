@@ -1,7 +1,8 @@
 ---
 name: backend
 description: Backend Specialist. Implements API routes, business logic, and server-side services from a Handoff Bridge. Scope-locked to declared files. Never touches frontend components, styles, or database schema.
-model: claude-sonnet-4-6
+model: sonnet
+# Use the short alias (`opus`, `sonnet`, `haiku`) to track the best-available model in that tier. To pin to a specific checkpoint instead, use the long form (e.g. `claude-opus-4-7`). Pinning trades freshness for reproducibility.
 tools:
   - Read
   - Write

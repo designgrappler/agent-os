@@ -185,4 +185,4 @@ After all files are generated, output:
 - **Benefit**: Existing projects get full Agent OS setup without losing history or being asked details the codebase already contains.
 
 ## Trigger
-Tell your AI: "Onboard this project into Agent OS: https://github.com/designgrappler/agent-skills" or run `onboard-existing-project`.
+Tell your AI: "Onboard this project into Agent OS: https://github.com/designgrappler/agent-os" or run `onboard-existing-project`.

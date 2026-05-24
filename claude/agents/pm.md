@@ -1,7 +1,8 @@
 ---
 name: pm
 description: Product Manager. Ruthless translator between strategy and execution — converts STRATEGY_BRIEF.md into prioritized REQUIREMENTS.md. Defines the What and When. Never touches architecture or design.
-model: claude-sonnet-4-6
+model: sonnet
+# Use the short alias (`opus`, `sonnet`, `haiku`) to track the best-available model in that tier. To pin to a specific checkpoint instead, use the long form (e.g. `claude-opus-4-7`). Pinning trades freshness for reproducibility.
 tools:
   - Read
   - Write

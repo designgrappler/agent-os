@@ -6,7 +6,7 @@ Thank you for your interest in contributing. Agent OS is a framework for reliabl
 
 ## How contributions work
 
-This public repository (`designgrappler/agent-skills`) is the distribution target. The maintainer reviews contributions here and integrates accepted changes into the source. The CI system then syncs the source back to this repo.
+This public repository (`designgrappler/agent-os`) is the distribution target. The maintainer reviews contributions here and integrates accepted changes into the source. The CI system then syncs the source back to this repo.
 
 **The flow:**
 1. Fork this repository

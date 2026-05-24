@@ -2,6 +2,7 @@
 name: qa
 description: QA and quality gate. Read-only — runs build checks, audits diffs, and issues a PASS or BLOCKED verdict. No track is complete until QA approves.
 model: sonnet
+# Use the short alias (`opus`, `sonnet`, `haiku`) to track the best-available model in that tier. To pin to a specific checkpoint instead, use the long form (e.g. `claude-opus-4-7`). Pinning trades freshness for reproducibility.
 tools:
   - Read
   - Bash

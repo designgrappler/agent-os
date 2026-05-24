@@ -1,7 +1,8 @@
 ---
 name: designer
 description: Design Specialist. Guardian of user experience and visual consistency — translates requirements into interaction flows, component specs, and design documentation. Defines the presentation layer. Never touches backend logic or source code.
-model: claude-sonnet-4-6
+model: sonnet
+# Use the short alias (`opus`, `sonnet`, `haiku`) to track the best-available model in that tier. To pin to a specific checkpoint instead, use the long form (e.g. `claude-opus-4-7`). Pinning trades freshness for reproducibility.
 tools:
   - Read
   - Write
