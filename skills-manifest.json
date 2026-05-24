@@ -1,0 +1,22 @@
+{
+  "skills": [
+    "audit-security",
+    "install-agent-scaffold",
+    "minify-context",
+    "onboard-existing-project",
+    "open-sprint",
+    "refresh-agent-os",
+    "report-track-status",
+    "start-sprint",
+    "streamline-approvals",
+    "sync-vercel-env"
+  ],
+  "renames": [
+    { "from": "fewer-permission-prompts", "to": "streamline-approvals" },
+    { "from": "project-adopt", "to": "onboard-existing-project" },
+    { "from": "sprint-open", "to": "open-sprint" },
+    { "from": "start-sprint", "to": "open-sprint" },
+    { "from": "track-status", "to": "report-track-status" },
+    { "from": "agent-orchestration-setup", "to": "install-agent-scaffold" }
+  ]
+}
