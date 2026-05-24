@@ -1,6 +1,7 @@
 {
   "skills": [
     "audit-security",
+    "check-agent-os",
     "install-agent-scaffold",
     "minify-context",
     "onboard-existing-project",
