@@ -538,4 +538,6 @@ Your first move: open a planning session with `@[ARCHITECT]`.
 - AGENTIC.md is your project's source of truth — your Architect keeps it current.
 
 **Verification:** Run `[BUILD_CMD]` to confirm the build environment is clean.
+
+**Activate skills:** Close and reopen your IDE window — installed skills load on session start.
 ```

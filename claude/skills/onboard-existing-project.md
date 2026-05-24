@@ -204,6 +204,8 @@ After all files are generated, output:
 4. Call @[architect-name] to open your first sprint.
 
 **Verification:** Run [BUILD COMMAND] to confirm the build is clean before starting work.
+
+**Activate skills:** Close and reopen your IDE window — installed skills load on session start.
 ```
 
 ---
