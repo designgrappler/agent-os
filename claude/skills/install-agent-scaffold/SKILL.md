@@ -140,21 +140,30 @@ Create all files below. For each file that already exists, show the diff and ask
 
 ### Model alias and tier guidance (read before generating any agent)
 
+Every generated agent file uses **two frontmatter fields** to identify its model:
+
+```yaml
+provider: claude       # cloud provider: claude | gemini | (future)
+model: sonnet          # tier alias within that provider
+```
+
 Use the short alias (`opus`, `sonnet`, `haiku`) for `model:` in every generated agent file. The short alias tracks the best-available model in that tier. To pin a specific checkpoint instead, use the long form (e.g. `claude-opus-4-7`) — pinning trades freshness for reproducibility.
+
+**Compatibility note:** `provider:` absent defaults to `claude` during the compatibility window (see AGENTIC.md §9.2). All new agents must include the `provider:` line above `model:`.
 
 The table below is **guidance, not a hard rule.** [OWNER] retains the right to override per project.
 
-| Role | Tier | Model alias | Why this tier |
-|---|---|---|---|
-| Architect / Peaches | Strategic / planning | `opus` | Heavy reasoning, plan synthesis, Red Flag Analysis |
-| Strategist | Strategic / planning | `opus` | Pre-planning, market and product framing |
-| Specialist (Skylar) | Implementation / coding | `sonnet` | Code execution at speed |
-| Backend / Frontend / Fullstack / Database | Implementation / coding | `sonnet` | Standard implementation work |
-| Designer | Implementation / craft | `sonnet` | Visual / UX deliverables |
-| PM | Implementation / writing | `sonnet` | Requirements drafting, ticket grooming |
-| Marketing | Implementation / writing | `sonnet` | Copy and positioning |
-| Critic / QA / Bandit | Lightweight review | `sonnet` | Fast read-only verdict (Sonnet preferred for nuance; Haiku acceptable for purely-mechanical checks) |
-| Lightweight / fast tasks | Routine | `haiku` | Quick reformat, summarization, simple lookups |
+| Role | Tier | Provider | Model alias | Why this tier |
+|---|---|---|---|---|
+| Architect / Peaches | Strategic / planning | `claude` | `opus` | Heavy reasoning, plan synthesis, Red Flag Analysis |
+| Strategist | Strategic / planning | `claude` | `opus` | Pre-planning, market and product framing |
+| Specialist (Skylar) | Implementation / coding | `claude` | `sonnet` | Code execution at speed |
+| Backend / Frontend / Fullstack / Database | Implementation / coding | `claude` | `sonnet` | Standard implementation work |
+| Designer | Implementation / craft | `claude` | `sonnet` | Visual / UX deliverables |
+| PM | Implementation / writing | `claude` | `sonnet` | Requirements drafting, ticket grooming |
+| Marketing | Implementation / writing | `claude` | `sonnet` | Copy and positioning |
+| Critic / QA / Bandit | Lightweight review | `claude` | `sonnet` | Fast read-only verdict (Sonnet preferred for nuance; Haiku acceptable for purely-mechanical checks) |
+| Lightweight / fast tasks | Routine | `claude` | `haiku` | Quick reformat, summarization, simple lookups |
 
 ---
 
@@ -421,6 +430,7 @@ Generate an architect agent definition:
 
 - `name:` → ARCHITECT (lowercase, hyphen-separated if multi-word)
 - `description:` → "Lead Architect for [NAME]. Zero-code planner — owns plans, Red Flag Analysis, and Handoff Bridges."
+- `provider: claude`
 - `model: opus`
 - `tools: Read, Write, Edit, Bash`
 - Body: Initialization (read AGENTIC.md, plan.md, tracks.md, product.md, INSTALL_CHECKLIST.md — surface any unchecked required items before planning), Core Identity (zero-code planner), Capabilities (Red Flag Analysis, Implementation Plan, Handoff Bridge using template from AGENTIC.md §8, Sprint Housekeeping), Hard Constraints (no source file edits; writes to `docs/context/` and `docs/archive/` only; never issue a Bridge with unfilled safety fields), Sign-Off Protocol, Circuit Breaker.
@@ -434,6 +444,7 @@ Generate a QA agent definition:
 
 - `name:` → QA (lowercase, hyphen-separated if multi-word)
 - `description:` → "QA for [NAME]. Zero-write quality gate — issues PASS or BLOCKED verdict."
+- `provider: claude`
 - `model: sonnet`
 - `tools: Read, Bash`
 - Body: Initialization, Core Identity (zero-write), Spec Gate (must receive Handoff Bridge before auditing), Quality Gate checks (scope, build passes `[BUILD_CMD]`, no secrets, format), Context Gate (track hygiene), Hard Constraints (never write or edit; verdict is APPROVED or BLOCKED only), Circuit Breaker.
@@ -446,6 +457,7 @@ For each specialist parsed from the team table, generate an agent definition:
 
 - `name:` → specialist name (lowercase, hyphen-separated if multi-word)
 - `description:` → "[NAME] [DOMAIN] Specialist for [NAME]. Owns [SCOPE]."
+- `provider: claude`
 - `model: sonnet`
 - `tools: Read, Write, Edit, Bash`
 - Body: Initialization (read DNA files), Core Identity (domain and scope), Capabilities, Hard Constraints (Bridge is the only scope boundary; STOP if Bridge safety fields are unpopulated for auth/schema/payment changes), Sign-Off Protocol.

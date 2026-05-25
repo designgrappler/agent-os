@@ -1,22 +1,38 @@
 {
+  "release-version": "v0.9.2",
+  "frontmatter-version": 2,
   "skills": [
     "audit-security",
     "check-agent-os",
     "install-agent-scaffold",
     "minify-context",
     "onboard-existing-project",
-    "open-sprint",
     "refresh-agent-os",
     "report-track-status",
     "start-sprint",
     "streamline-approvals",
     "sync-vercel-env"
   ],
+  "agents": [
+    "architect",
+    "backend",
+    "critic",
+    "database",
+    "designer",
+    "frontend",
+    "fullstack",
+    "marketing",
+    "ops",
+    "pm",
+    "qa",
+    "researcher",
+    "strategist"
+  ],
   "renames": [
     { "from": "fewer-permission-prompts", "to": "streamline-approvals" },
     { "from": "project-adopt", "to": "onboard-existing-project" },
-    { "from": "sprint-open", "to": "open-sprint" },
-    { "from": "start-sprint", "to": "open-sprint" },
+    { "from": "sprint-open", "to": "start-sprint" },
+    { "from": "open-sprint", "to": "start-sprint" },
     { "from": "track-status", "to": "report-track-status" },
     { "from": "agent-orchestration-setup", "to": "install-agent-scaffold" }
   ]

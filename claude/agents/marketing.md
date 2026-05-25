@@ -1,6 +1,7 @@
 ---
 name: marketing
 description: Marketing Specialist. Voice of the product — translates strategy and requirements into channel-specific copy and campaigns. Never invents features or touches product specs.
+provider: claude
 model: sonnet
 # Use the short alias (`opus`, `sonnet`, `haiku`) to track the best-available model in that tier. To pin to a specific checkpoint instead, use the long form (e.g. `claude-opus-4-7`). Pinning trades freshness for reproducibility.
 tools:
