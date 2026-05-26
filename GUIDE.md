@@ -145,14 +145,14 @@ Sprint Open → Plan → Handoff Bridge → Execute → Quality Gate → Sprint 
 
 | Step | Skill / Command | Trigger |
 | :--- | :--- | :--- |
-| Open sprint | `open-sprint` | "Start planning" / "New sprint" |
+| Open sprint | `start-sprint` (Claude) / `open-sprint` (Gemini) | "Start planning" / "New sprint" |
 | Check status | `report-track-status` | "Catch me up" / "Status check" |
 | Generate handoff | `optimize-handoff` (Gemini) / *(native)* (Claude) | "Generate handoff for [specialist]" |
 | Review output | `audit-deliverables` | "Run quality gate on [specialist]'s output" |
 | Archive completed | `clean-context` (Gemini) / *(native)* (Claude) | "Clean context" |
 | Compress active files | `minify-context` | "Minify context" |
 
-`open-sprint` and `report-track-status` **auto-trigger** on natural language phrases — no explicit command needed when configured via the `CLAUDE.md` Auto-Invocations table (Claude Code) or the Trigger section of each skill (Gemini).
+`start-sprint` / `open-sprint` and `report-track-status` **auto-trigger** on natural language phrases — no explicit command needed when configured via the `CLAUDE.md` Auto-Invocations table (Claude Code) or the Trigger section of each skill (Gemini).
 
 ---
 
@@ -309,7 +309,8 @@ All skills below require Agent OS to be initialized via `install-agent-scaffold`
 
 | Skill | Claude Code | Gemini CLI | Purpose |
 | :--- | :---: | :---: | :--- |
-| `open-sprint` | ✓ | ✓ | Launch a sprint, set objective, create first track |
+| `start-sprint` | ✓ | — | Launch a sprint, set objective, create first track (Claude Code) |
+| `open-sprint` | — | ✓ | Launch a sprint, set objective, create first track (Gemini CLI) |
 | `report-track-status` | ✓ | ✓ | Situational status report across all active tracks |
 
 **Execution**
@@ -345,6 +346,7 @@ These skills work on any project — no Agent OS installation required.
 | Skill | Claude Code | Gemini CLI | Purpose |
 | :--- | :---: | :---: | :--- |
 | `audit-security` | ✓ | ✓ | Security sweep — vulnerabilities, secrets, policy violations |
+| `sync-vercel-env` | ✓ | — | Reads `.env`, confirms an exclude list, then pushes remaining keys to Vercel (Production + Preview) |
 
 > New skills that don't depend on `AGENTIC.md`, `tracks.md`, or the Handoff Bridge workflow belong in this library.
 

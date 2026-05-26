@@ -32,11 +32,15 @@ claude/
 │   ├── qa.md                     ← QA template (read-only, binary gate)
 │   └── critic.md                 ← Critic template (adversarial review, ideas and plans)
 ├── skills/
-│   ├── agent-orchestration-setup.md  ← Bootstraps a full Claude Code project from scratch
-│   ├── sprint-open.md            ← Opens a new sprint (auto-triggers on planning prompts)
-│   ├── track-status.md           ← Status report (auto-triggers on catch-up prompts)
-│   ├── minify-context.md         ← Compresses verbose active context files
-│   └── [other skills from Settle: clean-context, verify-ui, security-review, simplify]
+│   ├── install-agent-scaffold/
+│   │   └── SKILL.md              ← Bootstraps a full Claude Code project from scratch
+│   ├── start-sprint/
+│   │   └── SKILL.md              ← Opens a new sprint (auto-triggers on planning prompts)
+│   ├── report-track-status/
+│   │   └── SKILL.md              ← Status report (auto-triggers on catch-up prompts)
+│   ├── minify-context/
+│   │   └── SKILL.md              ← Compresses verbose active context files
+│   └── [other skills: check-agent-os, refresh-agent-os, onboard-existing-project, ...]
 └── templates/
     ├── AGENTIC.md                ← Fill-in-the-blanks Static DNA starter
     └── CLAUDE.md                 ← Fill-in-the-blanks orchestrator config (includes auto-trigger rules)
@@ -47,7 +51,7 @@ claude/
 ## Quick Start
 
 **Option A — Automated (recommended):**
-Copy `skills/conductor-setup.md` to `.claude/skills/agent-orchestration-setup.md` in your project, then run `/agent-orchestration-setup`. The skill will ask for your project details and generate everything.
+Copy `skills/install-agent-scaffold/SKILL.md` to `.claude/skills/install-agent-scaffold/SKILL.md` in your project, then run `/install-agent-scaffold`. The skill will ask for your project details and generate everything.
 
 **Option B — Manual:**
 1. Copy `templates/AGENTIC.md` → `AGENTIC.md` at your project root. Fill in placeholders.

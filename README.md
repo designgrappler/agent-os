@@ -84,7 +84,7 @@ Define and track a unit of work. A sprint is a focused period with a clear objec
 
 | Goal                     | Claude Code                   | Gemini CLI                   |
 | :----------------------- | :---------------------------- | :--------------------------- |
-| Open a sprint            | `/open-sprint`                | `open-sprint`                |
+| Open a sprint            | `/start-sprint`               | `open-sprint`                |
 | Check track status       | `/report-track-status`        | `report-track-status`        |
 
 ### Execution
@@ -135,7 +135,6 @@ These skills work on any project — no Agent OS installation required.
 
 - [Implementation Guide](./GUIDE.md) — setup, IDE paths, conversation hygiene, security & isolation
 - [System Architecture](./ARCHITECTURE.md) — the five layers, key protocols, and reliability model
-- [Project Evolution](./EVOLUTION.md) — from instructional governance to hardware-locked roles
 - [Contributing](./CONTRIBUTING.md) — adding skills, validating new environments, expanding agent types
 
 ---

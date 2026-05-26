@@ -1,44 +1,62 @@
-# Product Strategy: Agent OS (v1.0)
+# Product
+
+> This file is the product context template for an Agent OS project. Replace all placeholder content with your project's specifics. The Lead Architect reads this file before planning any sprint — it must be non-empty or planning stops.
+
+<!-- Describe what this product is, who it serves, and what success looks like. A 2–3 sentence vision plus concise answers to each section below is enough to unblock planning. The `/onboard-existing-project` skill can synthesize this file from an existing README or vision doc if you have one. -->
+
+---
 
 ## Vision
-To transform AI interaction from "unreliable chat" into a structured **Agent Operating System** — enabling any team, dev or non-dev, to manage high-fidelity outcomes through **Structural Enforcement** and **Mechanical Role Integrity**.
 
-## The Evolution: From Narrative to Mechanical to Universal
-Conductor OS has moved through three strategic phases:
+<!-- A 2–3 sentence description of what this product is and what problem it solves. Focus on the outcome for the user, not the implementation. -->
 
-- **v2.0 (Instructional Age)**: Relied on prompt-based role instructions. Failed due to "Helpful Drift" — models override persona constraints when context grows.
-- **v2.1 (Mechanical Age)**: Structural enforcement via Gemini CLI Policy Engine. Tools physically stripped from manifests. Role integrity moved from the brain (unreliable) to the toolbelt (reliable).
-- **v1.0 (Universal Age)**: Platform portability and non-dev role support. The same mechanical discipline now applies to any knowledge work team on any supported platform.
+`<2–3 sentence vision statement>`
 
-## Targeted Problems
+*e.g. "This product is a project management tool for small engineering teams that want structured sprint workflows without heavyweight tooling. It gives teams a lightweight, AI-assisted way to plan, track, and close sprints entirely from the command line."*
 
-1. **Agent Drift** — Prevented by **Mechanical Tool-Masking**. The environment strips unauthorized tools from the agent's manifest at the runtime level.
-2. **Context Rot** — Reduced by **Atomic Context Heartbeats** and active context management (`minify-context`, `context-cleaner`). Fresh, scoped context per task.
-3. **Instructional Fragility** — Replaced by **Structural Policy Gates** that intercept and block unauthorized tool calls — on Gemini via `policy.toml`, on Claude Code via `tools:` frontmatter.
-4. **Setup Friction** — Eliminated by the **Pre-Flight Interview** pattern in `conductor-bundle` and `agent-orchestration-setup`. All questions gathered first; no mid-setup interruptions.
-5. **Scope Creep** — Controlled by **Execution Deliverables** locking in `generic-specialist` and the **Quality Gate** scope check. Any undeclared change triggers an automatic BLOCKED verdict.
+---
 
-## Key Product Pillars
+## Users
 
-- **Predictability over Autonomy**: We prioritize "System Impossibility" over "Model Compliance." If a role is forbidden from writing code, it physically cannot access the write tool.
-- **Structural Integrity**: Role isolation enforced at the system level — not through instructions alone.
-- **Universal Role Support**: The architecture applies to any knowledge worker role. Dev teams scope to source files; creative and business teams scope to documents, briefs, and designs. Same protocols, same quality gate, same three tiers.
-- **Dual-Platform**: Full implementations for both Gemini CLI (`skills/`) and Claude Code (`claude/`). Platform-agnostic concepts documented in `ARCHITECTURE.md`.
-- **Sprint Lifecycle**: First-class skills for the full sprint loop — open, execute, review, close, status check — not just the execution phase.
+<!-- Who are the primary users? One sentence per persona is enough. If there are secondary personas, list them after the primary. -->
 
-## The Operational Tiers
+`<Primary user persona>`
 
-| Tier | Role | Examples |
-|---|---|---|
-| **Tier 1 (Meta)** | Orchestration — establishes DNA, blocked from deliverable production | Conductor, Architect |
-| **Tier 2 (Strategic)** | Planning — generates Handoff Bridges, manages sprint lifecycle | Architect, Sprint Manager |
-| **Tier 3 (Tactical)** | Execution — scoped to declared deliverables only | Frontend Dev, Backend Dev, Designer, PM, Marketing Manager, Content Strategist |
-| **Tier 3 (Sentinel)** | Quality — read-only, binary verdict | Quality Gate |
+*e.g. Primary: Solo developers and small teams (2–5 engineers) who already use an AI coding assistant and want to formalize their sprint process.*
 
-## Target User Personas
+*e.g. Secondary: Engineering leads at mid-size companies who want to give their team a structured agent workflow without adopting a full project-management platform.*
 
-**The High-Rigor Orchestrator (Dev Team)**: An engineering lead or solo developer who values process certainty. Uses Conductor OS to manage a fleet of specialist agents with the same rigor as a human engineering team.
+---
 
-**The Cross-Functional Lead (Mixed Team)**: A product manager, founder, or team lead running a mixed team of dev and non-dev roles. Uses Conductor OS to ensure every contributor — engineer, designer, marketer — operates within a declared scope and produces verifiable deliverables.
+## Goals
 
-**The Content/Creative Director (Non-Dev Team)**: A creative lead managing copy, design, and strategy agents. Uses Conductor OS to bring the same structural discipline of software development to knowledge work — briefs, campaigns, and design systems.
+<!-- What are the 2–4 concrete outcomes this product is working toward right now? Frame as outcomes, not features. -->
+
+<!-- Keep this list short and honest — it guides the Lead Architect's Red Flag Analysis. If a proposed track doesn't serve any goal here, that's a signal to pause and ask why. -->
+
+1. `<Goal 1>`
+2. `<Goal 2>`
+3. `<Goal 3>`
+
+*e.g. 1. Reduce the time it takes a new user to run their first sprint from hours to under 20 minutes.*
+*e.g. 2. Make drift between installed skills and canonical versions visible and one-command-fixable.*
+
+---
+
+## Non-Goals
+
+<!-- What is explicitly out of scope? Stating non-goals prevents scope creep and gives the QA agent a clear boundary for blocking undeclared changes. -->
+
+*e.g. This product does not aim to replace a full project-management platform (Jira, Linear, etc.) — it complements them.*
+
+*e.g. Multi-tenant SaaS hosting is not a goal for this phase; the product runs locally or in a single-team environment.*
+
+---
+
+## Success Metrics
+
+<!-- How will you know the goals above have been achieved? List 2–4 measurable signals. Qualitative signals (e.g. "users can complete the setup flow without asking for help") are fine alongside quantitative ones. -->
+
+*e.g. A new user can complete `/install-agent-scaffold` and open their first sprint in under 20 minutes with no external help.*
+
+*e.g. `/check-agent-os` returns `OVERALL: PASS` on a fresh install with no manual fixup required.*
