@@ -55,7 +55,9 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 
 ---
 
-## Phase 4: Agent Model Format Check
+## Phase 4: Agent Frontmatter Check
+
+### 4a: Model Format Check
 
 1. List all files matching `.claude/agents/*.md` in the current project.
 2. For each file, parse the frontmatter `model:` line.
@@ -63,11 +65,26 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 4. **Fail rows:** list each agent file where `model:` contains a long-form name (e.g. `claude-opus-4-7`, `claude-sonnet-4-6`) rather than the short alias. For each fail row, include the remediation hint:
    > Remediation: Edit `.claude/agents/<name>.md` and change `model:` to the short form (`opus`, `sonnet`, or `haiku`). See `install-agent-scaffold` Step 4 for the role→tier guidance table.
 
+### 4b: WebFetch Tools Frontmatter Check
+
+1. For each file matching `.claude/agents/*.md` in the current project, parse the frontmatter `tools:` list.
+2. **Pass:** every agent file includes `WebFetch` in its `tools:` list.
+3. **Fail rows:** list each agent file where `WebFetch` is absent from `tools:`. For each fail row, include the remediation hint:
+   > Remediation: Run `/refresh-agent-os` to sync with canonical.
+
+### 4c: Specialist `isolation: worktree` Check
+
+1. For each file matching `.claude/agents/*.md` in the current project, determine whether the agent is a Specialist by checking for a `## Sign-Off Protocol` section that contains both a `**Track:**` field and a `**Completed:**` field. Agents meeting this criterion are Specialists.
+2. For each identified Specialist, parse the frontmatter and confirm `isolation: worktree` appears.
+3. **Pass:** every Specialist agent has `isolation: worktree` in its frontmatter.
+4. **Fail rows:** list each Specialist agent where `isolation: worktree` is absent from frontmatter. For each fail row, include the remediation hint:
+   > Remediation: Run `/refresh-agent-os` to sync with canonical.
+
 ---
 
 ## Phase 5: Report
 
-Emit the full report with one clearly-labeled section per phase. Each section states whether the phase **PASSED** or **FAILED**, and if failed, lists every fail row with its remediation hint.
+Emit the full report with one clearly-labeled section per phase. Each section states whether the phase **PASSED** or **FAILED**, and if failed, lists every fail row with its remediation hint. Phase 4 has three sub-checks (4a model format, 4b WebFetch, 4c isolation); each sub-check contributes its fail rows to the overall count.
 
 Example structure:
 
@@ -82,15 +99,23 @@ All canonical skills are installed.
 ### Phase 3: Required docs/context/ Check — PASSED
 All three required context files exist and are non-empty.
 
-### Phase 4: Agent Model Format Check — PASSED
+### Phase 4: Agent Frontmatter Check
+
+#### 4a: Model Format Check — PASSED
 All agent model values use canonical short form.
+
+#### 4b: WebFetch Tools Frontmatter Check — PASSED
+All agent files include WebFetch in their tools list.
+
+#### 4c: Specialist isolation: worktree Check — PASSED
+All Specialist agents have isolation: worktree in frontmatter.
 
 OVERALL: FAIL (1 issue)
 ```
 
 The final line of the report **must** be exactly one of:
 - `OVERALL: PASS`
-- `OVERALL: FAIL (N issues)` — where N is the total count of fail rows across all phases.
+- `OVERALL: FAIL (N issues)` — where N is the total count of fail rows across all phases and sub-checks.
 
 ---
 
@@ -118,3 +143,5 @@ The final line of the report **must** be exactly one of:
 - [ ] On PASS, `.agent-os-checked` was written with today's ISO date (single line)
 - [ ] On FAIL, `.agent-os-checked` was NOT created or modified
 - [ ] Every fail row in the report includes a remediation hint
+- [ ] Phase 4b: every `.claude/agents/*.md` was checked for `WebFetch` in the `tools:` list; any absent entries are FAIL rows with remediation "Run `/refresh-agent-os` to sync with canonical."
+- [ ] Phase 4c: each agent identified as a Specialist (has `## Sign-Off Protocol` with `**Track:**` and `**Completed:**` fields) was checked for `isolation: worktree` in frontmatter; any absent entries are FAIL rows with the same remediation hint

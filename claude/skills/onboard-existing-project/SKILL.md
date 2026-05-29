@@ -70,7 +70,7 @@ Then present **only the gaps** as a numbered list. **Wait for all answers before
 > - **Specialist roles** — What specialist agent(s) should be added? What are their names and domains? *(Proposed: [inferred from folder structure, or "Not found — please provide"])*
 > - **One-sentence description** — *(Only if not found in README or AGENTIC.md)*
 > - **Team type** — Dev team, creative/business team, or mixed? *(Only if genuinely ambiguous)*
-> - **Product vision** — required. If `docs/context/product.md` already exists and is non-empty, mark ✓ CONFIRMED and skip. Otherwise: if `PRODUCT_CANDIDATES` is non-empty, list them numbered and ask: "Synthesize `product.md` from one of these candidates? Pick a number, or type your own 2–3 sentence description of what this product is and who it serves." If `PRODUCT_CANDIDATES` is empty, ask directly: "Provide a 2–3 sentence description of what this product is and who it serves."
+> - **Product vision** — If `docs/context/product.md` already exists and is non-empty, mark ✓ CONFIRMED and skip. Otherwise: `product.md` will be created with a skeleton placeholder automatically in Phase 4e. If `PRODUCT_CANDIDATES` is non-empty, list them numbered and ask: "Fill in `product.md` now? Pick a candidate number to synthesize, or type your own 2–3 sentence description of what this product is and who it serves. Or type 'skip' to leave the placeholder and fill it in later." If `PRODUCT_CANDIDATES` is empty, ask: "Fill in `product.md` now? Type a 2–3 sentence description of what this product is and who it serves, or type 'skip' to leave the placeholder and fill it in later."
 >
 > **Existing docs** (if found and not yet mapped): I'll list any docs found and propose how they map to `docs/context/`. Confirm or reject each mapping. *(Skip if docs/context/ already has plan.md, tracks.md, product.md.)*
 
@@ -132,6 +132,43 @@ Present each patch individually and wait for the user to confirm or decline befo
 
 **Step 5 — Apply.** Apply only the patches the user explicitly confirmed. All other `CLAUDE.md` content is preserved verbatim.
 
+**Step 6 — Auto-trigger table diff.** After applying any per-reference patches from Steps 1–5, run this scoped sub-step to detect drift in the Auto-Invocations table specifically.
+
+1. **Locate the table.** Find the Auto-Invocations table in the existing `CLAUDE.md` (rows matching `| User says... | Invoke |` — look for the header row with those two columns, then collect the data rows beneath it).
+
+2. **Load canonical table.** The canonical table has exactly these two rows (from `install-agent-scaffold` Step 4b):
+
+   | User says... | Invoke |
+   |---|---|
+   | "start planning", "new sprint", "let's plan", "begin planning", "what are we working on next" | `/sprint-open` |
+   | "catch me up", "what's the status", "where are we", "status check", "quick update" | `/track-status` |
+
+3. **Produce a structured diff.** Compare the existing table rows against the canonical table row-by-row:
+   - Rows present in canonical but **missing locally** → `MISSING` (skill not yet in local table)
+   - Rows present locally but whose `Invoke` value **differs from canonical** → `RENAMED` (e.g. `/start-sprint` vs `/sprint-open`)
+   - Rows present locally but **absent from canonical** → `EXTRA` (skill added locally or removed from canonical)
+   - If no differences: state "Auto-trigger table matches canonical — no drift detected." and skip Steps 4–6.
+
+4. **Present the diff** in this format before making any changes:
+
+   ```
+   Auto-trigger table drift detected:
+
+   | Status  | User says pattern                          | Local Invoke    | Canonical Invoke |
+   |---------|--------------------------------------------|-----------------|------------------|
+   | RENAMED | "start planning", "new sprint", ...        | /start-sprint   | /sprint-open     |
+   | MISSING | "catch me up", "what's the status", ...    | —               | /track-status    |
+   | EXTRA   | "deploy now"                               | /deploy         | (not in canonical) |
+   ```
+
+5. **Offer a single table-level patch.** Offer to replace the entire Auto-Invocations table with the canonical version. Do **not** offer per-cell patches — table replacement only. Present the offer as:
+
+   > "Apply canonical Auto-Invocations table? This will replace the table with the two-row canonical version (sprint-open, track-status). Your other CLAUDE.md content is untouched."
+
+   Wait for the user to confirm or decline.
+
+6. **Apply or skip.** If the user confirms, replace the Auto-Invocations table block with the canonical two-row table. All other `CLAUDE.md` content is preserved verbatim. If the user declines, log the diff as a note and move on — no silent rewrite, no re-prompting.
+
 ### 4c. `docs/context/plan.md`
 
 If the user approved a doc migration, copy the source file and prepend:
@@ -146,13 +183,39 @@ Initialize with: `Project adoption — Agent OS initialized.`
 
 ### 4e. `docs/context/product.md`
 
-Apply exactly one of the following three branches based on the outcome of Phase 3:
+Apply exactly one of the following branches based on the outcome of Phase 3:
 
-1. **User picked a candidate file** — Read the candidate, generate a 2–3 sentence summary that captures what the product is and who it serves. Write `docs/context/product.md` using the standard template (Vision section = the generated summary). Prepend the file with `<!-- Synthesized from [candidate path] — review and refine. -->`.
+1. **`docs/context/product.md` already exists and is non-empty** — Leave it untouched. (Unchanged from prior behaviour.)
 
-2. **User typed a description** — Write `docs/context/product.md` using the standard template. Use the user's typed text as the Vision section verbatim.
+2. **`docs/context/product.md` does not exist (all other cases)** — **Create the skeleton file first**, then apply the user's Phase 3 response:
 
-3. **`docs/context/product.md` already exists and is non-empty** — Leave it untouched. (Preserves current behavior.)
+   The skeleton template is:
+
+   ```markdown
+   # Product Context
+
+   <!-- TODO: fill in product context — what is this product, who does it serve, why now? -->
+
+   ## Vision
+   [To be filled in.]
+
+   ## Current Focus
+   [To be filled in.]
+
+   ---
+
+   *Last updated: [TODAY'S DATE]*
+   ```
+
+   Write this skeleton to `docs/context/product.md` immediately (before checking the user's Phase 3 answer), then:
+
+   - **User picked a candidate file** → Read the candidate, generate a 2–3 sentence summary that captures what the product is and who it serves. Overwrite the skeleton's `<!-- TODO -->` comment and `[To be filled in.]` Vision placeholder with the generated summary. Prepend the file with `<!-- Synthesized from [candidate path] — review and refine. -->`. End-state: `created (filled)`.
+
+   - **User typed a description** → Overwrite the skeleton's `<!-- TODO -->` comment and `[To be filled in.]` Vision placeholder with the user's text verbatim. End-state: `created (filled)`.
+
+   - **User deferred (typed 'skip' or declined)** → Leave the skeleton in place with the `<!-- TODO: fill in product context -->` marker. End-state: `created (skeleton — needs fill)`.
+
+   The file exists in all three end-states. The `<!-- TODO: fill in product context -->` marker signals to downstream agents (Architect HARD STOP) that context is still needed.
 
 ### 4f. `.claude/agents/[architect-name].md`
 
@@ -189,9 +252,9 @@ After all files are generated, output:
 ## Project Adoption Complete
 
 **Project:** [PROJECT NAME]
-**Files created:** [list — always include docs/context/product.md here if it was created or synthesized in this run]
+**Files created:** [list — always include docs/context/product.md here if it was created or synthesized in this run; label with end-state: `created (filled)`, `created (skeleton — needs fill)`, or `pre-existing`]
 **Files updated:** [list, or "None"]
-**Skipped (no changes needed):** [list — always include docs/context/product.md here if it already existed and was left untouched]
+**Skipped (no changes needed):** [list — always include docs/context/product.md here if it already existed and was left untouched, labeled `pre-existing`]
 
 **Existing docs migrated:**
 [list of original path → docs/context/X.md, or "None"]
@@ -221,4 +284,6 @@ After all files are generated, output:
 - [ ] Migrated docs include the `<!-- Migrated from -->` header
 - [ ] `.claude/settings.json` merge preserved any pre-existing hooks
 - [ ] If CLAUDE.md was preserved, every skill reference in the file resolved to `~/.claude/skills/<name>/SKILL.md`, or the user was offered a targeted patch for each unresolvable reference.
-- [ ] Phase 4e produced a non-empty docs/context/product.md (created, synthesized, or pre-existing — never absent).
+- [ ] If CLAUDE.md was preserved, the auto-trigger table diff (Phase 4b Step 6) ran; any drift was presented as a structured diff and the user was offered a table-level patch; only confirmed patches were applied.
+- [ ] Phase 4e produced a `docs/context/product.md` in one of three valid end-states: `pre-existing` (untouched), `created (filled)` (synthesized or user-typed), or `created (skeleton — needs fill)` (user deferred). The file must exist in all three cases — never absent after onboarding completes.
+- [ ] Phase 5 Adoption Summary labels the `docs/context/product.md` end-state explicitly (`pre-existing`, `created (filled)`, or `created (skeleton — needs fill)`).

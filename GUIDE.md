@@ -192,11 +192,13 @@ Before any Tier 3 Specialist begins work, the Architect generates a **Handoff Br
 
 - **Role Identity** — who is waking and what domain they own
 - **Specialist** — which domain specialist is assigned (frontend / backend / database / fullstack / designer / pm / marketing)
-- **Execution Deliverables** — the exact files or documents to produce/modify
+- **Execution Files (source)** — primary source/canonical files to modify
+- **Execution Files (tests)** — test files in scope; `[]` with justification if none apply
+- **Execution Files (tooling/config)** — build/config/scaffold files; `[]` if none
 - **Migration Safety** — N/A / Reversible / Irreversible; Conductor sign-off required if irreversible
 - **Security Review** — N/A / Auth / Payments / Schema; Conductor sign-off required if any
-- **Worktree Setup** — isolated git worktree command if 2+ tracks are active in parallel
-- **Acceptance Criteria** — how to verify the work is complete
+- **Worktree Setup** — automatic via `isolation: worktree` in Specialist frontmatter; manual worktree command only needed for the Architect's chicken-and-egg first run
+- **Verification** — how to confirm the work is complete (pasted observed output required for Behavioral Verification Gate)
 - **Circuit Breaker** — escalation threshold (3 same-cause failures → Architect)
 
 ### RELAY Mode (Claude Code or external model)
@@ -214,7 +216,7 @@ The Architect generates a self-executing wake command: `gemini --skill add-speci
 - **Gemini CLI**: `policy.toml` strips unauthorized tools from the manifest
 - **Claude Code**: `tools:` frontmatter list is enforced by the Claude Code runtime
 
-**Parallel tracks** each get an isolated workspace (git worktree or equivalent) to prevent cross-track contamination.
+**Parallel tracks** each get an isolated workspace via `isolation: worktree` in each Specialist's agent frontmatter — the Claude Code runtime creates and cleans up the worktree automatically. No manual worktree commands required.
 
 ### Approval Discipline
 
@@ -334,7 +336,7 @@ All skills below require Agent OS to be initialized via `install-agent-scaffold`
 
 | Skill | Claude Code | Gemini CLI | Purpose |
 | :--- | :---: | :---: | :--- |
-| `check-agent-os` | ✓ | — | Health check — verifies skills, CLAUDE.md refs, docs, and model names; emits PASS/FAIL |
+| `check-agent-os` | ✓ | — | Health check — verifies skills, CLAUDE.md refs, docs, model names, WebFetch in agent tools, and Specialist `isolation: worktree`; emits PASS/FAIL |
 | `refresh-agent-os` | ✓ | — | Diffs installed skills against canonical manifest; installs, renames, or removes on confirmation |
 
 ---

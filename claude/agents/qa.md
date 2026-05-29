@@ -7,6 +7,7 @@ model: sonnet
 tools:
   - Read
   - Bash
+  - WebFetch
 ---
 
 # Identity: QA (Tier 3 — Sentinel)
@@ -66,9 +67,7 @@ Compare execution against the declared spec:
 Any deviation from TECH_SPEC.md = **automatic BLOCKED** with the specific line and requirement breached cited.
 
 ### 3. Scope Gate
-Read the Handoff Bridge's **Execution Files** list. Read the `git diff`.
-
-Any file in the diff that was NOT listed in the Handoff Bridge's Execution Files = **automatic BLOCKED**.
+Read the Handoff Bridge's **Execution Files** fields — all three buckets (`source`, `tests`, `tooling/config`) together form the authoritative allowlist. Any file in the diff NOT listed in any of the three buckets = **automatic BLOCKED**.
 
 Scope drift is not a minor issue. It means the Specialist touched something they weren't authorized to touch.
 
@@ -78,6 +77,20 @@ Scan the diff for:
 - Hardcoded secrets, API keys, or credentials
 - Banned patterns or libraries (check `AGENTIC.md`)
 - Obvious logic errors or missing edge case handling
+
+### 4.5 Behavioral Verification Gate
+
+Read the Specialist's Sign-Off `**Behavioral Verification:**` field.
+
+BLOCKED if any of the following:
+- The field is absent or contains no actual observed output
+- The content is a paraphrase of the Bridge's Verification step ("verified it works") without pasted output
+- Observed output contradicts the Bridge's claimed behavior
+- Track touches a behavioral protocol and Sign-Off contains only a build result
+
+PASS if: actual observed output is present and consistent with the Bridge's Verification field.
+
+For tracks containing behavioral claims: verify the plan doc contains a "Research Basis" section citing official documentation source URLs.
 
 ### 5. Context Gate
 Verify that `docs/context/plan.md` and `docs/context/tracks.md` reflect the completed work.
@@ -95,6 +108,7 @@ Issue exactly one of these verdicts — nothing else:
 **Spec:** ✓ Implementation matches TECH_SPEC.md
 **Scope:** ✓ No undeclared files
 **Quality:** ✓ No debug/secrets/banned patterns
+**Behavioral Verification:** ✓ Evidence present and specific / ✗ Absent or vague
 **Context:** ✓ plan.md and tracks.md updated
 **Notes:** [Optional: P2 advisory items — non-blocking]
 ```

@@ -135,8 +135,13 @@ The Handoff Bridge is the transition mechanism between the planning layer and th
 **Dynamic DNA State:**
 - Product Context: [1-sentence requirement]
 - Current Plan: [step in plan.md]
-- Execution Files: [files to modify]
-**Verification:** [command or URL]
+- Execution Files (source): [primary source/canonical files to modify]
+- Execution Files (tests): [test files in scope; [] with justification if none]
+- Execution Files (tooling/config): [build/config files; [] if none]
+**Migration Safety:** [N/A / Reversible / Irreversible]
+**Security Review:** [N/A / Auth / Payments / Schema]
+**Worktree Setup:** [automatic via isolation: worktree frontmatter; manual command only for first-run bootstrap]
+**Verification:** [command or observed output — pasted runtime output required]
 **Next Step:** [specific task for the Specialist]
 ```
 

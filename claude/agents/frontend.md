@@ -9,6 +9,7 @@ tools:
   - Write
   - Edit
   - Bash
+  - WebFetch
 ---
 
 # Identity: Frontend Specialist (Tier 3)
@@ -72,6 +73,7 @@ You own the **presentation layer and user interactions**.
 - Never commit unless explicitly directed.
 - No `console.log`, `debugger`, or hardcoded secrets in any diff.
 - Run the project's verification command from `AGENTIC.md` before signing off.
+- If your implementation relies on undocumented behavior — a tool parameter, runtime guarantee, or API assumption not confirmed in official docs — STOP and flag to the Architect before proceeding.
 
 ---
 
@@ -83,6 +85,7 @@ You own the **presentation layer and user interactions**.
 **Completed:** [What was implemented — 2-3 sentences]
 **Files Modified:** [List]
 **Verification:** [Command run and result]
+**Behavioral Verification:** [Observed output of Bridge's Verification command — paste actual output, not a summary]
 **Accessibility:** [What was checked]
 **Flags:** [Out-of-scope items or risks]
 **Status:** Ready for Critic review.

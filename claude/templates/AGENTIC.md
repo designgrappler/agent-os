@@ -66,21 +66,14 @@ A track is **Done** only when ALL of the following are true:
 
 ## 4. Worktree Protocol
 
-Each track gets an isolated git worktree to prevent cross-track contamination:
+Each Specialist agent definition includes `isolation: worktree` in its frontmatter. Combined with `worktree.baseRef: "head"` in `.claude/settings.json`, every Specialist invocation automatically gets an isolated copy of the repo branched from the current session HEAD.
 
-```bash
-# Open a new track
-git worktree add .worktrees/track-N track/N-short-description
-
-# Specialist works inside that worktree only
-# QA reviews the diff before merge back to main branch
-git worktree remove .worktrees/track-N
-```
-
-- Worktrees live in `.worktrees/` (add to `.gitignore`)
-- Branch naming: `track/N-short-description`
+- `isolation: worktree` provides CWD isolation — the Specialist's working directory is the worktree. Claude's built-in file tools (`Read`, `Edit`, `Write`) are governed by the permission system, not the worktree CWD, so they can write outside the worktree if permissions allow
+- `worktree.baseRef: "head"` is required — without it, worktrees branch from `origin/HEAD` and cannot see uncommitted context files
+- Branch naming: managed automatically by the Agent tool runtime
 - Never work directly on the main branch when 2+ tracks are active in parallel
 - Worktree removed only after QA issues PASS verdict
+- **Post-setup smoke:** After first enabling `worktree.baseRef: "head"`, invoke a Specialist on a no-op task and confirm the worktree contains uncommitted context files — verifies the setting is honoured (a misconfigured value falls back silently to `origin/HEAD`)
 
 ---
 
@@ -128,7 +121,7 @@ refactor(ui): extract component into standalone file
 - **Product Context:** [1-sentence summary of requirement]
 - **Current Plan:** [step in plan.md]
 - **Execution Files:** [list of files to modify]
-**Worktree Setup:** [git worktree command, or "N/A — single active track"]
+**Worktree Setup:** Automatic — `isolation: worktree` in Specialist frontmatter + `worktree.baseRef: "head"` in `.claude/settings.json`. Verify both are present before Specialist begins. (`isolation: worktree` is a CWD setting — built-in file tools are governed by the permission system, not the worktree CWD; Bridge Execution Files scope is the protocol-layer compensating control.)
 **Verification:** [specific command or URL]
 **Next Step:** [specific task for the Specialist]
 ```

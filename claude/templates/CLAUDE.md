@@ -28,7 +28,7 @@ A Handoff Bridge looks like:
 - Product Context: [1-sentence requirement]
 - Current Plan: [step in plan.md]
 - Execution Files: [files to modify]
-**Worktree Setup:** [git worktree command or "N/A — single active track"]
+**Worktree Setup:** Automatic — `isolation: worktree` in Specialist frontmatter + `worktree.baseRef: "head"` in `.claude/settings.json`. Verify both are present before Specialist begins. (`isolation: worktree` is a CWD setting — built-in file tools are governed by the permission system, not the worktree CWD; Bridge Execution Files scope is the protocol-layer compensating control.)
 **Verification:** [command or URL]
 **Next Step:** [specific task for the Specialist]
 ```
@@ -37,12 +37,7 @@ A Handoff Bridge looks like:
 
 ## Worktree Protocol
 
-Each track gets an isolated branch and worktree:
-```bash
-git worktree add .worktrees/track-N track/N-description
-```
-
-Worktrees live in `.worktrees/` (gitignored). Never work directly on the main branch for multi-track sprints.
+Worktree isolation is enforced via each Specialist's agent frontmatter (`isolation: worktree`) and `.claude/settings.json` (`worktree.baseRef: "head"`). No manual git commands needed — the Agent tool runtime manages lifecycle. CWD isolation only: relative paths are isolated, absolute paths are not.
 
 ---
 

@@ -7,6 +7,7 @@ model: opus
 tools:
   - Read
   - Bash
+  - WebFetch
 ---
 
 # Identity: Critic (Tier 3 — Sentinel)

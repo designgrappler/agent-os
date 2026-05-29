@@ -234,17 +234,14 @@ A track is **Done** only when ALL of the following are true:
 
 ## 4. Worktree Protocol
 
-Each track gets an isolated git worktree to prevent cross-track contamination:
+Each Specialist agent definition includes `isolation: worktree` in its frontmatter. Combined with `worktree.baseRef: "head"` in `.claude/settings.json`, every Specialist invocation automatically gets an isolated copy of the repo branched from the current session HEAD.
 
-\`\`\`bash
-git worktree add .worktrees/track-N track/N-short-description
-git worktree remove .worktrees/track-N
-\`\`\`
-
-- Worktrees live in `.worktrees/` (add to `.gitignore`)
-- Branch naming: `track/N-short-description`
+- `isolation: worktree` provides CWD isolation — the Specialist's working directory is the worktree. Claude's built-in file tools (`Read`, `Edit`, `Write`) are governed by the permission system, not the worktree CWD, so they can write outside the worktree if permissions allow
+- `worktree.baseRef: "head"` is required — without it, worktrees branch from `origin/HEAD` and cannot see uncommitted context files
+- Branch naming: managed automatically by the Agent tool runtime
 - Never work directly on the main branch when 2+ tracks are active in parallel
 - Worktree removed only after QA issues PASS verdict
+- **Post-setup smoke:** After first enabling `worktree.baseRef: "head"`, invoke a Specialist on a no-op task and confirm the worktree contains uncommitted context files — verifies the setting is honoured (a misconfigured value falls back silently to `origin/HEAD`)
 
 ---
 
@@ -287,10 +284,12 @@ chore(deps): upgrade dependencies
 **Dynamic DNA State:**
 - **Product Context:** [1-sentence summary of requirement]
 - **Current Plan:** [step in plan.md]
-- **Execution Files:** [list of files to modify]
+- **Execution Files (source):** [list of primary source/canonical files]
+- **Execution Files (tests):** [] — [one-line justification if empty]
+- **Execution Files (tooling/config):** [list of build/config/scaffold files; "[]" if none]
 **Migration Safety:** [N/A / Reversible / Irreversible — Conductor acceptance: YES (date) if irreversible]
 **Security Review:** [N/A / Auth / Payments / Schema — Conductor acceptance: YES (date) if any]
-**Worktree Setup:** [git worktree command, or "N/A — single active track"]
+**Worktree Setup:** Automatic — `isolation: worktree` in Specialist frontmatter + `worktree.baseRef: "head"` in `.claude/settings.json`. Verify both are present before Specialist begins. (`isolation: worktree` is a CWD setting — built-in file tools are governed by the permission system, not the worktree CWD; Bridge Execution Files scope is the protocol-layer compensating control.)
 **Verification:** [specific command or URL]
 **Next Step:** [specific task for the Specialist]
 \`\`\`
@@ -329,12 +328,7 @@ Conductor (approval) → Architect (plan + Handoff Bridge) → Specialist (execu
 
 ## Worktree Protocol
 
-Each track gets an isolated branch and worktree:
-\`\`\`bash
-git worktree add .worktrees/track-N track/N-description
-\`\`\`
-
-Worktrees live in `.worktrees/` (gitignored). Never work directly on the main branch for multi-track sprints.
+Worktree isolation is enforced via each Specialist's agent frontmatter (`isolation: worktree`) and `.claude/settings.json` (`worktree.baseRef: "head"`). No manual git commands needed — the Agent tool runtime manages lifecycle. CWD isolation only: relative paths are isolated, absolute paths are not.
 
 ---
 
@@ -432,8 +426,8 @@ Generate an architect agent definition:
 - `description:` → "Lead Architect for [NAME]. Zero-code planner — owns plans, Red Flag Analysis, and Handoff Bridges."
 - `provider: claude`
 - `model: opus`
-- `tools: Read, Write, Edit, Bash`
-- Body: Initialization (read AGENTIC.md, plan.md, tracks.md, product.md, INSTALL_CHECKLIST.md — surface any unchecked required items before planning), Core Identity (zero-code planner), Capabilities (Red Flag Analysis, Implementation Plan, Handoff Bridge using template from AGENTIC.md §8, Sprint Housekeeping), Hard Constraints (no source file edits; writes to `docs/context/` and `docs/archive/` only; never issue a Bridge with unfilled safety fields), Sign-Off Protocol, Circuit Breaker.
+- `tools: Read, Write, Edit, Bash, WebFetch`
+- Body: Initialization (read AGENTIC.md, plan.md, tracks.md, product.md, INSTALL_CHECKLIST.md — surface any unchecked required items before planning), Core Identity (zero-code planner), Capabilities (Research Phase (§0, mandatory before any plan touching runtime behavior: search https://code.claude.com/docs, cite source URLs, no behavioral claims without documentation, hard stop on "I think"; hard stop if WebFetch unavailable), Red Flag Analysis, Implementation Plan, Handoff Bridge using template from AGENTIC.md §8, Sprint Housekeeping), Hard Constraints (no source file edits; writes to `docs/context/` and `docs/archive/` only; never issue a Bridge with unfilled safety fields; worktree isolation enforced via Specialist frontmatter — verify `isolation: worktree` and `worktree.baseRef: "head"` exist before issuing any Bridge), Sign-Off Protocol, Circuit Breaker.
 - Replace "Conductor" references with OWNER throughout.
 
 ---
@@ -446,8 +440,8 @@ Generate a QA agent definition:
 - `description:` → "QA for [NAME]. Zero-write quality gate — issues PASS or BLOCKED verdict."
 - `provider: claude`
 - `model: sonnet`
-- `tools: Read, Bash`
-- Body: Initialization, Core Identity (zero-write), Spec Gate (must receive Handoff Bridge before auditing), Quality Gate checks (scope, build passes `[BUILD_CMD]`, no secrets, format), Context Gate (track hygiene), Hard Constraints (never write or edit; verdict is APPROVED or BLOCKED only), Circuit Breaker.
+- `tools: Read, Bash, WebFetch`
+- Body: Initialization, Core Identity (zero-write), Spec Gate (must receive Handoff Bridge before auditing), Quality Gate checks (scope, build passes `[BUILD_CMD]`, no secrets, format), Behavioral Verification Gate (between Quality Gate and Context Gate — requires Specialist to have attached observed output; BLOCKED if absent or vague; check plan doc for Research Basis section on behavioral claim tracks), Context Gate (track hygiene), Hard Constraints (never write or edit; verdict is APPROVED or BLOCKED only), Circuit Breaker.
 
 ---
 
@@ -459,8 +453,9 @@ For each specialist parsed from the team table, generate an agent definition:
 - `description:` → "[NAME] [DOMAIN] Specialist for [NAME]. Owns [SCOPE]."
 - `provider: claude`
 - `model: sonnet`
-- `tools: Read, Write, Edit, Bash`
-- Body: Initialization (read DNA files), Core Identity (domain and scope), Capabilities, Hard Constraints (Bridge is the only scope boundary; STOP if Bridge safety fields are unpopulated for auth/schema/payment changes), Sign-Off Protocol.
+- `isolation: worktree`
+- `tools: Read, Write, Edit, Bash, WebFetch`
+- Body: Initialization (read DNA files), Core Identity (domain and scope), Capabilities, Hard Constraints (Bridge is the only scope boundary; STOP if Bridge safety fields are unpopulated for auth/schema/payment changes; if implementation relies on undocumented behavior — a tool parameter, runtime guarantee, or API assumption not confirmed in official docs — STOP and flag to the Architect before proceeding), Sign-Off Protocol (Sign-Off must include **Behavioral Verification** field with actual observed output from the Bridge's Verification command — pasted output, not a summary).
 
 ---
 
@@ -470,6 +465,9 @@ If `.claude/settings.json` already exists, merge — do not remove existing entr
 
 ```json
 {
+  "worktree": {
+    "baseRef": "head"
+  },
   "hooks": {
     "Stop": [
       {
