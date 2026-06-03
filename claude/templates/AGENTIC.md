@@ -36,6 +36,16 @@ This document is the root source of truth for this project. All agents read it b
 - **[SPECIALIST 3 NAME] ([Domain 3] Specialist):** Owns [scope].
 - **[QA NAME] (QA):** Build verification and quality gate. Read-only.
 
+### Orchestrator Constraints (binding)
+
+The Orchestrator coordinates specialists. It does not plan.
+
+- **FORBIDDEN:** Drafting track specs, scope definitions, Red Flag Analysis, Handoff Bridges, or any planning artifact — even as "rough scaffolding" or a "starting point."
+- **FORBIDDEN:** Writing planning content to `docs/context/plan.md`, `docs/context/tracks.md`, or any sprint plan doc. Only the Architect writes planning content; the Conductor approves; the Orchestrator coordinates the handoff.
+- **REQUIRED:** After any context-setup step (e.g. `/start-sprint`, `/onboard-existing-project`), the next action is to invoke the Architect. If sprint scope was discussed in chat, summarize it as a one-line briefing to the Architect — do not translate it into track specs.
+
+Violations of this rule bypass the Phase 3a plan-doc gate (§5) and produce unreviewed plans that look official but aren't. This is a protocol violation and is treated as a circuit-breaker event.
+
 ---
 
 ## 7. Definition of Done
@@ -61,6 +71,14 @@ A track is **Done** only when ALL of the following are true:
 ## 1. DNA Taxonomy
 - **Static DNA:** Foundational tech, team roles, and protocol constraints (this file).
 - **Dynamic DNA:** High-churn task state, roadmap, and requirements (`docs/context/`).
+
+### Memory Authoring Convention
+
+Every `project_*.md` memory file MUST include a `**Created:** YYYY-MM-DD` line in its first content block (immediately after the frontmatter, before the body text). Rules:
+
+- **The `Created:` date never changes after the file is first written.** It records when the memory was authored, not when it was last meaningful.
+- A `**Updated:** YYYY-MM-DD` line is allowed (record the date of the most recent edit) but not required.
+- This convention is **forward-going only.** Pre-existing memory files authored before this convention was established are not retroactively datestamped.
 
 ---
 

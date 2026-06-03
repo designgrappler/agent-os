@@ -61,7 +61,8 @@ These are skills available in canonical that you do not have installed.
 
 **b. Removed** — names present in `~/.claude/skills/` but absent from the canonical `skills` array.
 For each removed name:
-- First, check the manifest `renames` array. If an entry `{ "from": "<name>", "to": "<new-name>" }` matches, surface it as a **confirmed rename** (no guessing required).
+- **Cross-array invariant guard (fires before the rename lookup):** Check whether the candidate name is present in the canonical `skills` array. Because the candidate is already defined as a name absent from canonical `skills`, this guard is vacuously true for a clean manifest — but if a §9.7.2 manifest invariant violation exists (the name appears in both `skills` and `renames[].from`), the candidate will pass the initial "absent from canonical `skills`" filter incorrectly. Therefore: when matching a candidate against the `renames` array, **first confirm the candidate is NOT present in the canonical `skills` array**. If the candidate IS in canonical `skills`, skip the `renames` match entirely — treat the candidate as "current" (no rename, no removal). Surface the one-line diagnostic: `Manifest invariant warning: <name> appears in both skills[] and renames[].from. Treating as canonical (no action).`
+- First, check the manifest `renames` array. If an entry `{ "from": "<name>", "to": "<new-name>" }` matches (and the guard above did not fire), surface it as a **confirmed rename** (no guessing required).
 - For removed names not covered by any `renames` entry, apply a name-similarity heuristic (e.g. Levenshtein distance, shared prefix/suffix) as a **suggestion only**. Label it clearly as "possible rename" and require explicit user confirmation before treating it as a rename.
 
 **c. Drifted** — names present in both `~/.claude/skills/` and the canonical set, but whose file contents differ (a `diff` of the two `SKILL.md` files is non-empty). These are installed skills that have diverged from the canonical version.
@@ -72,7 +73,7 @@ For each removed name:
 These are agents available in canonical that you do not have installed.
 
 **b. Removed** — names present in `~/.claude/agents/` but absent from the canonical `agents` array.
-Apply the same rename-check logic as for skills: check `renames` array first, then heuristic-as-suggestion only.
+Apply the same rename-check logic as for skills: **cross-array invariant guard first** — when matching a candidate against the `renames` array, confirm the candidate is NOT present in the canonical `agents` array. If the candidate IS in canonical `agents`, skip the `renames` match entirely — treat the candidate as "current" (no rename, no removal) and surface: `Manifest invariant warning: <name> appears in both agents[] and renames[].from. Treating as canonical (no action).` Then check `renames` array first (confirmed rename), then heuristic-as-suggestion only.
 
 **c. Drifted** — names present in both `~/.claude/agents/` and the canonical set, but whose file contents differ (a `diff` of the two agent `.md` files is non-empty). These are installed agents that have diverged from the canonical version.
 
@@ -176,6 +177,7 @@ Skills: <counts>. Agents: <counts>. CLAUDE.md: <N> reference(s) updated.
 - **Compatibility window:** never treat a missing-but-defaultable frontmatter field as a hard error. Surface it as a drift item with the documented default value. The minimum compatibility window is 2 sprints per AGENTIC.md §9.2.
 - **CLAUDE.md scan is conditional:** Phase 3 scans `CLAUDE.md` only when the diff contains at least one rename or removal. It does not fire on install-only or update-only runs. If no `CLAUDE.md` exists, the scan is skipped silently.
 - **Absent directories are created silently:** If `~/.claude/skills/` or `~/.claude/agents/` is absent at Phase 2, create it silently and treat the installed set as empty. No user message. No prompt. Surface an error only if directory creation fails.
+- **Manifest cross-array invariant (AGENTIC.md §9.7.2):** If a skill name appears in both `renames[].from` and the canonical `skills` array (a §9.7.2 invariant violation in the manifest), canonical `skills` membership is authoritative. The skill MUST NOT propose a rename or removal action for that name. Surface a one-line diagnostic to the user: `Manifest invariant warning: <name> appears in both skills[] and renames[].from. Treating as canonical (no action).` The same rule applies symmetrically to agent names: if a name appears in both `renames[].from` and the canonical `agents` array, canonical `agents` membership is authoritative and no rename or removal is proposed. This is a runtime defense against the §9.7.2 contract being violated by a future manifest edit — in a clean manifest the guard fires vacuously and has no effect.
 
 ---
 
@@ -188,6 +190,8 @@ Skills: <counts>. Agents: <counts>. CLAUDE.md: <N> reference(s) updated.
 - [ ] Release notes surfaced to user before the action table was shown
 - [ ] Phase 3 Diff run for both skills (`~/.claude/skills/`) and agents (`~/.claude/agents/`)
 - [ ] Phase 3 Diff cross-checked the manifest `renames` array before applying heuristic (for both skills and agents)
+- [ ] Cross-array invariant guard applied before each `renames` lookup: for skills, confirmed candidate is NOT in canonical `skills` before matching against `renames`; for agents, confirmed candidate is NOT in canonical `agents` before matching against `renames`
+- [ ] Manifest cross-array invariant violation (if any) was detected and surfaced as a diagnostic (`Manifest invariant warning: <name> appears in both skills[] and renames[].from. Treating as canonical (no action).`), and no rename/removal action was proposed for the colliding name
 - [ ] Compatibility-window check applied: missing-but-defaultable agent frontmatter fields surfaced as drift with documented default, not as errors
 - [ ] If diff contains at least one rename or removal: CLAUDE.md scanned for stale references (auto-trigger rows, inline `/skill-name` mentions, path literals); results held for Phase 4
 - [ ] If diff contains install-only or update-only changes: CLAUDE.md scan did NOT fire; no `[claude.md]` rows in Phase 4 table

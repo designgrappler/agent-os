@@ -1,9 +1,10 @@
 {
-  "release-version": "v0.9.3",
+  "release-version": "v0.9.4",
   "frontmatter-version": 2,
   "skills": [
     "audit-security",
     "check-agent-os",
+    "clean-context",
     "install-agent-scaffold",
     "minify-context",
     "onboard-existing-project",
@@ -11,7 +12,9 @@
     "report-track-status",
     "start-sprint",
     "streamline-approvals",
-    "sync-vercel-env"
+    "submit-agent-os-feedback",
+    "sync-vercel-env",
+    "triage-feedback"
   ],
   "agents": [
     "architect",

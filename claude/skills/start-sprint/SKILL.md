@@ -38,6 +38,19 @@ Separate tracks into:
 ### Step 3 — Resolve plan file
 The plan file follows the pattern `docs/context/t##-plan.md` where `##` is the sprint number (e.g., sprint 22 → `docs/context/t22-plan.md`). Use this path in every prompt.
 
+### Step 3b — Triage open feedback (non-blocking)
+
+Invoke `/triage-feedback` to surface any open feedback issues from `designgrappler/agent-os` before proposing tracks.
+
+- If `/triage-feedback` succeeds: include the cluster summary in the sprint scoping context. Reference any relevant clusters when building the track list.
+- If `/triage-feedback` errors (e.g. `gh` auth failure, network issue): continue sprint kickoff with a one-line note:
+  ```
+  feedback triage skipped — <error>
+  ```
+  Do not halt sprint kickoff.
+
+---
+
 ### Step 4 — Build tab names
 Tab naming convention: `@agent T##x theme`
 
@@ -49,11 +62,12 @@ Tab naming convention: `@agent T##x theme`
 For each OPEN track, the prompt follows this template:
 
 ```
-"You are [Agent]. Open [T##x] on branch track/[##x-theme]. Read [docs/context/t##-plan.md] [T##x] section and execute."
+"You are [Agent]. First: git worktree add .claude/worktrees/track-[##x-theme] -b track/[##x-theme]. Work exclusively inside that worktree. Read [docs/context/t##-plan.md] [T##x] section and execute."
 ```
 
 - `[Agent]` — the agent's display name (capitalized, e.g., `Lucy`)
 - Branch name: `track/[##x-theme]` — sprint number + letter + hyphenated theme slug (e.g., `track/22a-schema`)
+- The `git worktree add` command MUST be the first instruction in every prompt — before any plan-section read, file read, or edit instruction. This enforces worktree isolation when parallel tabs are open.
 - If the track has a specific Handoff Bridge or additional context file noted, append: `Handoff Bridge is in [file].`
 
 ### Step 6 — Output the kickoff card

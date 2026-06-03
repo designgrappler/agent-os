@@ -357,6 +357,7 @@ Invoke the following skills automatically when the user's message matches these 
 |---|---|
 | "start planning", "new sprint", "let's plan", "begin planning", "what are we working on next" | `/sprint-open` |
 | "catch me up", "what's the status", "where are we", "status check", "quick update" | `/track-status` |
+| "report an issue", "file feedback", "this skill is broken", "report an Agent OS issue", "this Agent OS skill is broken" | `/submit-agent-os-feedback` |
 ```
 
 ---
@@ -469,6 +470,20 @@ If `.claude/settings.json` already exists, merge — do not remove existing entr
     "baseRef": "head"
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$CLAUDE_PROJECT_DIR/.agent-os-checked\"; if [ ! -f \"$f\" ]; then echo 'Agent OS health check is overdue — run /check-agent-os.'; exit 0; fi; mtime=$(stat -f %m \"$f\" 2>/dev/null || stat -c %Y \"$f\" 2>/dev/null); now=$(date +%s); if [ -z \"$mtime\" ]; then exit 0; fi; age_days=$(( (now - mtime) / 86400 )); if [ \"$age_days\" -gt 30 ]; then echo 'Agent OS health check is overdue — run /check-agent-os.'; fi; exit 0"
+          },
+          {
+            "type": "command",
+            "command": "sanitized=$(echo \"$CLAUDE_PROJECT_DIR\" | sed 's|/|-|g'); mem_dir=\"$HOME/.claude/projects/$sanitized/memory\"; if [ ! -d \"$mem_dir\" ]; then exit 0; fi; newest_mtime=$(find \"$mem_dir\" -maxdepth 1 -type f -exec stat -f %m {} \\; 2>/dev/null | sort -n | tail -1); if [ -z \"$newest_mtime\" ]; then newest_mtime=$(find \"$mem_dir\" -maxdepth 1 -type f -exec stat -c %Y {} \\; 2>/dev/null | sort -n | tail -1); fi; if [ -z \"$newest_mtime\" ]; then exit 0; fi; now=$(date +%s); age_days=$(( (now - newest_mtime) / 86400 )); if [ \"$age_days\" -gt 14 ]; then echo \"Memory hygiene reminder — newest memory entry is $age_days days old. Consider /clean-context or /minify-context.\"; fi; exit 0"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

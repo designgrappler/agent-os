@@ -1,5 +1,13 @@
 # [PROJECT NAME] — Claude Code Configuration
 
+## Team Architecture
+
+The Orchestrator coordinates specialists and writes no code. It does not plan.
+
+> **Orchestrator constraint:** the Orchestrator never drafts plans, track specs, or planning artifacts. Planning belongs exclusively to the Architect. See AGENTIC.md §3 Orchestrator Constraints.
+
+---
+
 ## Initialization Loop (Every Session)
 
 Before any work, read:
@@ -47,6 +55,7 @@ Worktree isolation is enforced via each Specialist's agent frontmatter (`isolati
 |---|---|---|
 | **Stop** | Session ends | Prints DNA hygiene reminder |
 | **PreToolUse(Bash)** | `git push` | Blocks if build command fails (see AGENTIC.md §2) |
+| **SessionStart** | Session starts | Prints memory-staleness reminder if newest memory entry is >14 days old |
 
 ---
 
@@ -66,3 +75,4 @@ Invoke the following skills automatically when the user's message matches these 
 |---|---|
 | "start planning", "new sprint", "let's plan", "begin planning", "what are we working on next" | `/sprint-open` |
 | "catch me up", "what's the status", "where are we", "status check", "quick update" | `/track-status` |
+| "report an issue", "file feedback", "this skill is broken", "report an Agent OS issue", "this Agent OS skill is broken" | `/submit-agent-os-feedback` |
