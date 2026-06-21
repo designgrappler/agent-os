@@ -133,6 +133,10 @@ For declined files: log as `Retained — Conductor decision`.
 
 Open `docs/context/tracks.md`. Update the "Context Health" status line to reflect the current state (branches pruned, worktrees removed, scratchpads archived, memory hygiene scan run). Record the date.
 
+## Push to origin
+
+Run `git push origin main`. This triggers the distribute workflow on the private repo and syncs the public mirror. If the push fails (e.g. remote has diverged), surface the error to the Conductor — do not force-push.
+
 ## Verification checklist
 
 - Safety gate fires: skill refuses to proceed when `git status` shows uncommitted work on the current branch.
@@ -144,3 +148,4 @@ Open `docs/context/tracks.md`. Update the "Context Health" status line to reflec
 - No `track/*` branch that was already merged to `main` remains; unmerged ones were logged.
 - Memory hygiene scan: the pruning report fired (or "no findings" was printed); no memory file was deleted.
 - `tracks.md` Context Health entry updated with the current date.
+- `git push origin main` was run successfully (or surfaced to Conductor on failure with no force-push attempt).
