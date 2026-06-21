@@ -24,6 +24,16 @@ This document is the root source of truth for this project. All agents read it b
 - **Build:** [BUILD COMMAND]
 - **Linting:** [LINTER]
 
+### Design Toolchain (optional — omit if no Designer-class agent on this project)
+
+```yaml
+design_tool: <none|pencil|figma|other>   # Which design tool the Designer agent uses
+runtime: <desktop|vscode-extension|other> # Which Pencil/Figma runtime is installed
+mcp_server_path: <absolute path or N/A>  # Path to the standalone MCP server binary (N/A if design_tool: none)
+```
+
+Projects with no Designer-class agent leave this section as a stub or omit it entirely. When populated, this section governs how the project configures the Designer agent's `mcpServers:` frontmatter. See `claude/agents/designer.md` for the two supported shapes (desktop, vscode-extension) and the known VSCode-extension limitation.
+
 ---
 
 ## 3. Project Team
@@ -154,9 +164,13 @@ Each Specialist agent definition includes `isolation: worktree` in its frontmatt
 
 **No-Bridge rule (binding):** Any execution touching `src/`, `supabase/`, config files, agent profiles, skills, `CLAUDE.md`, or `AGENTIC.md` requires a Bridge first. "Sounds small", "it's just one line", and "quick fix" are not exemptions. Clarification questions are fine; execution is not.
 
+**Anti-patterns that do NOT exempt a request from the Bridge requirement (Issue #2 precedent):** "sounds small", "quick fix", "it's just one line", "to match X", "just update", "matching reference", "small tactical fix". These phrasings are explicitly recorded as Issue #2 failure patterns — they caused a real protocol bypass. Any request using these patterns, or any close variant suggesting the change is too small to need a Bridge, triggers the same Bridge requirement.
+
+**Orchestrator acknowledgement (binding):** Before executing against any execution file, the Orchestrator MUST emit a one-line acknowledgement: `"This request touches <file> — Bridge required. Calling Architect."` Then surface to Conductor or call Architect. Skipping this acknowledgement is a circuit-breaker event.
+
 **Continuous improvement loop:** Fix locally → confirm it works → if it works, queue a targeted backlog item naming the specific canonical file to update → process that item as a normal sprint track. An improvement is not shipped until canonical reflects it. See §5.1 for the full enforcement rule.
 
-**Orchestrator no-execution cross-reference:** §3 Orchestrator Constraints defines a binding role-scoped rule that forbids the Orchestrator from any direct execution on execution files, even when a Specialist is blocked. The only two valid Orchestrator moves in that case are (1) surface to Conductor, or (2) call Architect for unblock plan. The rule is enforced at the protocol layer here (§3 / §5) and at the tool layer via the `PreToolUse` hook documented in `docs/bridges/S18.1-em-execution-hook.md`. See AGENTIC.md §3 for the canonical rule text — this cross-reference does not duplicate it.
+**Orchestrator no-execution cross-reference:** §3 Orchestrator Constraints defines a binding role-scoped rule that forbids the Orchestrator from any direct execution on execution files, even when a Specialist is blocked. The only two valid Orchestrator moves in that case are (1) surface to Conductor, or (2) call Architect for unblock plan. The rule is enforced at the protocol layer here (§3 / §5) and at the tool layer via the `PreToolUse` hook documented in `docs/bridges/S18.1-em-execution-hook.md`. See AGENTIC.md §3 for the canonical rule text — this cross-reference does not duplicate it. T20.4 reinforces the protocol layer ON TOP of the hook, not in place of it.
 
 ### 5.1 Canonical Sync Before Sprint Close
 
@@ -319,3 +333,33 @@ Task blueprints are the third canonical content type Agent OS distributes to use
 - **§9.7.2 Cross-array mutual exclusion** extends to `blueprints-manifest.json` symmetrically: any Bridge touching `blueprints-manifest.json` must include a verification criterion asserting `blueprints ∩ renames[].from = ∅`. No blueprint name may appear in both the `blueprints` array and as a `from` value in the `renames` array — these semantics are contradictory (same reasoning as for skills and agents). When the `refresh-agent-os` skill's diff phase encounters a §9.7.2 violation in `blueprints-manifest.json`, it surfaces a one-line diagnostic (`Manifest invariant warning: <name> appears in both blueprints[] and renames[].from. Treating as canonical (no action).`) and treats canonical `blueprints` membership as authoritative — the same defensive runtime guard already implemented for skills and agents.
 
 **Schema reference:** the binding schema specification for blueprint files is at `claude/blueprints-schema.md`. The schema governs the four-column frontmatter contract (`name`, body+`description`, `tools`, `expected_output`), the three required body sections (System Prompt Strategy, Expected Output Contract, Allowed Tool Bindings — Reasoning), the uniform `task-` prefix naming convention, the frontmatter `expected_output:` ↔ body `## Expected Output Contract` first-sentence sync rule, and the §11 Deferred decisions list. §9.8 governs distribution of blueprints conforming to that schema; it does not redefine the schema. Schema evolution proceeds per §9.2 (compatibility window) and is reflected in the per-blueprint `schema_version:` field.
+
+---
+
+## 10. Communication Standards
+
+All long-form structured output — planning docs, research findings, reports, audits, multi-step plans, Q&A lists, track specs, Red Flag Analyses, sprint plans — must be written to a `.md` file and surfaced as a file reference. Chat carries only a 1–2 sentence summary.
+
+### 10.1 Rule Body
+
+1. **Long-form to file.** Any response that contains more than ~5 lines of structured content — tables, headers, multi-step plans, audits, research synthesis, Q&A lists, track specs, Red Flag Analyses, or sprint plans — MUST be written to a `.md` file, not rendered in chat.
+
+2. **Chat summary contract.** Chat contains a 1–2 sentence summary: (a) what the file is (one phrase, e.g. "Sprint 20 plan draft"), (b) the absolute path to the file.
+
+3. **Applies to all agents.** Orchestrator/EM, Architect, Specialist, QA — every agent in the system is bound by this rule.
+
+4. **Exceptions (exhaustive).** The rule does not apply to:
+   - (a) Direct yes/no decision questions to the Conductor where the full answer fits in one sentence.
+   - (b) Status updates ≤5 lines that contain no structured content (tables, headers, lists).
+   - (c) One-shot diagnostic outputs that the Conductor explicitly asked be rendered in chat.
+   - (d) Inline verification outputs (e.g. `grep` results) that are ≤5 lines and serve as confirmation of a completed step.
+
+### File Lifecycle
+
+Every `.md` file authored under the long-form-to-file rule belongs to exactly one of two categories. The author decides before writing the file.
+
+1. **Temporary docs (`docs/temp-<topic>.md`):** Content that loses relevance after the current sprint — sprint plans, sprint interview docs, active Q&A tables, issue inventories, raw synthesis outputs. Auto-archived to `docs/archive/` by `/clean-context` at sprint close.
+
+2. **Permanent docs (`docs/<category>/<topic>.md`):** Content that serves as a long-term source of truth — architectural analyses, finalized audits, release notes, plan docs at sprint close (`docs/archive/plan-docs/<N>.md`), I/O contracts, schema specs. No `temp-` prefix.
+
+3. **Author obligation:** Before writing any long-form `.md` file, every agent decides which category the file belongs in and uses the matching path prefix. If unsure, default to `docs/temp-` and surface the question to the Conductor in the chat summary.

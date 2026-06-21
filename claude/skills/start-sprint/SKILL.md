@@ -191,21 +191,47 @@ For each OPEN track, the prompt follows this template:
 
 ### Step 6 — Output the kickoff card
 
+Output one card per track. OPEN tracks first, then BLOCKED tracks. Separate each card with `---`.
+
+**For each OPEN track**, output exactly this shape:
+
+**T##x — slug**
+
+Tab name:
 ```
-Sprint T[##] — Parallel Kickoff
+@agent T##x slug
+```
 
-OPEN (start now):
-  Tab [N] — @[agent] T[##x] [theme]
-  Prompt: "[ready-to-paste prompt]"
+Prompt:
+```
+[ready-to-paste opening prompt from Step 5]
+```
 
-  Tab [N] — @[agent] T[##x] [theme]
-  Prompt: "[ready-to-paste prompt]"
+---
 
-BLOCKED:
-  Tab [N] — @[agent] T[##x] [theme]  ← blocked until [condition]
+**For each BLOCKED track**, output the same two-fenced-blocks shape with a `← blocked until [condition]` annotation on the line immediately after the bolded track header:
 
+**T##x — slug**
+← blocked until [condition]
+
+Tab name:
+```
+@agent T##x slug
+```
+
+Prompt:
+```
+[ready-to-paste opening prompt from Step 5]
+```
+
+---
+
+Both fenced blocks are present for BLOCKED tracks so the user can copy-paste once the blocker clears.
+
+If there are no BLOCKED tracks, omit all BLOCKED cards entirely.
+If all tracks are blocked, output all BLOCKED cards and add a closing note: `No tracks are ready to start. Resolve blockers first.`
+
+After all cards, output:
+```
 Open one tab per OPEN track via Cmd+Shift+Esc, paste the prompt, name the tab.
 ```
-
-If there are no BLOCKED tracks, omit the BLOCKED section entirely.
-If all tracks are blocked, output the BLOCKED list and note: `No tracks are ready to start. Resolve blockers first.`

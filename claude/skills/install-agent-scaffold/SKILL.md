@@ -194,6 +194,16 @@ This document is the root source of truth for this project. All agents read it b
 - **Build:** [BUILD_CMD]
 - **Linting:** [LINTER or "none configured"]
 
+### Design Toolchain (optional — omit if no Designer-class agent on this project)
+
+```yaml
+design_tool: <none|pencil|figma|other>   # Which design tool the Designer agent uses
+runtime: <desktop|vscode-extension|other> # Which Pencil/Figma runtime is installed
+mcp_server_path: <absolute path or N/A>  # Path to the standalone MCP server binary (N/A if design_tool: none)
+```
+
+Projects with no Designer-class agent leave this section as a stub or omit it entirely. When populated, this section governs how the project configures the Designer agent's `mcpServers:` frontmatter. See `claude/agents/designer.md` for the two supported shapes (desktop, vscode-extension) and the known VSCode-extension limitation.
+
 ---
 
 ## 3. Project Team
@@ -596,6 +606,146 @@ Complete at any time. Your Architect will surface unchecked items at the start o
 - [ ] Product focus — fill in Current Focus in `docs/context/product.md`
 - [ ] Team conventions — update AGENTIC.md §5 with any project-specific workflow rules
 ```
+
+---
+
+### 4k-designer. Designer-aware setup (Claude Code only)
+
+> **If you are running as Claude Code, perform the designer-aware setup step below. If you are running as Gemini CLI, skip this step entirely.**
+
+**Claude Code branch only:**
+
+**Designer-class detection:** inspect the `SPECIALISTS` list parsed in Step 3. A specialist is Designer-class if:
+- Their `name` (lowercase, hyphen-separated) matches `designer`; OR
+- Their canonical agent file's `description:` or `name:` frontmatter declares a designer role (e.g. a project-renamed designer agent).
+
+If **no Designer-class agent is found** in the roster, write the AGENTIC.md §2 Design Toolchain section as a stub and skip to the final bullet below:
+
+```yaml
+design_tool: none
+runtime: N/A
+mcp_server_path: N/A
+```
+
+Then append to `INSTALL_CHECKLIST.md`:
+```
+- [ ] MCP: N/A (no design tool configured)
+```
+
+Skip the rest of this sub-phase.
+
+---
+
+If **a Designer-class agent is found**, proceed:
+
+**Step 1 — Prompt for design tool and runtime:**
+
+Ask the user:
+> "Designer-class agent detected in your roster. Two questions:
+> 1. Design tool? [pencil / figma / none / other]
+> 2. Runtime? [desktop / vscode-extension / other]
+>
+> (If `pencil` on `desktop`: you need `/Applications/Pencil.app/` installed. If `pencil` on `vscode-extension`: you need the Pencil extension installed in VS Code.)"
+
+Wait for the user's answers.
+
+**Step 2 — Handle `none` selection:**
+
+If the user selects `none` as the design tool:
+
+1. Write the AGENTIC.md §2 Design Toolchain section as a stub:
+   ```yaml
+   design_tool: none
+   runtime: N/A
+   mcp_server_path: N/A
+   ```
+2. Append to `INSTALL_CHECKLIST.md`:
+   ```
+   - [ ] MCP: N/A (no design tool configured)
+   ```
+3. Skip the MCP config block entirely. Proceed to Step 4l.
+
+**Step 3 — Handle `pencil` + `desktop` selection:**
+
+1. Populate the AGENTIC.md §2 Design Toolchain section:
+   ```yaml
+   design_tool: pencil
+   runtime: desktop
+   mcp_server_path: /Applications/Pencil.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64
+   ```
+
+2. Surface the following `mcpServers:` config block to the user for **explicit review and confirmation before any write**:
+
+   > "Add the following block to `~/.claude/settings.json` under `mcpServers` to enable Pencil MCP access for the Designer subagent. Review and confirm before applying — do NOT auto-write:"
+   >
+   > ```json
+   > "mcpServers": {
+   >   "pencil-desktop": {
+   >     "type": "stdio",
+   >     "command": "/Applications/Pencil.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64",
+   >     "args": ["--app", "desktop"]
+   >   }
+   > }
+   > ```
+   >
+   > "Paste and merge this into your `~/.claude/settings.json`. Restart Claude Code after editing. Then run the MCP reachability check in `INSTALL_CHECKLIST.md`."
+
+3. Append to `INSTALL_CHECKLIST.md`:
+   ```
+   - [ ] MCP reachability — confirm `mcp__pencil__get_editor_state` succeeds with a Pencil file open (pencil-desktop shape)
+   ```
+
+**Step 4 — Handle `pencil` + `vscode-extension` selection:**
+
+1. Populate the AGENTIC.md §2 Design Toolchain section:
+   ```yaml
+   design_tool: pencil
+   runtime: vscode-extension
+   mcp_server_path: ~/.pencil/mcp/visual_studio_code/out/mcp-server-darwin-arm64
+   ```
+
+2. Surface the following config block to the user for **explicit review and confirmation before any write**:
+
+   > "Add the following block to `~/.claude/settings.json` under `mcpServers`. Note the known limitation: the Pencil VS Code extension's MCP server is session-only and does NOT propagate to Designer subagents automatically — this explicit registration is required. Review and confirm before applying — do NOT auto-write:"
+   >
+   > ```json
+   > "mcpServers": {
+   >   "pencil-vscode": {
+   >     "type": "stdio",
+   >     "command": "~/.pencil/mcp/visual_studio_code/out/mcp-server-darwin-arm64",
+   >     "args": ["--app", "visual_studio_code"]
+   >   }
+   > }
+   > ```
+   >
+   > "Paste and merge this into your `~/.claude/settings.json`. Restart Claude Code after editing. Then run the MCP reachability check in `INSTALL_CHECKLIST.md`."
+
+3. Append to `INSTALL_CHECKLIST.md`:
+   ```
+   - [ ] MCP reachability — confirm `mcp__pencil__get_editor_state` succeeds with a Pencil file open (pencil-vscode shape)
+   ```
+
+**Step 5 — Handle `figma` or `other` selection:**
+
+1. Populate the AGENTIC.md §2 Design Toolchain section with the user's input:
+   ```yaml
+   design_tool: figma   # or the user's stated tool name
+   runtime: [user's stated runtime]
+   mcp_server_path: [user's stated path, or N/A if not yet known]
+   ```
+2. Tell the user:
+   > "Figma / other design tool detected. Consult your design tool's MCP server documentation to configure `mcpServers` in `~/.claude/settings.json`. See `claude/agents/designer.md` for the general MCP registration pattern. Update `INSTALL_CHECKLIST.md` manually with the MCP reachability check once configured."
+3. Append to `INSTALL_CHECKLIST.md`:
+   ```
+   - [ ] MCP reachability — configure `mcpServers` for your design tool and confirm the Designer subagent can reach it
+   ```
+
+**Absent-file handling (AGENTIC.md §9.7.1):** `INSTALL_CHECKLIST.md` was created in Step 4k above. If for any reason it does not exist, create it silently before appending:
+```bash
+touch INSTALL_CHECKLIST.md
+```
+
+**AGENTIC.md Design Toolchain write:** the Design Toolchain section already exists as a stub in the generated `AGENTIC.md` (Step 4a generated it as a placeholder block). Replace the stub's `design_tool`, `runtime`, and `mcp_server_path` placeholder values with the chosen values. Field order is binding: `design_tool` first, `runtime` second, `mcp_server_path` third.
 
 ---
 

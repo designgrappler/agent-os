@@ -52,11 +52,23 @@ A Handoff Bridge looks like:
 **Next Step:** [specific task for the Specialist]
 ```
 
+**No-Bridge rule (binding):** Any execution touching `src/`, `supabase/`, config files, agent profiles, skills, `CLAUDE.md`, or `AGENTIC.md` requires a Bridge first. "Sounds small", "it's just one line", and "quick fix" are not exemptions. Clarification questions are fine; execution is not.
+
+**Anti-patterns that do NOT exempt a request from the Bridge requirement:** "sounds small", "quick fix", "it's just one line", "to match X", "just update", "matching reference", "small tactical fix". These phrasings are explicitly recorded as Issue #2 failure patterns — they caused a real protocol bypass. Any request using these patterns, or any close variant suggesting the change is too small to need a Bridge, triggers the same Bridge requirement.
+
+**Orchestrator acknowledgement (binding):** Before executing against any execution file, the Orchestrator MUST emit a one-line acknowledgement: `"This request touches <file> — Bridge required. Calling Architect."` Then surface to Conductor or call Architect. Skipping this acknowledgement is a circuit-breaker event. See AGENTIC.md §3 for the Orchestrator no-execution rule and AGENTIC.md §5 for the canonical No-Bridge rule.
+
 **Commit-before-dispatch (binding):** Conductor commits staged changes on `main` before dispatching. Uncommitted work does not reach Specialist worktrees. Canonical rule: AGENTIC.md §5.
 
 **`.claude/` exception (binding):** `.claude/settings.json` and `.claude/hooks/**` are not worktree-isolated; edit on `main` (absolute path). Canonical rule: AGENTIC.md §5; Bridge template guidance: AGENTIC.md §8.
 
 **Pre-staging hygiene (binding):** Run `git status` before `git add`; commit or stash unrelated dirty files first. Canonical rule: AGENTIC.md §5.
+
+---
+
+## Communication Standards
+
+All long-form structured output must be written to a `.md` file. Chat carries a 1–2 sentence summary + absolute path. See AGENTIC.md §10 for the canonical rule body, agent applicability scope, and exception cases. (T7.5 — one rule, one place.)
 
 ---
 
