@@ -82,9 +82,109 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 
 ---
 
-## Phase 5: Report
+## Phase 7: Blueprint Frontmatter Validity Check
 
-Emit the full report with one clearly-labeled section per phase. Each section states whether the phase **PASSED** or **FAILED**, and if failed, lists every fail row with its remediation hint. Phase 4 has three sub-checks (4a model format, 4b WebFetch, 4c isolation); each sub-check contributes its fail rows to the overall count.
+**Note:** Phase 7 fail rows contribute to the OVERALL fail count in Phase 9.
+
+### 7.1 Absent-directory precondition
+
+If `~/.claude/blueprints/` does not exist, emit a single PASS line:
+
+> `Phase 7: Blueprint Frontmatter Validity Check — PASS (no blueprints installed — run /refresh-agent-os to install)`
+
+Exit Phase 7 cleanly. No fail row, no error, no auto-create.
+
+### 7.2 File enumeration
+
+If `~/.claude/blueprints/` exists, enumerate all files matching `~/.claude/blueprints/*.md` (top level only — no recursion). For each file, run the per-file validation block below. An error in one file does not abort the phase — continue to the next file.
+
+### 7.3 Per-file validation block
+
+For each `~/.claude/blueprints/<filename>.md`:
+
+**a. Frontmatter parse.** Read the file and parse the YAML frontmatter (delimited by `---` lines). If the frontmatter is missing or malformed (no opening `---`, no closing `---`, or invalid YAML that cannot be parsed), emit a fail row:
+
+> `<filename>: invalid or missing frontmatter (could not parse YAML)`
+> Remediation: Re-author the file per `claude/blueprints-schema.md` §8 file format template, or run `/refresh-agent-os` to restore the canonical version.
+
+Continue to the next file. Do NOT crash the phase.
+
+**b. Required field presence.** Confirm the parsed frontmatter contains all six required fields: `name`, `description`, `tools`, `expected_output`, `model`, `schema_version`. For each missing field, emit a fail row:
+
+> `<filename>: required frontmatter field absent: <field>`
+> Remediation: Add the missing field per `claude/blueprints-schema.md` §2 field reference.
+
+**c. `name:` ↔ filename invariant.** Confirm the frontmatter `name:` value equals the filename minus the `.md` extension (e.g. `task-coder.md` must have `name: task-coder`). If mismatch, emit a fail row:
+
+> `<filename>: name field "<value>" does not match filename`
+> Remediation: Rename the file or update the name field so they match exactly (filename minus .md).
+
+**d. `task-` prefix invariant.** Confirm the frontmatter `name:` value starts with `task-`. If not, emit a fail row:
+
+> `<filename>: name "<value>" does not start with the required task- prefix`
+> Remediation: Rename the file and update the name field to use the task- prefix per `claude/blueprints-schema.md` §4 naming convention.
+
+**e. `expected_output:` first-sentence sync rule.** Locate the H2 section heading exactly matching `## Expected Output Contract` (case-sensitive, exact whitespace) in the file body. If the section is absent, emit a fail row:
+
+> `<filename>: required body section "## Expected Output Contract" absent`
+> Remediation: Add the section per `claude/blueprints-schema.md` §3 required body sections, ensuring the first sentence equals the frontmatter expected_output: value.
+
+Skip the sync-rule check for this file (already failed on absent section).
+
+If the section is present, extract the first sentence of the section body — defined as the text from the start of the section body (first non-blank line after the heading) up to and including the first period (`.`) that ends a sentence, excluding periods inside inline code spans (`` `...` ``). Trim leading and trailing whitespace on both the extracted first sentence and the frontmatter `expected_output:` value. Compare character-for-character. If they do not match exactly, emit a fail row:
+
+> `<filename>: expected_output sync rule violation — frontmatter value does not match first sentence of body's ## Expected Output Contract section`
+> Frontmatter: <frontmatter value>
+> Body first sentence: <extracted first sentence>
+> Remediation: Update the frontmatter expected_output: value to equal the first sentence of the body's ## Expected Output Contract section verbatim, OR update the body to match the frontmatter. The two surfaces must agree per `claude/blueprints-schema.md` §3 sync rule.
+
+### 7.4 Pass condition
+
+Phase 7 passes if every enumerated file passes every check in §7.3 (or if `~/.claude/blueprints/` is absent — see §7.1).
+
+---
+
+## Phase 8: Claude Code Version Notice
+
+**Phase 8 is informational and does not affect OVERALL.** All output from Phase 8 is passive notice — no fail rows, no contribution to the OVERALL fail count.
+
+**Rationale:** The v2.1.172 threshold is a recommendation for tier-2 autonomous-mode spawning (per Q0 research), not a hard correctness requirement. Because `claude --version`'s output format is not separately versioned by Anthropic, a future format change should not break the health check. Phase 8 therefore degrades gracefully on any parse failure and never flips the OVERALL verdict.
+
+**Source:** `claude --version` (`claude -v`) is documented as a stable CLI flag at `https://code.claude.com/docs/en/cli-reference`. Defensive parsing is used because the output format (`<semver> (Claude Code)`) is not separately specified as a stability contract.
+
+### 8.1 Invocation
+
+Run `claude --version` in a defensive subshell that does not abort Phase 8 on non-zero exit:
+
+```bash
+version_output=$(claude --version 2>/dev/null)
+exit_code=$?
+```
+
+### 8.2 Parse
+
+Extract the version string by taking the first whitespace-delimited token of the first line of stdout. Apply a permissive regex (`^[0-9]+\.[0-9]+\.[0-9]+`) to accept prerelease suffixes (e.g. `2.1.172-beta.1` parses as `2.1.172`).
+
+### 8.3 Threshold comparison
+
+Compare the parsed `major.minor.patch` tuple to the threshold `2.1.172` element-wise: version is at-or-above threshold if major > 2, OR (major == 2 AND minor > 1), OR (major == 2 AND minor == 1 AND patch >= 172).
+
+### 8.4 Output cases (notice only — never fail rows)
+
+**Case a — Parse succeeded AND version >= 2.1.172:** emit:
+> `Claude Code version OK (v<X.Y.Z>)`
+
+**Case b — Parse succeeded AND version < 2.1.172:** emit:
+> `Claude Code v2.1.172+ recommended for autonomous mode (detected: v<X.Y.Z>)`
+
+**Case c — Parse failed** (binary unavailable, exit code != 0, output does not match the version regex, or stdout is empty): emit:
+> `Claude Code v2.1.172+ recommended for autonomous mode (could not detect installed version)`
+
+---
+
+## Phase 9: Report
+
+Emit the full report with one clearly-labeled section per phase. Each section states whether the phase **PASSED** or **FAILED**, and if failed, lists every fail row with its remediation hint. Phase 4 has three sub-checks (4a model format, 4b WebFetch, 4c isolation); each sub-check contributes its fail rows to the overall count. Phase 7 fail rows are included in the OVERALL count. **Phase 8 notices are NOT included in the OVERALL fail count — Phase 8 is informational only.**
 
 Example structure:
 
@@ -110,20 +210,28 @@ All agent files include WebFetch in their tools list.
 #### 4c: Specialist isolation: worktree Check — PASSED
 All Specialist agents have isolation: worktree in frontmatter.
 
+### Phase 7: Blueprint Frontmatter Validity Check — PASSED
+All installed blueprints have valid frontmatter and pass all invariants.
+
+### Phase 8: Claude Code Version Notice (informational — does not affect OVERALL)
+Claude Code v2.1.172+ recommended for autonomous mode (detected: v2.1.150)
+
 OVERALL: FAIL (1 issue)
 ```
 
 The final line of the report **must** be exactly one of:
 - `OVERALL: PASS`
-- `OVERALL: FAIL (N issues)` — where N is the total count of fail rows across all phases and sub-checks.
+- `OVERALL: FAIL (N issues)` — where N is the total count of fail rows across all phases and sub-checks (Phases 1, 2, 3, 4, and 7). Phase 8 notices are never counted.
 
 ---
 
-## Phase 6: Timestamp on Success
+## Phase 10: Timestamp on Success
 
 - **If `OVERALL: PASS`:** write today's ISO date as a single line (e.g. `2026-05-23`) to `.agent-os-checked` at the project root. Print:
   > `Wrote .agent-os-checked (next reminder in 30 days)`
 - **If `OVERALL: FAIL`:** do NOT create or modify `.agent-os-checked`. The 30-day session-start reminder will continue to appear until all issues are resolved and the check passes.
+
+Phase 10 fires after Phase 9 regardless of Phase 8's notice content — the timestamp is written on every OVERALL PASS even when Phase 8 emits a version advisory.
 
 ---
 
@@ -138,10 +246,14 @@ The final line of the report **must** be exactly one of:
 
 ## Verification Checklist (Internal — Run Before Reporting Complete)
 - [ ] Canonical source resolved (URL primary, local clone fallback) before Phase 1 ran
-- [ ] All four phases executed in order
+- [ ] All phases (1, 2, 3, 4, 7, 8) executed in order; Phase 9 Report and Phase 10 Timestamp run last
 - [ ] Report ends with explicit `OVERALL: PASS` or `OVERALL: FAIL (N issues)` line
 - [ ] On PASS, `.agent-os-checked` was written with today's ISO date (single line)
 - [ ] On FAIL, `.agent-os-checked` was NOT created or modified
 - [ ] Every fail row in the report includes a remediation hint
 - [ ] Phase 4b: every `.claude/agents/*.md` was checked for `WebFetch` in the `tools:` list; any absent entries are FAIL rows with remediation "Run `/refresh-agent-os` to sync with canonical."
 - [ ] Phase 4c: each agent identified as a Specialist (has `## Sign-Off Protocol` with `**Track:**` and `**Completed:**` fields) was checked for `isolation: worktree` in frontmatter; any absent entries are FAIL rows with the same remediation hint
+- [ ] Phase 7: `~/.claude/blueprints/` absent-directory case handled as PASS with notice (no fail row, no auto-create)
+- [ ] Phase 7: each `~/.claude/blueprints/*.md` checked for all six required fields, name/filename match, task- prefix, and expected_output: first-sentence sync rule; malformed frontmatter emits a fail row and continues (does not crash)
+- [ ] Phase 8: `claude --version` invoked with defensive parsing; one of the three output cases emitted as a notice line; Phase 8 does not contribute any fail rows to OVERALL
+- [ ] Phase 9 OVERALL count includes fail rows from Phases 1, 2, 3, 4, and 7 only (Phase 8 notices excluded)

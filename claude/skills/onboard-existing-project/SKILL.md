@@ -88,7 +88,7 @@ Use the same template as `install-agent-scaffold` Step 2a. Replace all placehold
 
 ### 4b. `CLAUDE.md` (root)
 
-Use the same template as `install-agent-scaffold` Step 2b. Include the Auto-Invocations table for open-sprint and report-track-status.
+Use the same template as `install-agent-scaffold` Step 2b. Include the Auto-Invocations table for start-sprint and report-track-status.
 
 **When `CLAUDE.md` already exists:** after confirming the merge/replace/skip decision with the user, run the **Skill-reference drift check** sub-flow below before writing any changes.
 
@@ -119,13 +119,13 @@ Skill-reference drift detected in CLAUDE.md:
 
 | Skill name        | Line | Context                                      |
 |-------------------|------|----------------------------------------------|
-| start-sprint      | 42   | `| User says "open sprint" | /start-sprint |` |
+| open-sprint       | 42   | `| User says "open sprint" | /open-sprint |`  |
 | deploy-preview    | 67   | Inline mention: "run /deploy-preview to..."  |
 ```
 
 **Step 4 — Per-reference targeted patches.** For each unresolvable reference, offer a specific fix. Examples:
 - "Remove line 42 (this skill no longer exists)"
-- "Rename `/start-sprint` → `/open-sprint` to match the installed canonical name"
+- "Rename `/open-sprint` → `/start-sprint` to match the installed canonical name"
 - "Replace this row with the canonical equivalent from the Auto-Invocations template"
 
 Present each patch individually and wait for the user to confirm or decline before moving to the next. Do **not** apply patches in bulk. If the user declines a patch, skip it silently — no further prompting for that reference.
@@ -140,12 +140,12 @@ Present each patch individually and wait for the user to confirm or decline befo
 
    | User says... | Invoke |
    |---|---|
-   | "start planning", "new sprint", "let's plan", "begin planning", "what are we working on next" | `/sprint-open` |
+   | "start planning", "new sprint", "let's plan", "begin planning", "what are we working on next" | `/start-sprint` |
    | "catch me up", "what's the status", "where are we", "status check", "quick update" | `/track-status` |
 
 3. **Produce a structured diff.** Compare the existing table rows against the canonical table row-by-row:
    - Rows present in canonical but **missing locally** → `MISSING` (skill not yet in local table)
-   - Rows present locally but whose `Invoke` value **differs from canonical** → `RENAMED` (e.g. `/start-sprint` vs `/sprint-open`)
+   - Rows present locally but whose `Invoke` value **differs from canonical** → `RENAMED` (e.g. `/open-sprint` vs `/start-sprint`)
    - Rows present locally but **absent from canonical** → `EXTRA` (skill added locally or removed from canonical)
    - If no differences: state "Auto-trigger table matches canonical — no drift detected." and skip Steps 4–6.
 
@@ -156,14 +156,14 @@ Present each patch individually and wait for the user to confirm or decline befo
 
    | Status  | User says pattern                          | Local Invoke    | Canonical Invoke |
    |---------|--------------------------------------------|-----------------|------------------|
-   | RENAMED | "start planning", "new sprint", ...        | /start-sprint   | /sprint-open     |
+   | RENAMED | "start planning", "new sprint", ...        | /open-sprint    | /start-sprint    |
    | MISSING | "catch me up", "what's the status", ...    | —               | /track-status    |
    | EXTRA   | "deploy now"                               | /deploy         | (not in canonical) |
    ```
 
 5. **Offer a single table-level patch.** Offer to replace the entire Auto-Invocations table with the canonical version. Do **not** offer per-cell patches — table replacement only. Present the offer as:
 
-   > "Apply canonical Auto-Invocations table? This will replace the table with the two-row canonical version (sprint-open, track-status). Your other CLAUDE.md content is untouched."
+   > "Apply canonical Auto-Invocations table? This will replace the table with the two-row canonical version (start-sprint, track-status). Your other CLAUDE.md content is untouched."
 
    Wait for the user to confirm or decline.
 
@@ -179,7 +179,34 @@ Otherwise create the standard blank template.
 
 ### 4d. `docs/context/tracks.md`
 
-Initialize with: `Project adoption — Agent OS initialized.`
+Initialize with the following seed entry:
+
+```markdown
+## Track 0 — Project adoption
+
+**Status:** DONE — Bandit APPROVED, committed <hash> (<date>)
+
+**Goal:** Onboard existing project into Agent OS.
+
+**Plan reference:** docs/temp-sprint1-plan.md
+
+**Files:**
+- `AGENTIC.md` (new)
+- `CLAUDE.md` (new)
+- `docs/context/plan.md` (new)
+- `docs/context/tracks.md` (new)
+- `docs/context/product.md` (new)
+- `.claude/agents/<architect-name>.md` (new)
+- `.claude/agents/<specialist-name>.md` (new)
+- `.claude/agents/<qa-name>.md` (new)
+- `.claude/settings.json` (new)
+
+**Migration Safety:** Reversible
+
+**Security Review:** N/A
+```
+
+Replace `<hash>` and `<date>` with the actual commit hash and ISO date once the commit is made. Replace `<architect-name>`, `<specialist-name>`, and `<qa-name>` with the names confirmed during Phase 3. Replace the sprint number in `docs/temp-sprint1-plan.md` with the actual sprint number if one is in progress.
 
 ### 4e. `docs/context/product.md`
 

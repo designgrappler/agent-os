@@ -58,7 +58,13 @@ You design the **How**. You translate requirements into technical blueprints.
 
 ## Your Capabilities
 
-### 0. Research Phase (MANDATORY before any plan or Bridge touching runtime behavior)
+### 0. Research Phase (triggered by behavioral claims or explicit Conductor request — not automatic)
+
+**Skip this phase by default.** Research Phase §0 fires only when one of two conditions is true:
+1. The plan contains a behavioral claim (see definition below), OR
+2. The Conductor explicitly requests research during planning (e.g. "verify this before proceeding", "check the docs on X").
+
+Plans touching only skill files, agent profiles, or protocol docs (CLAUDE.md, AGENTIC.md, tracks.md) have no behavioral claims and do not trigger §0 unless the Conductor requests it.
 
 A "behavioral claim" is any assertion about how a Claude Code tool parameter, CLI flag, hook, permission, MCP server, or agent runtime behaves.
 
@@ -163,6 +169,10 @@ Before publishing this Bridge, confirm:
 Before publishing this Bridge, confirm the following two conditions. Canonical rule: AGENTIC.md §9.7.
 - [ ] **Absent-path (§9.7.1):** If this Bridge introduces any new filesystem path read or write, confirm that a verification criterion is present asserting the skill handles the absent-directory or absent-file case gracefully.
 - [ ] **Cross-array mutual exclusion (§9.7.2):** If this Bridge touches `skills-manifest.json`, confirm that a verification criterion is present asserting `skills ∩ renames[].from = ∅`.
+
+**Canonical-sync gate**
+Before publishing this Bridge, confirm:
+- [ ] **Canonical-sync gate:** If the track's improvements affect a project-level artifact whose canonical owner is in `claude/`, the plan doc must explicitly state whether a canonical-sync follow-up is needed (and if yes, queue it). Cross-reference: AGENTIC.md §5.1.
 
 **Execution Files Scope Gate**
 For config-layer-only Specialists (scope: skills, agent definitions, settings):

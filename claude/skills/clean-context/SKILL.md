@@ -7,9 +7,9 @@ description: Sanitize the project environment — archive scratchpads, remove me
 
 Run `git status`. If there is any uncommitted work in the current branch, **bail immediately** with a warning and do not proceed.
 
-Run `git worktree list`. If any worktree (other than the main one) is dirty, bail with a warning naming the affected worktree.
+Run `git worktree list`. Note any dirty worktrees (other than the main one) — these are not an immediate bail condition. Each dirty worktree is evaluated individually in the Merged worktree sweep below: if its branch is merged into `main`, it will be force-removed with a log line; if its branch is NOT merged (or branch state cannot be determined), the existing bail logic fires at that point.
 
-Only continue when both checks pass.
+Only continue when the uncommitted-work check passes.
 
 ## Scratchpad and temp-artifact archival
 
@@ -25,7 +25,34 @@ For each directory under `.claude/worktrees/` (and `.worktrees/` if present), ch
 git branch --merged main
 ```
 
-If merged: run `git worktree remove <path>`. Use `--force` only when the worktree contains nothing beyond generated or symlinked artifacts (e.g. `node_modules`). Log any skipped worktrees with the reason.
+**For clean (non-dirty) worktrees:** if merged, run `git worktree remove <path>` and log it. If not merged, log and skip.
+
+**For dirty worktrees**, apply the following three-case logic before taking any action:
+
+1. **Determine the worktree's branch.** Run `git -C <path> branch --show-current` to get the branch name.
+
+2. **If the branch is in `git branch --merged main` output (branch is merged):**
+   Force-remove the worktree:
+   ```
+   git worktree remove --force <path>
+   ```
+   Then emit a mandatory log line in exactly this format:
+   ```
+   force-removed merged worktree: <path> (branch: <branch-name>, last commit: <SHA>)
+   ```
+   where `<SHA>` is the output of `git -C <path> rev-parse --short HEAD` captured before removal. Continue to the next worktree.
+
+3. **If the branch is NOT in `git branch --merged main` output (branch is not merged):**
+   Bail with a warning naming the affected worktree — existing bail logic, unchanged:
+   > `Worktree <path> is dirty and its branch (<branch-name>) is not merged into main. Resolve or commit the work before running /clean-context.`
+   Stop the cleanup phase.
+
+4. **If branch state cannot be determined** (e.g. detached HEAD, `git -C <path> branch --show-current` returns empty, or the git command errors):
+   Treat as "not merged" and bail per the existing logic above. Do NOT auto-force-remove a worktree whose branch state is ambiguous.
+
+The log line on every force-remove is **mandatory**. Without it, the user has no audit trail of what was destroyed. Log to stdout so the line appears in the cleanup summary.
+
+Log any skipped worktrees (non-merged or ambiguous) with the reason.
 
 ## Merged branch sweep
 
@@ -108,7 +135,10 @@ Open `docs/context/tracks.md`. Update the "Context Health" status line to reflec
 
 ## Verification checklist
 
-- Safety gate fires: skill refuses to proceed when `git status` shows uncommitted work or any worktree is dirty.
+- Safety gate fires: skill refuses to proceed when `git status` shows uncommitted work on the current branch.
+- Dirty worktrees whose branch IS merged into `main` are force-removed with the mandatory log line in the format `force-removed merged worktree: <path> (branch: <branch-name>, last commit: <SHA>)`.
+- Dirty worktrees whose branch is NOT merged into `main` trigger the existing bail with a warning naming the affected worktree — cleanup stops.
+- Dirty worktrees with ambiguous branch state (detached HEAD, empty branch output, or git error) are treated as "not merged" and trigger the existing bail — cleanup stops.
 - Scratchpad/temp files were moved or deleted; `.agent/archives/` updated where applicable.
 - Merged worktrees under `.claude/worktrees/` (and `.worktrees/` if present) were removed; unmerged ones were logged and skipped.
 - No `track/*` branch that was already merged to `main` remains; unmerged ones were logged.

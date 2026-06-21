@@ -18,6 +18,7 @@ Invoke when the user says:
 - **No arbitrary code execution.** Never allowlist a wildcard pattern for interpreters (`python3`, `node`, `bun`, `deno`, `ruby`, etc.), shells (`bash`, `sh`, `zsh`, `eval`, `exec`, `ssh`), package runners (`npx`, `bunx`, `uvx`), or task-runner wildcards (`bun run *`, `npm run *`, `make *`). An exact form like `Bash(bun run typecheck)` is fine; `Bash(bun run *)` is not.
 - **Merge, never overwrite.** Preserve all existing keys and existing `permissions.allow` entries. De-duplicate. Never reorder unrelated fields.
 - **Global settings.** Write to `~/.claude/settings.json` — not `.claude/settings.json`, not `.claude/settings.local.json`. Patterns found across multiple projects belong globally; writing per-project leaves prompts unresolved everywhere else.
+- **Scripts directory scope.** When Step 9a extracts a compound command into a script, write the script to `scripts/<name>.sh` inside the current project's working directory (the per-project repo). Do not write extracted scripts to global paths (`~/.claude/`, `/usr/local/bin/`, etc.). The `scripts/` directory and its contents belong to the project repo, not the global Agent OS install.
 
 ---
 
@@ -35,7 +36,7 @@ Scan recent transcripts across the user's full projects dir — not just the cur
 
   2. **`git -C <path> <subcommand>`** — if the command matches `git -C <path> <subcommand> ...`, extract `<subcommand>` as the operative token. Record as `git -C * <subcommand>` for classification. These are NOT auto-allowed by Claude Code even when the subcommand is read-only — they need explicit allowlist entries.
 
-  3. **Compound commands** (`&&`, `||`, `|`, `;`, `for`/`while` loops, subshells) — flag these separately as "compound — cannot allowlist." Do not attempt to parse constituent commands. Collect them in a separate list for the Step 10 gap report.
+  3. **Compound commands** (`&&`, `||`, `|`, `;`, `for`/`while` loops, subshells) — flag these separately as "compound — cannot allowlist as-is." Do not attempt to parse constituent commands. Normalize whitespace (collapse all runs of whitespace to a single space, trim leading/trailing whitespace) to produce a canonical form for each compound, then count occurrences of each canonical form across all scanned transcripts. Collect the resulting canonical-form → count map in a separate list for Step 9a and the Step 10 gap report.
 
   4. **Everything else** — take the leading command token (handling `sudo`, `timeout`). Record the command + first subcommand pair (e.g. `git status`, `gh pr view`, `ls`).
 
@@ -93,6 +94,33 @@ Show the prioritized list as a markdown table before writing anything, with a ti
 ### Step 9 — Merge into `~/.claude/settings.json`
 Create the file if it doesn't exist. Preserve existing keys and `permissions.allow` entries; de-duplicate; don't remove anything; don't touch `permissions.deny` or `permissions.ask` or any other field.
 
+### Step 9a — Compound Script Extraction
+Using the canonical-form → count map built in Step 2, split the compound commands into two tiers:
+
+**Tier A — extraction candidates (3 or more occurrences):**
+
+For each canonical form that appears 3+ times across the scanned transcripts:
+1. Propose a descriptive script name under `scripts/` that captures the command's purpose (e.g. `scripts/check-status.sh`, `scripts/verify-build.sh`).
+2. Show the proposed script contents — a minimal shell script wrapping the compound exactly as observed (canonical form). Example:
+   ```
+   Proposed: scripts/check-status.sh
+   #!/usr/bin/env bash
+   set -euo pipefail
+   git remote -v && GH_HOST=github.com gh auth status 2>&1 | head -10
+   ```
+3. Ask the user to **approve**, **decline**, or **rename** each proposed script individually. Wait for the user's response before proceeding to any writes.
+4. For each approved script:
+   - If the `scripts/` directory does not exist in the current project repo, create it silently (`mkdir -p scripts`).
+   - Write the script file to `scripts/<name>.sh`.
+   - Make it executable (`chmod +x scripts/<name>.sh`).
+   - Add `Bash(bash scripts/<name>.sh)` to the allowlist candidates for Step 9 (merge into `~/.claude/settings.json`).
+5. Declined scripts are skipped entirely — move them to the "CANNOT ALLOWLIST" bucket in the Step 10 gap report.
+6. Renamed scripts use the user-supplied name in place of the proposed name; otherwise the process is identical.
+
+**Tier B — low-frequency compounds (fewer than 3 occurrences):**
+
+Do not propose script extraction for these. Continue to report them as un-allowlistable in the Step 10 gap report under the "CANNOT ALLOWLIST" bucket (existing behavior preserved exactly).
+
 ### Step 10 — Report back
 Tell the user: what was added (count + examples), what was already in the allowlist, and what was skipped and why (e.g. "dropped `rm` and `git push` — not read-only; dropped `cat`/`ls`/`git status` — already auto-allowed").
 
@@ -101,10 +129,13 @@ Tell the user: what was added (count + examples), what was already in the allowl
 If compound commands were detected in Step 2, report them here:
 
 ```
-CANNOT ALLOWLIST (compound commands):
+EXTRACTED TO SCRIPTS (compound commands, 3+ occurrences — extracted in Step 9a):
+  - `git remote -v && GH_HOST=github.com gh auth status 2>&1 | head -10`
+    → scripts/check-status.sh  (Bash(bash scripts/check-status.sh) added to allowlist)
+
+CANNOT ALLOWLIST (compound commands, fewer than 3 occurrences or declined in Step 9a):
   These commands triggered prompts but cannot be safely pattern-matched:
   - `ls ~/.claude/skills/ && cat CLAUDE.md | grep skill`
-  - `git remote -v && GH_HOST=github.com gh auth status 2>&1 | head -10`
 
   Fix: extract into a named script and allowlist the script instead.
   Example:

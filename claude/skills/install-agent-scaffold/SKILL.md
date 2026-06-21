@@ -306,12 +306,21 @@ chore(deps): upgrade dependencies
 ```markdown
 # [NAME] — Claude Code Configuration
 
+## Operating Mode
+
+Current: MANUAL (autonomous loop inactive — Tim triggers each handoff)
+
+To change: `/switch-workflow-mode autonomous` or `/switch-workflow-mode manual` (sprint boundary only — see feasibility gate).
+
+---
+
 ## Initialization Loop (Every Session)
 
 Before any work, read:
 1. `AGENTIC.md` — Static DNA (tech stack, team, protocols, hard constraints)
 2. `docs/context/plan.md` — Current sprint objective
 3. `docs/context/tracks.md` — Active tracks and their status
+4. **Operating mode mismatch check:** Compare the `operatingMode` field in `.claude/settings.json` against the `## Operating Mode` section in this file. If they differ, surface this warning at the top of the session: `Operating mode mismatch detected: settings.json says <X>, CLAUDE.md says <Y>. Run /switch-workflow-mode to reconcile.` Session continues; the warning persists until reconciled.
 
 ---
 
@@ -466,6 +475,7 @@ If `.claude/settings.json` already exists, merge — do not remove existing entr
 
 ```json
 {
+  "operatingMode": "manual",
   "worktree": {
     "baseRef": "head"
   },
@@ -509,6 +519,54 @@ If `.claude/settings.json` already exists, merge — do not remove existing entr
 ```
 
 ---
+
+---
+
+### 4i-blueprints. Blueprint scaffolding (Claude Code only)
+
+> **If you are running as Claude Code, perform the blueprint-scaffolding step below. If you are running as Gemini CLI, skip this step entirely — blueprints are a Claude Code-only canonical content type this sprint.**
+
+**Claude Code branch only:**
+
+1. Read `blueprints-manifest.json` from the canonical source repo (the same local clone used in Step 4 for skills). If `blueprints-manifest.json` is absent (e.g. the canonical clone predates T19.2), emit a single line:
+   > `no blueprints-manifest.json found in canonical source — skipping blueprint scaffolding`
+   Then continue to Step 4i-mode. No error, no abort.
+
+2. If `~/.claude/blueprints/` does not exist, create it silently:
+   ```bash
+   mkdir -p ~/.claude/blueprints/
+   ```
+   Do not emit any message about the directory creation itself.
+
+3. For each name in the manifest's `blueprints` array, copy `claude/blueprints/<name>.md` from the canonical source to `~/.claude/blueprints/<name>.md`. If a same-named file already exists at the destination, show the diff and ask the user: merge, replace, or skip — identical to the existing Step 4 file-collision pattern.
+
+4. After all entries are processed, emit a single summary line:
+   > `Installed N blueprint(s) to ~/.claude/blueprints/`
+   Where N is the count of successfully installed blueprints. Skipped or failed files are reported per-file above the summary line.
+
+---
+
+### 4i-mode. Operating mode introduction
+
+After `.claude/settings.json` is written, introduce operating mode to the user and verify the freshly generated `CLAUDE.md` contains the `## Operating Mode` section.
+
+**Agent OS defaults to MANUAL mode on every fresh install.** In MANUAL mode, the Conductor (you) triggers each handoff — the Orchestrator coordinates on request, not autonomously. Autonomous mode is a deliberate posture change made via `/switch-workflow-mode`.
+
+No mode-selection prompt is shown at install time. The default is always manual. Switching modes is always a deliberate, named action.
+
+Verify that the freshly generated `CLAUDE.md` contains a `## Operating Mode` section. If it does not (e.g. because the template predates T17.3), insert the following block immediately after `## Team Architecture` (or at the top of the file if that section is absent):
+
+```markdown
+## Operating Mode
+
+Current: MANUAL (autonomous loop inactive — Tim triggers each handoff)
+
+To change: `/switch-workflow-mode autonomous` or `/switch-workflow-mode manual` (sprint boundary only — see feasibility gate).
+```
+
+Tell the user:
+> **Operating mode:** Agent OS is installed in **MANUAL** mode (default). Tim triggers each handoff. To switch to autonomous orchestration in a future sprint, run `/switch-workflow-mode autonomous` at a sprint boundary. The skill includes a feasibility gate and requires explicit confirmation.
+
 
 ### 4j. `.gitignore` additions
 
@@ -554,6 +612,7 @@ After all files are created successfully, delete `AgentOS-Setup.md`.
 
 **Project:** [NAME]
 **Files created:** [count]
+**Blueprints installed:** N  <!-- Claude Code branch only: include this line with the count of blueprints installed. Omit this line entirely on Gemini CLI installs or when blueprints-manifest.json was absent. -->
 
 **Your team:**
 - @[ARCHITECT] — Lead Architect (planning + Handoff Bridges)
@@ -568,5 +627,7 @@ Your first move: open a planning session with `@[ARCHITECT]`.
 
 **Verification:** Run `[BUILD_CMD]` to confirm the build environment is clean.
 
+**Operating mode:** MANUAL (default). To switch to autonomous orchestration, run `/switch-workflow-mode autonomous` at a sprint boundary.
+
+
 **Activate skills:** Close and reopen your IDE window — installed skills load on session start.
-```

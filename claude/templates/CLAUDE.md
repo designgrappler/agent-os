@@ -6,6 +6,16 @@ The Orchestrator coordinates specialists and writes no code. It does not plan.
 
 > **Orchestrator constraint:** the Orchestrator never drafts plans, track specs, or planning artifacts. Planning belongs exclusively to the Architect. See AGENTIC.md §3 Orchestrator Constraints.
 
+> **Orchestrator no-execution constraint:** the Orchestrator never edits execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/**`) — even when a Specialist is blocked. The only two valid moves are (1) surface to Conductor, (2) call Architect for unblock plan. See AGENTIC.md §3 Orchestrator Constraints.
+
+---
+
+## Operating Mode
+
+Current: MANUAL (autonomous loop inactive — Tim triggers each handoff)
+
+To change: `/switch-workflow-mode autonomous` or `/switch-workflow-mode manual` (sprint boundary only — see feasibility gate).
+
 ---
 
 ## Initialization Loop (Every Session)
@@ -14,6 +24,7 @@ Before any work, read:
 1. `AGENTIC.md` — Static DNA (tech stack, team, protocols, hard constraints)
 2. `docs/context/plan.md` — Current sprint objective
 3. `docs/context/tracks.md` — Active tracks and their status
+4. **Operating mode mismatch check:** Compare the `operatingMode` field in `.claude/settings.json` against the `## Operating Mode` section in this file. If they differ, surface this warning at the top of the session: `Operating mode mismatch detected: settings.json says <X>, CLAUDE.md says <Y>. Run /switch-workflow-mode to reconcile.` Session continues; the warning persists until reconciled.
 
 ---
 
@@ -41,6 +52,12 @@ A Handoff Bridge looks like:
 **Next Step:** [specific task for the Specialist]
 ```
 
+**Commit-before-dispatch (binding):** Conductor commits staged changes on `main` before dispatching. Uncommitted work does not reach Specialist worktrees. Canonical rule: AGENTIC.md §5.
+
+**`.claude/` exception (binding):** `.claude/settings.json` and `.claude/hooks/**` are not worktree-isolated; edit on `main` (absolute path). Canonical rule: AGENTIC.md §5; Bridge template guidance: AGENTIC.md §8.
+
+**Pre-staging hygiene (binding):** Run `git status` before `git add`; commit or stash unrelated dirty files first. Canonical rule: AGENTIC.md §5.
+
 ---
 
 ## Worktree Protocol
@@ -56,6 +73,21 @@ Worktree isolation is enforced via each Specialist's agent frontmatter (`isolati
 | **Stop** | Session ends | Prints DNA hygiene reminder |
 | **PreToolUse(Bash)** | `git push` | Blocks if build command fails (see AGENTIC.md §2) |
 | **SessionStart** | Session starts | Prints memory-staleness reminder if newest memory entry is >14 days old |
+
+---
+
+## Language Protocol
+
+Plans, Handoff Bridges, and protocol documentation must use **system role terms** — not agent names.
+
+| Use this | Not this |
+|---|---|
+| Architect | [project-specific Architect name] (or any project-specific name) |
+| Specialist | [project-specific Specialist name] (or any project-specific name) |
+| QA | [project-specific QA name] (or any project-specific name) |
+| Conductor | [project-specific Conductor name] (or any individual's name) |
+
+Agent names are project-specific and fungible. Role terms are stable across every Agent OS installation. File paths referencing `.claude/agents/<name>.md` are fine — those are paths, not role references.
 
 ---
 

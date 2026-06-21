@@ -1,18 +1,135 @@
 ---
 name: start-sprint
-description: Reads `docs/context/tracks.md`, finds all OPEN tracks (no dependency blockers), and outputs a parallel tab kickoff card — one entry per open track with a tab name and a ready-to-paste opening prompt.
+description: Unified sprint-start skill with two modes — Mode A (sprint-setup) opens a new sprint, runs a structured interview, creates the temp interview doc, and updates context files; Mode B (parallel-kickoff) reads tracks.md and outputs a parallel tab kickoff card for all OPEN tracks.
 ---
 # Start Sprint
-Reads `docs/context/tracks.md`, finds all OPEN tracks (no dependency blockers), and outputs a parallel tab kickoff card — one entry per open track with a tab name and a ready-to-paste opening prompt. BLOCKED tracks are listed separately with their blocker noted.
+Unified sprint-start skill with two modes. **Mode A (sprint-setup)** opens a new sprint with a clean setup — surfaces unresolved prior work, runs a structured interview, writes a temporary sprint interview doc for the Architect, and updates context files. **Mode B (parallel-kickoff)** reads `docs/context/tracks.md`, finds all OPEN tracks (no dependency blockers), and outputs a parallel tab kickoff card — one entry per open track with a tab name and a ready-to-paste opening prompt. BLOCKED tracks are listed separately with their blocker noted.
 
 ## Auto-Trigger
 Invoke when the user says:
+- "start planning", "new sprint", "let's plan", "begin planning"
+- "what are we working on next", "ready to start"
+- Any message that signals intent to begin a new planning cycle
 - "start sprint", "kick off sprint", "launch sprint", "start the sprint"
 - "open tabs", "parallel kickoff", "start parallel tracks"
 
 ---
 
-## Rules
+## Mode Routing
+
+Before executing any steps, read `docs/context/plan.md` and `docs/context/tracks.md` to determine which mode to run.
+
+**Decision rule (binary, deterministic):**
+
+- **Mode A — Sprint Setup:** if `plan.md` has no Current Sprint section, OR the Current Sprint is marked complete, OR `tracks.md` has zero non-archived tracks for the current/next sprint number.
+- **Mode B — Parallel Kickoff:** if `plan.md` has an active Current Sprint section AND `tracks.md` has at least one track for that sprint with a non-archived status.
+- **Ambiguous case:** if the state is unclear (e.g. `plan.md` names one sprint, `tracks.md` references a different one), surface a one-line summary of what was found and ask the user which mode to run. Do not infer.
+
+**Announce the selected mode before executing:**
+
+> Running **[Mode A: Sprint Setup / Mode B: Parallel Kickoff]** because [reason — e.g. "plan.md has no active Current Sprint section" / "tracks.md has 3 open tracks for Sprint 15"].
+
+---
+
+## Mode A — Sprint Setup
+
+Opens a new sprint. Surfaces unresolved work, interviews the user, writes a temp interview doc, and updates context files. The counterpart to `clean-context`.
+
+### Step 1 — Prior Sprint Check
+
+Read `docs/context/tracks.md` and `docs/context/plan.md`.
+
+If `docs/context/tracks.md` does not exist, treat it as empty and proceed — do not error.
+
+If any tracks are marked **in progress** or **blocked**, surface them:
+
+> *"There are [N] unresolved tracks: [list]. Carry them forward, close them, or archive them before opening the new sprint?"*
+
+Wait for confirmation before continuing.
+
+### Step 2 — Sprint Interview
+
+Ask as a single message. Wait for all answers.
+
+> 1. **Sprint objective** — What is the primary goal? (1-2 sentences)
+> 2. **Proposed tracks** — What are the tracks for this sprint? List each with a brief description and the specialist owner (or "TBD").
+> 3. **Open questions for Tim** — Any unresolved decisions, tradeoffs, or risks Tim should weigh in on before planning starts?
+> 4. **Red flags surfaced** — Are there any architectural, security, or sequencing concerns to flag for the Architect?
+
+### Step 3 — Update Context Files
+
+**`docs/context/plan.md`:**
+```markdown
+## Current Sprint: [Sprint Objective]
+
+### Sprint Goals:
+- [ ] [First task] — [Owner] — Track [N]
+
+---
+*Last updated: [DATE]*
+```
+
+**`docs/context/tracks.md`** — add new track entry for each proposed track:
+```markdown
+## Track [N]: [Task Name]
+- **Owner:** [Specialist]
+- **Status:** Ready for Handoff Bridge
+- **Sprint:** [Sprint Objective]
+- **Opened:** [DATE]
+```
+
+**Confirm `AGENTIC.md`** is current — read and flag any stale fields. Do not modify without explicit direction.
+
+If `docs/` does not exist, create it silently (no user message, no prompt) before writing any files under it.
+
+### Step 4 — Write Temp Interview Doc
+
+Write a temporary sprint interview document at `docs/temp-sprint<N>-interview.md` where `<N>` is the sprint number (inferred from the track IDs or the sprint objective context; if ambiguous, use the next sequential number after the highest sprint number found in `docs/context/tracks.md`).
+
+The file must contain exactly these sections:
+
+```markdown
+# Sprint <N> Interview — <DATE>
+
+## Sprint Objective
+[Verbatim sprint objective from Step 2, question 1]
+
+## Proposed Tracks
+[List each proposed track with its description and owner, as provided in Step 2, question 2]
+
+## Open Questions for Tim
+[List each open question from Step 2, question 3 — or "None" if none were raised]
+
+## Red Flags Surfaced During Interview
+[List each red flag from Step 2, question 4 — or "None" if none were raised]
+
+---
+*Generated by /start-sprint Mode A on <DATE>. Architect reads this doc as the canonical sprint brief.*
+```
+
+No `[PLACEHOLDER]` values may remain in the written file. All sections must be populated from the Step 2 answers or explicitly marked "None".
+
+### Step 5 — Sprint Summary
+
+```
+## Sprint [N] Open
+
+**Objective:** [Sprint objective]
+**Tracks proposed:** [N tracks — list names and owners]
+**Context:** [Clean / N archived / N flags]
+**Interview Doc:** docs/temp-sprint<N>-interview.md
+
+Ready. Call @[architect-name] with the interview doc as input for planning.
+```
+
+---
+
+## Mode B — Parallel Kickoff
+
+Reads `docs/context/tracks.md` and outputs a parallel tab kickoff card for all OPEN tracks. **Read-only — no files are modified.**
+
+### Rules
+
 - **Read-only.** No files are modified.
 - **Parse tracks.md exactly as written.** Do not infer status — read the `Status` field.
 - A track is **OPEN** if its status is `Ready`, `Ready for Handoff Bridge`, `In Progress`, or equivalent active state with no blocker line.
@@ -20,22 +137,22 @@ Invoke when the user says:
 - Tab letter suffix (`a`, `b`, `c`…) is assigned by track order in tracks.md.
 - Sprint number is inferred from the track IDs (e.g., `T22a` → sprint 22). If tracks have mixed sprint numbers, use the majority; flag the outlier.
 
----
-
-## Protocol
-
 ### Step 1 — Read context
+
 Read `docs/context/tracks.md`.
 
-If the file has no tracks or is empty, output:
-> No tracks found in `docs/context/tracks.md`. Run `/open-sprint` to define tracks first.
+If the file has no tracks, is empty, or does not exist, output:
+
+> No tracks found in `docs/context/tracks.md`. Run `/start-sprint` (Mode A) to define tracks first.
 
 ### Step 2 — Classify tracks
+
 Separate tracks into:
 - **OPEN** — ready to start now, no unresolved blockers
 - **BLOCKED** — has a blocker or dependency that is not yet resolved
 
 ### Step 3 — Resolve plan file
+
 The plan file follows the pattern `docs/context/t##-plan.md` where `##` is the sprint number (e.g., sprint 22 → `docs/context/t22-plan.md`). Use this path in every prompt.
 
 ### Step 3b — Triage open feedback (non-blocking)
@@ -52,6 +169,7 @@ Invoke `/triage-feedback` to surface any open feedback issues from `designgrappl
 ---
 
 ### Step 4 — Build tab names
+
 Tab naming convention: `@agent T##x theme`
 
 - `@agent` — the specialist assigned to the track (from the Owner field); use the agent's name in lowercase (e.g., `@lucy`, `@max`, `@peaches`)
@@ -59,6 +177,7 @@ Tab naming convention: `@agent T##x theme`
 - `theme` — 1–3 word slug from the track name (lowercase, hyphenated if multi-word)
 
 ### Step 5 — Build opening prompts
+
 For each OPEN track, the prompt follows this template:
 
 ```
