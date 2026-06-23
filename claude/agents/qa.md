@@ -99,6 +99,19 @@ Verify that `docs/context/plan.md` and `docs/context/tracks.md` reflect the comp
 
 For every track, verify that every commit on the track branch was authored by the Specialist declared in the Handoff Bridge. Mismatch is treated as fabrication and produces an automatic BLOCKED verdict.
 
+#### Mode detection (run first, per-track)
+
+Run the following command on the track branch to determine which mode applies:
+
+```bash
+git log --pretty="%ae" main..HEAD | sort -u | wc -l
+```
+
+- Result `1` → **single-dev mode.** The Specialist Sign-Off file is the authoritative identity signal. Git-author is informational only (all commits share one human identity on single-developer installs, making git-author unable to distinguish Specialist authorship from Conductor authorship). Skip Step 2.
+- Result `> 1` → **multi-user mode.** Run both Step 1 and Step 2. The sign-off file is the primary signal; the git-author check (Step 2, S18.3 logic preserved verbatim) is additive.
+
+The detection rule is deterministic and binary. It runs per-track, not once at install time.
+
 #### Locating the Bridge and the declared Specialist
 
 Read the Handoff Bridge file from the track branch:
@@ -111,7 +124,35 @@ Or, if the Bridge file is already at a known path on the track branch, read it d
 
 If the Bridge file is missing from the track branch, or the `**Specialist:**` field is absent or empty: **BLOCKED.** Reason: "No declared Specialist on the track branch — authorship cannot be reconciled."
 
-#### Listing commits and their authors on the track branch
+#### Step 1 — Sign-Off file assertion (always — both modes)
+
+Assert that a Specialist Sign-Off file exists for this track. The canonical path pattern observed in this repo is `docs/bridges/T<sprint>.<track>-signoff.md` (examples: `docs/bridges/T18.3-signoff.md`, `docs/bridges/T21.E-signoff.md`). If a different path convention is canonical for this project, use that.
+
+The sign-off file must satisfy all three of the following:
+
+1. **Exist** on the track branch (or on `main` if committed under the `.claude/`-on-main carve-out documented in the Bridge).
+2. **Declare the same Specialist** as the Bridge's `**Specialist:**` field. Read the sign-off file's `**Track:**` and any Specialist declaration line — the name must match.
+3. **Be traceable to the declared Specialist** via `git log --follow` on the sign-off file path. The sign-off file's introducing commit's author must match the declared Specialist's git identity — OR, on single-dev installs (mode detection result `1`), the single human identity is acknowledged as the sole committer and this sub-check is informational only.
+
+If Step 1 fails (sign-off file missing OR sign-off file not authored by the declared Specialist on the relevant branch), issue BLOCKED with this three-field format:
+
+- **Sign-off file path:** the expected path where the file was not found, or the path of the file whose author did not match.
+- **Actual sign-off-file author (from `git log --follow`):** the `%an <%ae>` of the commit that introduced the sign-off file, or "FILE NOT FOUND" if absent.
+- **Declared Specialist (from Bridge):** the value of the `**Specialist:**` field from the Bridge.
+
+Example BLOCKED text (Step 1 failure):
+
+> Authorship Reconciliation BLOCKED (Step 1 — Sign-off file).
+> - Sign-off file path: `docs/bridges/T21.E-signoff.md`
+> - Actual sign-off-file author: FILE NOT FOUND
+> - Declared Specialist (Bridge): `skylar`
+> The sign-off file is missing from the track branch. The Specialist must author and commit the sign-off file before re-verification.
+
+#### Step 2 — Git-author check (multi-user mode only)
+
+On multi-user installs (mode detection result `> 1`), run the existing git-author check as an additional signal alongside the sign-off file.
+
+##### Listing commits and their authors on the track branch
 
 Run `git log --name-only` against the track branch to enumerate commits, authors, and modified files:
 
@@ -121,11 +162,11 @@ git log --name-only --format='COMMIT %H%nAUTHOR %an <%ae>%nDATE %ai%nMESSAGE %s%
 
 The `main..<track-branch>` range scopes the check to commits introduced by the track. Use `staging..<track-branch>` if the project uses a staging branch as the integration point (consult `AGENTIC.md` §6 / project conventions).
 
-#### Worktree branch naming note
+##### Worktree branch naming note
 
 Worktrees spawned by the Agent tool runtime use `worktree-agent-<id>` naming (per AGENTIC.md §4 — the runtime manages branch lifecycle), not the `track/N.M-*` naming used in plan docs. The QA gate must locate the track's commits by inspecting the diff against `main` (or the project's integration branch), not by branch name alone. Use `git log` with an explicit range, not `git branch --list 'track/*'`.
 
-#### Author / Specialist identity reconciliation
+##### Author / Specialist identity reconciliation
 
 For each commit listed by `git log --name-only`:
 
@@ -140,7 +181,7 @@ The match rule (binding):
 - **PASS:** every commit on the track branch is authored by the declared Specialist (or by an identity that is documented as that Specialist's commit identity in the project's agent profile / git config).
 - **BLOCKED:** any commit on the track branch is authored by an identity that does not match the declared Specialist. This includes (but is not limited to) Orchestrator-authored commits, Conductor-authored commits, and commits authored by a different Specialist than the one declared in the Bridge.
 
-#### Main-branch carve-out (binding)
+##### Main-branch carve-out (binding — Step 2 only)
 
 Some commits are structurally required to be authored outside the Specialist's worktree because the affected paths are not worktree-safe. These are **excluded from the authorship-reconciliation check** when they appear on `main` (not on the track branch):
 
@@ -155,9 +196,9 @@ The carve-out applies only when:
 
 If a Specialist branch contains a commit to `.claude/settings.json` or `.claude/hooks/` without an explicit Bridge carve-out, the carve-out does NOT apply — Bandit treats the commit as a normal authorship-reconciliation candidate and BLOCKED if the author does not match the declared Specialist. The carve-out is a documented exception, not a default.
 
-#### BLOCKED verdict format (binding — three required fields)
+##### BLOCKED verdict format — Step 2 (binding — three required fields)
 
-When the Authorship Reconciliation gate fails, Bandit issues BLOCKED with the following three required fields surfaced in the rejection message:
+When the Step 2 git-author check fails, Bandit issues BLOCKED with the following three required fields surfaced in the rejection message:
 
 - **Offending commit hash:** the full SHA of the first commit whose author does not match the declared Specialist.
 - **Actual commit author:** the `%an <%ae>` value of the offending commit.
@@ -165,7 +206,7 @@ When the Authorship Reconciliation gate fails, Bandit issues BLOCKED with the fo
 
 Example BLOCKED rejection text:
 
-> Authorship Reconciliation BLOCKED.
+> Authorship Reconciliation BLOCKED (Step 2 — git-author check).
 > - Offending commit: `4668904a`
 > - Actual author: `Tim Rechin <tim@example.com>` (Orchestrator identity)
 > - Declared Specialist (Bridge `docs/bridges/S18.3-authorship-reconciliation.md`): `skylar`
@@ -235,6 +276,62 @@ A new superseding entry IS allowed and is the documented mechanism for revising 
 - The original entry remaining in place unchanged — the historical record is preserved.
 
 Only silent mutation of the existing entry's content is fabrication. The append-with-supersedes path is always permitted.
+
+### 8. MANUAL-mode Exit-State Protocol (binding)
+
+This section applies to **MANUAL mode only**. An AUTONOMOUS-mode variant is out of scope for S21 and deferred to backlog (see `docs/sprint-plan-S21.md` §8 item 1). The MANUAL-mode rule below is the only binding exit-state rule today.
+
+After Bandit issues an APPROVED verdict, the following four-step sequence MUST be completed in order before the track is considered done:
+
+1. **Bandit issues APPROVED verdict.** This is the QA final gate. No track exits without it.
+2. **Conductor confirms acceptance.** Tim (Conductor) confirms acceptance of the APPROVED verdict in chat. Silence is not confirmation — an explicit acknowledgement is required.
+3. **Specialist commits any uncommitted track work.** Skylar (Specialist) commits any uncommitted track work in the worktree (if not already committed). This ensures the Conductor merges a complete, committed state.
+4. **Conductor merges to `main`.** Conductor merges the track branch to `main` using the commit message format: `chore(merge): T<id> <slug> — Bandit APPROVED`. Example: `chore(merge): T21.C exit-state-protocol — Bandit APPROVED`.
+
+The APPROVED verdict does not itself close the track. The track is closed only after Step 4 completes.
+
+### 8a. AUTONOMOUS-mode Exit-State Protocol (binding)
+
+This clause applies to **AUTONOMOUS mode only**. The MANUAL-mode protocol above (§8) is READ-ONLY — no retroactive edits. Both clauses are active simultaneously; mode determines which applies.
+
+**Auto-confirm rule:** The Sprint Coordinator merges without explicit Conductor confirmation when ALL four conditions are met:
+
+| Condition | Required value |
+|---|---|
+| Migration Safety | `Reversible` (set in Bridge) |
+| Security Review | `N/A` (set in Bridge) |
+| Circuit breaker | No circuit-breaker event active in the current sprint |
+| Per-track override | Bridge does NOT carry `tim_review_required: true` |
+
+**Tim-pause condition:** Sprint Coordinator MUST pause and surface to Tim (explicit confirmation required) when ANY of:
+1. `Migration Safety = Irreversible` in the Bridge
+2. `Security Review = Auth`, `Payments`, or `Schema` in the Bridge
+3. Circuit-breaker event active (3 same-pattern interventions in the sprint)
+4. `tim_review_required: true` flag in the Bridge
+5. Bandit issues `BLOCKED` verdict
+
+**AUTONOMOUS-mode merge commit message:** `chore(merge): T<id> <slug> — Bandit APPROVED [autonomous]`
+
+**The four-step AUTONOMOUS exit-state sequence:**
+```
+1. Bandit issues APPROVED verdict in Specialist sub-context.
+   Sprint Coordinator receives bounded summary (Track / Verdict: APPROVED / Commit hash).
+
+2. Sprint Coordinator evaluates auto-confirm rule:
+   ├── ALL conditions met → proceed to step 3 (auto-confirm).
+   └── ANY Tim-pause condition triggered → STOP.
+       Surface to Tim: "[Track ID] requires your confirmation before merge.
+       Reason: [Migration Safety=Irreversible | Security Review=X | circuit-breaker | override flag | BLOCKED]."
+       Wait for explicit Tim confirmation before continuing.
+
+3. Specialist commits any uncommitted track work in worktree (if not already committed).
+   Sprint Coordinator verifies commit hash before merge.
+
+4. Sprint Coordinator merges to main:
+   chore(merge): T<id> <slug> — Bandit APPROVED [autonomous]
+```
+
+Source: `docs/temp-s22-autonomous-architecture-research.md` §2 (T22.A.0).
 
 ---
 

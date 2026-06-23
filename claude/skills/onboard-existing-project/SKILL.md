@@ -58,7 +58,8 @@ Present confirmed values as a silent summary block first:
 > - Tech stack: [value from AGENTIC.md]
 > - Build command: [value from AGENTIC.md or package.json]
 > - Conductor: [value from AGENTIC.md]
-> - Architect: [name from .claude/agents/]
+> - Sprint Coordinator: [name from .claude/agents/]
+- Technical Architect: [name from .claude/agents/]
 > - QA: [name from .claude/agents/]
 
 Then present **only the gaps** as a numbered list. **Wait for all answers before creating any files.**
@@ -84,7 +85,7 @@ After all answers are confirmed, create or update the following. For each file:
 
 ### 4a. `AGENTIC.md` (root)
 
-Use the same template as `install-agent-scaffold` Step 2a. Replace all placeholders with confirmed values. No `[PLACEHOLDER]` may remain.
+Use the same template as `install-agent-scaffold` Step 4a. Replace all placeholders with confirmed values. No `[PLACEHOLDER]` may remain.
 
 ### 4b. `CLAUDE.md` (root)
 
@@ -196,7 +197,8 @@ Initialize with the following seed entry:
 - `docs/context/plan.md` (new)
 - `docs/context/tracks.md` (new)
 - `docs/context/product.md` (new)
-- `.claude/agents/<architect-name>.md` (new)
+- `.claude/agents/<sprint-coordinator-name>.md` (new)
+- `.claude/agents/<technical-architect-name>.md` (new)
 - `.claude/agents/<specialist-name>.md` (new)
 - `.claude/agents/<qa-name>.md` (new)
 - `.claude/settings.json` (new)
@@ -242,11 +244,11 @@ Apply exactly one of the following branches based on the outcome of Phase 3:
 
    - **User deferred (typed 'skip' or declined)** → Leave the skeleton in place with the `<!-- TODO: fill in product context -->` marker. End-state: `created (skeleton — needs fill)`.
 
-   The file exists in all three end-states. The `<!-- TODO: fill in product context -->` marker signals to downstream agents (Architect HARD STOP) that context is still needed.
+   The file exists in all three end-states. The `<!-- TODO: fill in product context -->` marker signals to downstream agents (Technical Architect HARD STOP) that context is still needed.
 
-### 4f. `.claude/agents/[architect-name].md`
+### 4f. `.claude/agents/[sprint-coordinator-name].md` and `.claude/agents/[technical-architect-name].md`
 
-Use the architect template. Update name, description, and tech stack reference section.
+Use the Sprint Coordinator and Technical Architect templates from `install-agent-scaffold`. Update names, descriptions, and project references.
 
 ### 4g. `.claude/agents/[specialist-name].md` (one per specialist)
 
@@ -287,7 +289,8 @@ After all files are generated, output:
 [list of original path → docs/context/X.md, or "None"]
 
 **Your team:**
-- [ARCHITECT NAME] — invoke with @[architect-name]
+- [SPRINT COORDINATOR NAME] — invoke with @[sprint-coordinator-name]
+- [TECHNICAL ARCHITECT NAME] — invoke with @[technical-architect-name]
 - [SPECIALIST NAMES] — invoke with @[name]
 - [QA NAME] — invoke with @[qa-name]
 
@@ -295,7 +298,7 @@ After all files are generated, output:
 1. Review AGENTIC.md — confirm the protocols match your project's conventions.
 2. Update docs/context/plan.md with your current sprint objective.
 3. Review any migrated docs and remove stale content.
-4. Call @[architect-name] to open your first sprint.
+4. Call @[sprint-coordinator-name] to open your first sprint.
 
 **Verification:** Run [BUILD COMMAND] to confirm the build is clean before starting work.
 

@@ -58,7 +58,8 @@ Agents can be invoked by typing their name via `@[architect-name]`, `@[qa-name]`
 |---|---|---|
 | **[YOUR NAME]** | Conductor | Vision & Approval |
 | **[YOUR AI]** | Orchestrator | Coordinates specialists, no direct execution | <!-- e.g., Claude, Gemini -->
-| **[ARCHITECT NAME]** | Lead Architect | Plans, Red Flag Analysis, Handoff Bridges — zero code |
+| **[SPRINT COORDINATOR NAME]** | Sprint Coordinator | Sprint synthesis, routing, sprint interview docs — zero code |
+| **[TECHNICAL ARCHITECT NAME]** | Technical Architect | Red Flag Analysis, Implementation Plans, Handoff Bridges for technical tracks — zero code |
 | **[SPECIALIST 1 NAME]** | Frontend Specialist | UI components, pages, and styling |
 | **[SPECIALIST 2 NAME]** | Backend Specialist | API routes, server logic, and integrations |
 | **[SPECIALIST 3 NAME]** | Database Specialist | Schema, migrations, and queries |
@@ -106,7 +107,8 @@ Read `AgentOS-Setup.md`. Extract values as follows.
 **Team table** — parse each row (skip the header row and the Orchestrator row):
 - Row with Role = "Conductor" → `OWNER` = Agent Name value (strip `**`)
 - Row with Role = "Orchestrator" → `ORCHESTRATOR` = Agent Name value (strip `**`)
-- Row with Role = "Lead Architect" → `ARCHITECT` = Agent Name value (strip `**`)
+- Row with Role = "Sprint Coordinator" → `SPRINT_COORDINATOR` = Agent Name value (strip `**`)
+- Row with Role = "Technical Architect" → `TECHNICAL_ARCHITECT` = Agent Name value (strip `**`)
 - Row with Role = "QA" → `QA` = Agent Name value (strip `**`)
 - All remaining rows → `SPECIALISTS` list, each with name, domain (from Role column, strip " Specialist"), and scope (from Scope column, strip backticks)
 
@@ -119,14 +121,15 @@ Read `AgentOS-Setup.md`. Extract values as follows.
 - `DESCRIPTION` = Short description
 - `OWNER` = Conductor agent name
 - `ORCHESTRATOR` = Orchestrator agent name
-- `ARCHITECT` = Lead Architect agent name
+- `SPRINT_COORDINATOR` = Sprint Coordinator agent name
+- `TECHNICAL_ARCHITECT` = Technical Architect agent name
 - `QA` = QA agent name
 - `SPECIALISTS` = list of specialist rows (may be empty)
 - `RUNTIME`, `FRAMEWORK`, `DATABASE`, `FRONTEND`, `STYLING`, `BUILD_CMD`, `TYPECHECK_CMD`, `LINTER`
 - `MIGRATIONS` = list of confirmed doc migration pairs
 
 **Validation** — stop and list what's missing if any of these are blank:
-- `NAME`, `DESCRIPTION`, `OWNER`, `ARCHITECT`, `QA`, `BUILD_CMD`
+- `NAME`, `DESCRIPTION`, `OWNER`, `SPRINT_COORDINATOR`, `TECHNICAL_ARCHITECT`, `QA`, `BUILD_CMD`
 
 If all required values are present → proceed to Step 4.
 
@@ -155,7 +158,8 @@ The table below is **guidance, not a hard rule.** [OWNER] retains the right to o
 
 | Role | Tier | Provider | Model alias | Why this tier |
 |---|---|---|---|---|
-| Architect / Peaches | Strategic / planning | `claude` | `opus` | Heavy reasoning, plan synthesis, Red Flag Analysis |
+| Sprint Coordinator | Coordination / synthesis | `claude` | `sonnet` | Sprint synthesis, routing, sprint interview docs |
+| Technical Architect | Strategic / planning | `claude` | `opus` | Heavy reasoning, plan synthesis, Red Flag Analysis |
 | Strategist | Strategic / planning | `claude` | `opus` | Pre-planning, market and product framing |
 | Specialist (Skylar) | Implementation / coding | `claude` | `sonnet` | Code execution at speed |
 | Backend / Frontend / Fullstack / Database | Implementation / coding | `claude` | `sonnet` | Standard implementation work |
@@ -210,7 +214,8 @@ Projects with no Designer-class agent leave this section as a stub or omit it en
 
 - **[OWNER] (Conductor):** Vision & Approval.
 - **[ORCHESTRATOR] (Orchestrator):** Coordinates specialists, no direct execution.
-- **[ARCHITECT] (Lead Architect):** Context Owner. Zero-code. Plans and produces Handoff Bridges.
+- **[SPRINT_COORDINATOR] (Sprint Coordinator):** Coordination hub. Zero-code. Sprint synthesis, routing.
+- **[TECHNICAL_ARCHITECT] (Technical Architect):** Technical planning authority. Zero-code. Plans and produces Handoff Bridges.
 [For each specialist: - **[NAME] ([DOMAIN] Specialist):** Owns [SCOPE].]
 - **[QA] (QA):** Build verification and quality gate. Read-only.
 
@@ -265,8 +270,8 @@ Each Specialist agent definition includes `isolation: worktree` in its frontmatt
 ### Handoff Logic
 - **Phase 1 (Verify):** Downstream specialist verifies upstream interface before any implementation begins.
 - **Phase 2 (Align):** Synchronize with `AGENTIC.md` and `tracks.md`.
-- **Phase 3 (Draft):** Architect drafts implementation plan.
-- **Phase 4 (Bridge):** Architect compresses Dynamic DNA into a Handoff Bridge for the Specialist.
+- **Phase 3 (Draft):** Technical Architect drafts implementation plan.
+- **Phase 4 (Bridge):** Technical Architect compresses Dynamic DNA into a Handoff Bridge for the Specialist.
 
 ---
 
@@ -340,7 +345,7 @@ Before any work, read:
 
 All work must flow through:
 \`\`\`
-Conductor (approval) → Architect (plan + Handoff Bridge) → Specialist (execute) → QA (quality gate)
+Conductor (approval) → Sprint Coordinator (routing) → Technical Architect (plan + Handoff Bridge) → Specialist (execute) → QA (quality gate)
 \`\`\`
 
 ---
@@ -362,7 +367,7 @@ Worktree isolation is enforced via each Specialist's agent frontmatter (`isolati
 
 ## Stability Rules
 
-- **Circuit Breaker:** 3 consecutive failures with the same root cause → STOP. Call the Architect for Red Flag Analysis. Any destructive or irreversible failure triggers an immediate stop.
+- **Circuit Breaker:** 3 consecutive failures with the same root cause → STOP. Call the Technical Architect for Red Flag Analysis. Any destructive or irreversible failure triggers an immediate stop.
 - **Git Hygiene:** No commits unless the Conductor directs.
 - **Sentinel Proof:** Never trust a verbal summary. Verify with `git diff` or file reads.
 
@@ -438,12 +443,22 @@ If a migration source was confirmed for `product.md`, copy that file and prepend
 
 ---
 
-### 4f. `.claude/agents/[ARCHITECT].md`
+### 4f. `.claude/agents/[SPRINT_COORDINATOR].md` and `.claude/agents/[TECHNICAL_ARCHITECT].md`
 
-Generate an architect agent definition:
+Generate two agent definitions:
 
-- `name:` → ARCHITECT (lowercase, hyphen-separated if multi-word)
-- `description:` → "Lead Architect for [NAME]. Zero-code planner — owns plans, Red Flag Analysis, and Handoff Bridges."
+**Sprint Coordinator:**
+- `name:` → SPRINT_COORDINATOR (lowercase, hyphen-separated if multi-word)
+- `description:` → "Sprint Coordinator for [NAME]. Coordination hub — sprint synthesis, routing, sprint interview docs."
+- `provider: claude`
+- `model: sonnet`
+- `tools: Read, Bash`
+- Body: Initialization (read AGENTIC.md, plan.md, tracks.md, CLAUDE.md), Core Identity (zero-code coordinator), Routing Protocol (technical → Technical Architect, design → Designer, marketing → Marketing), Specialist dispatch per operating mode, Hard Constraints (no execution files, no domain plans), Sign-Off Protocol, Circuit Breaker.
+- Replace "Conductor" references with OWNER throughout.
+
+**Technical Architect:**
+- `name:` → TECHNICAL_ARCHITECT (lowercase, hyphen-separated if multi-word)
+- `description:` → "Technical Architect for [NAME]. Zero-code planner — owns Red Flag Analysis, Implementation Plans, and Handoff Bridges for technical tracks."
 - `provider: claude`
 - `model: opus`
 - `tools: Read, Write, Edit, Bash, WebFetch`
@@ -475,7 +490,7 @@ For each specialist parsed from the team table, generate an agent definition:
 - `model: sonnet`
 - `isolation: worktree`
 - `tools: Read, Write, Edit, Bash, WebFetch`
-- Body: Initialization (read DNA files), Core Identity (domain and scope), Capabilities, Hard Constraints (Bridge is the only scope boundary; STOP if Bridge safety fields are unpopulated for auth/schema/payment changes; if implementation relies on undocumented behavior — a tool parameter, runtime guarantee, or API assumption not confirmed in official docs — STOP and flag to the Architect before proceeding), Sign-Off Protocol (Sign-Off must include **Behavioral Verification** field with actual observed output from the Bridge's Verification command — pasted output, not a summary).
+- Body: Initialization (read DNA files), Core Identity (domain and scope), Capabilities, Hard Constraints (Bridge is the only scope boundary; STOP if Bridge safety fields are unpopulated for auth/schema/payment changes; if implementation relies on undocumented behavior — a tool parameter, runtime guarantee, or API assumption not confirmed in official docs — STOP and flag to the Technical Architect before proceeding), Sign-Off Protocol (Sign-Off must include **Behavioral Verification** field with actual observed output from the Bridge's Verification command — pasted output, not a summary).
 
 ---
 
@@ -601,7 +616,7 @@ Complete these before opening the first sprint.
 - [ ] Review AGENTIC.md — verify team configuration is correct
 
 ## Optional
-Complete at any time. Your Architect will surface unchecked items at the start of each session.
+Complete at any time. Your Technical Architect will surface unchecked items at the start of each session.
 
 - [ ] Product focus — fill in Current Focus in `docs/context/product.md`
 - [ ] Team conventions — update AGENTIC.md §5 with any project-specific workflow rules
@@ -765,15 +780,16 @@ After all files are created successfully, delete `AgentOS-Setup.md`.
 **Blueprints installed:** N  <!-- Claude Code branch only: include this line with the count of blueprints installed. Omit this line entirely on Gemini CLI installs or when blueprints-manifest.json was absent. -->
 
 **Your team:**
-- @[ARCHITECT] — Lead Architect (planning + Handoff Bridges)
+- @[SPRINT_COORDINATOR] — Sprint Coordinator (routing + sprint synthesis)
+- @[TECHNICAL_ARCHITECT] — Technical Architect (planning + Handoff Bridges)
 - @[QA] — QA (quality gate)
 [For each specialist: - @[NAME] — [DOMAIN] specialist]
 
 **Next steps:**
-Your first move: open a planning session with `@[ARCHITECT]`.
+Your first move: open a sprint session with `@[SPRINT_COORDINATOR]`.
 
 - See `INSTALL_CHECKLIST.md` for any remaining setup items.
-- AGENTIC.md is your project's source of truth — your Architect keeps it current.
+- AGENTIC.md is your project's source of truth — your Technical Architect keeps it current.
 
 **Verification:** Run `[BUILD_CMD]` to confirm the build environment is clean.
 

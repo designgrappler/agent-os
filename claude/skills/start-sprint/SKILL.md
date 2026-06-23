@@ -1,9 +1,9 @@
 ---
 name: start-sprint
-description: Unified sprint-start skill with two modes — Mode A (sprint-setup) opens a new sprint, runs a structured interview, creates the temp interview doc, and updates context files; Mode B (parallel-kickoff) reads tracks.md and outputs a parallel tab kickoff card for all OPEN tracks.
+description: Unified sprint-start skill with two modes — Mode A (sprint-setup) opens a new sprint, calls the Sprint Coordinator (Peaches) to author the plan doc, and updates context files; Mode B (parallel-kickoff) reads tracks.md and outputs a parallel tab kickoff card for all OPEN tracks.
 ---
 # Start Sprint
-Unified sprint-start skill with two modes. **Mode A (sprint-setup)** opens a new sprint with a clean setup — surfaces unresolved prior work, runs a structured interview, writes a temporary sprint interview doc for the Architect, and updates context files. **Mode B (parallel-kickoff)** reads `docs/context/tracks.md`, finds all OPEN tracks (no dependency blockers), and outputs a parallel tab kickoff card — one entry per open track with a tab name and a ready-to-paste opening prompt. BLOCKED tracks are listed separately with their blocker noted.
+Unified sprint-start skill with two modes. **Mode A (sprint-setup)** opens a new sprint with a clean setup — surfaces unresolved prior work, calls the Sprint Coordinator (Peaches) to author the sprint plan doc, and updates context files. **Mode B (parallel-kickoff)** reads `docs/context/tracks.md`, finds all OPEN tracks (no dependency blockers), and outputs a parallel tab kickoff card — one entry per open track with a tab name and a ready-to-paste opening prompt. BLOCKED tracks are listed separately with their blocker noted.
 
 ## Auto-Trigger
 Invoke when the user says:
@@ -33,7 +33,7 @@ Before executing any steps, read `docs/context/plan.md` and `docs/context/tracks
 
 ## Mode A — Sprint Setup
 
-Opens a new sprint. Surfaces unresolved work, interviews the user, writes a temp interview doc, and updates context files. The counterpart to `clean-context`.
+Opens a new sprint. Surfaces unresolved work, calls the Sprint Coordinator (Peaches) to author the plan doc, and updates context files. The counterpart to `clean-context`.
 
 ### Step 1 — Prior Sprint Check
 
@@ -47,14 +47,20 @@ If any tracks are marked **in progress** or **blocked**, surface them:
 
 Wait for confirmation before continuing.
 
-### Step 2 — Sprint Interview
+### Step 2 — Call Sprint Coordinator (Peaches)
 
-Ask as a single message. Wait for all answers.
+Call Peaches (Sprint Coordinator role agent) to author the sprint plan doc.
 
-> 1. **Sprint objective** — What is the primary goal? (1-2 sentences)
-> 2. **Proposed tracks** — What are the tracks for this sprint? List each with a brief description and the specialist owner (or "TBD").
-> 3. **Open questions for Tim** — Any unresolved decisions, tradeoffs, or risks Tim should weigh in on before planning starts?
-> 4. **Red flags surfaced** — Are there any architectural, security, or sequencing concerns to flag for the Architect?
+Peaches authors `docs/temp-sprintN-plan.md` (where `N` is the sprint number, inferred from the track IDs or the sprint objective context; if ambiguous, use the next sequential number after the highest sprint number found in `docs/context/tracks.md`).
+
+Peaches' plan doc must cover all four required sections:
+
+1. **Sprint objective** — What is the primary goal? (1–2 sentences)
+2. **Proposed tracks** — Each track with a brief description and the specialist owner (or "TBD").
+3. **Open questions for Tim** — Any unresolved decisions, tradeoffs, or risks Tim should weigh in on before planning starts.
+4. **Red flags surfaced** — Any architectural, security, or sequencing concerns to flag for the Technical Architect.
+
+The Sprint Coordinator (this skill) waits for Peaches' doc to be written before continuing.
 
 ### Step 3 — Update Context Files
 
@@ -82,44 +88,16 @@ Ask as a single message. Wait for all answers.
 
 If `docs/` does not exist, create it silently (no user message, no prompt) before writing any files under it.
 
-### Step 4 — Write Temp Interview Doc
+### Step 4 — Sprint Summary
 
-Write a temporary sprint interview document at `docs/temp-sprint<N>-interview.md` where `<N>` is the sprint number (inferred from the track IDs or the sprint objective context; if ambiguous, use the next sequential number after the highest sprint number found in `docs/context/tracks.md`).
-
-The file must contain exactly these sections:
-
-```markdown
-# Sprint <N> Interview — <DATE>
-
-## Sprint Objective
-[Verbatim sprint objective from Step 2, question 1]
-
-## Proposed Tracks
-[List each proposed track with its description and owner, as provided in Step 2, question 2]
-
-## Open Questions for Tim
-[List each open question from Step 2, question 3 — or "None" if none were raised]
-
-## Red Flags Surfaced During Interview
-[List each red flag from Step 2, question 4 — or "None" if none were raised]
-
----
-*Generated by /start-sprint Mode A on <DATE>. Architect reads this doc as the canonical sprint brief.*
-```
-
-No `[PLACEHOLDER]` values may remain in the written file. All sections must be populated from the Step 2 answers or explicitly marked "None".
-
-### Step 5 — Sprint Summary
+Output a 1–2 sentence summary of the path forward: confirm the plan doc has been written at `docs/temp-sprintN-plan.md`, and state what the next step is (e.g. Tim reviews the plan doc before the Technical Architect issues Bridges).
 
 ```
 ## Sprint [N] Open
 
-**Objective:** [Sprint objective]
-**Tracks proposed:** [N tracks — list names and owners]
-**Context:** [Clean / N archived / N flags]
-**Interview Doc:** docs/temp-sprint<N>-interview.md
-
-Ready. Call @[architect-name] with the interview doc as input for planning.
+**Objective:** [Sprint objective from Peaches' plan doc]
+**Plan doc:** docs/temp-sprint<N>-plan.md
+**Next step:** Tim reviews `docs/temp-sprint<N>-plan.md`; Technical Architect issues Bridges upon approval.
 ```
 
 ---
@@ -155,18 +133,7 @@ Separate tracks into:
 
 The plan file follows the pattern `docs/context/t##-plan.md` where `##` is the sprint number (e.g., sprint 22 → `docs/context/t22-plan.md`). Use this path in every prompt.
 
-### Step 3b — Triage open feedback (non-blocking)
 
-Invoke `/triage-feedback` to surface any open feedback issues from `designgrappler/agent-os` before proposing tracks.
-
-- If `/triage-feedback` succeeds: include the cluster summary in the sprint scoping context. Reference any relevant clusters when building the track list.
-- If `/triage-feedback` errors (e.g. `gh` auth failure, network issue): continue sprint kickoff with a one-line note:
-  ```
-  feedback triage skipped — <error>
-  ```
-  Do not halt sprint kickoff.
-
----
 
 ### Step 4 — Build tab names
 

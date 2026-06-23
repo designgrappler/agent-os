@@ -4,9 +4,9 @@
 
 The Orchestrator coordinates specialists and writes no code. It does not plan.
 
-> **Orchestrator constraint:** the Orchestrator never drafts plans, track specs, or planning artifacts. Planning belongs exclusively to the Architect. See AGENTIC.md §3 Orchestrator Constraints.
+> **Sprint Coordinator constraint:** the Sprint Coordinator never drafts technical plans, track specs, or technical planning artifacts. Technical planning belongs exclusively to the Technical Architect. See AGENTIC.md §3 Sprint Coordinator Constraints.
 
-> **Orchestrator no-execution constraint:** the Orchestrator never edits execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/**`) — even when a Specialist is blocked. The only two valid moves are (1) surface to Conductor, (2) call Architect for unblock plan. See AGENTIC.md §3 Orchestrator Constraints.
+> **Sprint Coordinator no-execution constraint:** the Sprint Coordinator never edits execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/**`) — even when a Specialist is blocked. The only two valid moves are (1) surface to Conductor, (2) call Technical Architect for unblock plan. See AGENTIC.md §3 Sprint Coordinator Constraints.
 
 ---
 
@@ -15,6 +15,10 @@ The Orchestrator coordinates specialists and writes no code. It does not plan.
 Current: MANUAL (autonomous loop inactive — Tim triggers each handoff)
 
 To change: `/switch-workflow-mode autonomous` or `/switch-workflow-mode manual` (sprint boundary only — see feasibility gate).
+
+**Specialist dispatch protocol (mode-dependent):** The full binding rule lives in `AGENTIC.md` §3 Sprint Coordinator Constraints (T7.5 — one rule, one place). Summary:
+- **MANUAL mode:** kickoff card only — two fenced blocks per track for the Conductor to paste into a new tab. Inline Agent tool spawning is FORBIDDEN.
+- **AUTONOMOUS mode:** Agent tool inline spawn via native sub-agent isolation — each Specialist's context is isolated; Sprint Coordinator receives a bounded 3-field summary (Track / Verdict / Commit). Kickoff cards remain valid as a fallback. Multi-track: use `background: true` on Specialist for concurrent execution.
 
 ---
 
@@ -56,7 +60,7 @@ A Handoff Bridge looks like:
 
 **Anti-patterns that do NOT exempt a request from the Bridge requirement:** "sounds small", "quick fix", "it's just one line", "to match X", "just update", "matching reference", "small tactical fix". These phrasings are explicitly recorded as Issue #2 failure patterns — they caused a real protocol bypass. Any request using these patterns, or any close variant suggesting the change is too small to need a Bridge, triggers the same Bridge requirement.
 
-**Orchestrator acknowledgement (binding):** Before executing against any execution file, the Orchestrator MUST emit a one-line acknowledgement: `"This request touches <file> — Bridge required. Calling Architect."` Then surface to Conductor or call Architect. Skipping this acknowledgement is a circuit-breaker event. See AGENTIC.md §3 for the Orchestrator no-execution rule and AGENTIC.md §5 for the canonical No-Bridge rule.
+**Sprint Coordinator acknowledgement (binding):** Before executing against any execution file, the Sprint Coordinator MUST emit a one-line acknowledgement: `"This request touches <file> — Bridge required. Calling Technical Architect."` Then surface to Conductor or call Technical Architect. Skipping this acknowledgement is a circuit-breaker event. See AGENTIC.md §3 for the Sprint Coordinator no-execution rule and AGENTIC.md §5 for the canonical No-Bridge rule.
 
 **Commit-before-dispatch (binding):** Conductor commits staged changes on `main` before dispatching. Uncommitted work does not reach Specialist worktrees. Canonical rule: AGENTIC.md §5.
 
@@ -94,18 +98,19 @@ Plans, Handoff Bridges, and protocol documentation must use **system role terms*
 
 | Use this | Not this |
 |---|---|
-| Architect | [project-specific Architect name] (or any project-specific name) |
-| Specialist | [project-specific Specialist name] (or any project-specific name) |
-| QA | [project-specific QA name] (or any project-specific name) |
-| Conductor | [project-specific Conductor name] (or any individual's name) |
+| Sprint Coordinator | Peaches (or any project-specific name) when referring to coordination/routing role |
+| Technical Architect | Suzy (or any project-specific name) when referring to technical planning role |
+| Specialist | Skylar (or any project-specific name) |
+| QA | Bandit (or any project-specific name) |
+| Conductor | Tim (or any individual's name) |
 
-Agent names are project-specific and fungible. Role terms are stable across every Agent OS installation. File paths referencing `.claude/agents/<name>.md` are fine — those are paths, not role references.
+Agent names are project-specific and fungible. Role terms are stable across every Agent OS installation. File paths referencing `.claude/agents/peaches.md` are fine — those are paths, not role references.
 
 ---
 
 ## Stability Rules
 
-- **Circuit Breaker:** 3 consecutive failures with the same root cause → STOP. Call the Architect for Red Flag Analysis. Any destructive or irreversible failure triggers an immediate stop.
+- **Circuit Breaker:** 3 consecutive failures with the same root cause → STOP. Call the Technical Architect for Red Flag Analysis. Any destructive or irreversible failure triggers an immediate stop.
 - **Git Hygiene:** No commits unless the Conductor directs.
 - **Sentinel Proof:** Never trust a verbal summary. Verify with `git diff` or file reads.
 

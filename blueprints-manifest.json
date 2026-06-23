@@ -1,0 +1,5 @@
+{
+  "blueprints": ["task-coder", "task-writer", "task-researcher"],
+  "renames": [],
+  "schema-version": 1
+}

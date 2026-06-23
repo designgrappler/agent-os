@@ -1,5 +1,5 @@
 {
-  "release-version": "v0.10.0",
+  "release-version": "v0.11.0",
   "frontmatter-version": 2,
   "skills": [
     "audit-security",
@@ -17,7 +17,6 @@
     "triage-feedback"
   ],
   "agents": [
-    "architect",
     "backend",
     "critic",
     "database",
@@ -29,14 +28,38 @@
     "pm",
     "qa",
     "researcher",
-    "strategist"
+    "sprint-coordinator",
+    "strategist",
+    "technical-architect"
   ],
   "renames": [
-    { "from": "fewer-permission-prompts", "to": "streamline-approvals" },
-    { "from": "project-adopt", "to": "onboard-existing-project" },
-    { "from": "sprint-open", "to": "start-sprint" },
-    { "from": "open-sprint", "to": "start-sprint" },
-    { "from": "track-status", "to": "report-track-status" },
-    { "from": "agent-orchestration-setup", "to": "install-agent-scaffold" }
+    {
+      "from": "fewer-permission-prompts",
+      "to": "streamline-approvals"
+    },
+    {
+      "from": "project-adopt",
+      "to": "onboard-existing-project"
+    },
+    {
+      "from": "sprint-open",
+      "to": "start-sprint"
+    },
+    {
+      "from": "open-sprint",
+      "to": "start-sprint"
+    },
+    {
+      "from": "track-status",
+      "to": "report-track-status"
+    },
+    {
+      "from": "agent-orchestration-setup",
+      "to": "install-agent-scaffold"
+    },
+    {
+      "from": "architect",
+      "to": "sprint-coordinator"
+    }
   ]
 }

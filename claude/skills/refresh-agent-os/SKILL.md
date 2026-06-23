@@ -138,7 +138,8 @@ Then display the diff table. One row per skill, agent, blueprint, or CLAUDE.md r
 | audit-security                    | skill     | Current     | Skip (no changes)                                            |
 | researcher                        | agent     | New         | Install → ~/.claude/agents/researcher.md                     |
 | ops                               | agent     | Drifted     | Update → overwrite with canonical ops.md                     |
-| architect                         | agent     | Drifted     | Update → add provider: field (compatibility window)          |
+| sprint-coordinator                | agent     | New         | Install → ~/.claude/agents/sprint-coordinator.md             |
+| technical-architect               | agent     | New         | Install → ~/.claude/agents/technical-architect.md            |
 | task-coder                        | blueprint | New         | Install → ~/.claude/blueprints/task-coder.md                 |
 | CLAUDE.md line 14                 | claude.md | Rename ref  | Update /open-sprint → /start-sprint                          |
 ```

@@ -39,34 +39,47 @@ Projects with no Designer-class agent leave this section as a stub or omit it en
 ## 3. Project Team
 
 - **[CONDUCTOR NAME] (Conductor):** Vision & Approval.
-- **Claude (Orchestrator):** Coordinates specialists, no direct execution.
-- **[ARCHITECT NAME] (Lead Architect):** Context Owner. Zero-code. Plans and produces Handoff Bridges.
+- **Claude (Sprint Coordinator):** Coordinates specialists, no direct execution. Routes domain-specific planning to the Technical Architect.
+- **[SPRINT COORDINATOR NAME] (Sprint Coordinator):** Coordination hub. Zero-code. Sprint synthesis, routing, sprint interview docs. Routes technical tracks to Technical Architect.
+- **[TECHNICAL ARCHITECT NAME] (Technical Architect):** Technical planning authority. Zero-code. Red Flag Analysis, Implementation Plans, Handoff Bridges for code-touching tracks.
 - **[SPECIALIST 1 NAME] ([Domain 1] Specialist):** Owns [scope].
 - **[SPECIALIST 2 NAME] ([Domain 2] Specialist):** Owns [scope].
 - **[SPECIALIST 3 NAME] ([Domain 3] Specialist):** Owns [scope].
 - **[QA NAME] (QA):** Build verification and quality gate. Read-only.
 
-### Orchestrator Constraints (binding)
+### Sprint Coordinator Constraints (binding)
 
-The Orchestrator coordinates specialists. It does not plan.
+The Sprint Coordinator coordinates specialists and routes domain work. It does not author domain-specific plans.
 
-- **FORBIDDEN:** Drafting track specs, scope definitions, Red Flag Analysis, Handoff Bridges, or any planning artifact — even as "rough scaffolding" or a "starting point."
-- **FORBIDDEN:** Writing planning content to `docs/context/plan.md`, `docs/context/tracks.md`, or any sprint plan doc. Only the Architect writes planning content; the Conductor approves; the Orchestrator coordinates the handoff.
-- **REQUIRED:** After any context-setup step (e.g. `/start-sprint`, `/onboard-existing-project`), the next action is to invoke the Architect. If sprint scope was discussed in chat, summarize it as a one-line briefing to the Architect — do not translate it into track specs.
-- **FORBIDDEN:** Direct execution of any kind on execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/**`) — even when a Specialist is blocked, even when the fix is "obvious", even when the urgency feels high. The Orchestrator coordinates; it does not edit.
-- **REQUIRED (when a Specialist is blocked):** The only two valid Orchestrator moves are (1) surface the blocker to the Conductor, or (2) call the Architect for an unblock plan. Direct execution is forbidden regardless of urgency.
+- **FORBIDDEN:** Drafting technical track specs, Red Flag Analysis, Handoff Bridges for technical tracks, or any domain-specific planning artifact — even as "rough scaffolding" or a "starting point." Those belong to the Technical Architect.
+- **FORBIDDEN:** Writing planning content to `docs/context/plan.md`, `docs/context/tracks.md`, or any sprint plan doc for technical tracks. Only the Technical Architect writes technical planning content; the Conductor approves; the Sprint Coordinator coordinates the handoff.
+- **REQUIRED:** After any context-setup step (e.g. `/start-sprint`, `/onboard-existing-project`), the next action is to invoke the Technical Architect for technical tracks. If sprint scope was discussed in chat, summarize it as a one-line briefing to the Technical Architect — do not translate it into track specs.
+- **FORBIDDEN:** Direct execution of any kind on execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/**`) — even when a Specialist is blocked, even when the fix is "obvious", even when the urgency feels high. The Sprint Coordinator coordinates; it does not edit.
+- **REQUIRED (when a Specialist is blocked):** The only two valid Sprint Coordinator moves are (1) surface the blocker to the Conductor, or (2) call the Technical Architect for an unblock plan. Direct execution is forbidden regardless of urgency.
 
 Violations of this rule bypass the Phase 3a plan-doc gate (§5) and produce unreviewed plans that look official but aren't. This is a protocol violation and is treated as a circuit-breaker event.
 
-**Tool-layer enforcement:** This rule is also enforced at the tool layer by the `PreToolUse` hook at `.claude/hooks/block-orchestrator-execution.sh`. The hook blocks Orchestrator-authored Edit/Write calls to execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/**`) regardless of model state. See `docs/bridges/S18.1-em-execution-hook.md` for the Bridge and known bypass vectors.
+**Tool-layer enforcement:** This rule is also enforced at the tool layer by the `PreToolUse` hook at `.claude/hooks/block-orchestrator-execution.sh`. The hook blocks Sprint Coordinator-authored Edit/Write calls to execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/**`) regardless of model state. See `docs/bridges/S18.1-em-execution-hook.md` for the Bridge and known bypass vectors.
+
+**Mode-aware dispatch rule (binding):** The Sprint Coordinator's Specialist-dispatch method is mode-dependent. The rule was codified in S20 close (Tim's explicit instruction) and formalized as Track T21.D in `docs/sprint-plan-S21.md` §3. **Tool-layer enforcement (T22.B.2):** Sprint Coordinator-initiated Agent tool calls in MANUAL mode are blocked at the tool layer by the `PreToolUse` hook at `.claude/hooks/block-manual-agent-spawn.sh`. The hook checks: `agent_id` absent (main-thread call) + `tool_name == "Agent"` or `"Task"` + `operatingMode == "manual"` → exit code 2 (block). Same identity mechanism as S18.1 (`block-orchestrator-execution.sh`). Source: `docs/temp-s22-autonomous-architecture-research.md` §3.
+
+- **MANUAL mode:** The Sprint Coordinator's only valid Specialist-dispatch method is outputting a kickoff card — two fenced blocks per track (one naming the worktree branch / context-loading instructions; one carrying the Bridge body or its absolute path) — for the Conductor to paste into a new Claude Code tab. **Inline Agent tool spawning is FORBIDDEN in MANUAL mode.** Tool-layer enforcement: see `.claude/hooks/block-manual-agent-spawn.sh` (T22.B.2).
+
+- **AUTONOMOUS mode:** The Sprint Coordinator dispatches Specialists via the Agent tool inline. Conversation isolation is achieved via the Agent tool's native context isolation: each Specialist runs in its own context window and returns a bounded 3-field summary to the Sprint Coordinator:
+  ```
+  Track: T<id> <slug>
+  Verdict: Bandit APPROVED | BLOCKED
+  Commit: <hash> | N/A (if BLOCKED)
+  ```
+  Kickoff cards remain valid as a fallback when inline spawning is unavailable (e.g. running outside an Agent-tool-capable environment). Multi-track parallel execution uses `background: true` on the Skylar agent definition to allow concurrent execution without blocking the Sprint Coordinator's main context.
 
 **Mode-switch tool-layer enforcement:** The `/switch-workflow-mode` skill's
 Phase 1 feasibility gate (no Edit/Write while any task is `CLAIMED` or
 `IN_PROGRESS`) is also enforced at the tool layer by the `PreToolUse` hook at
 `.claude/hooks/block-mode-violation.sh`. The hook reads `docs/tasks.json` on
 every Edit/Write call and exits code 2 if any task is in flight, blocking
-the modification regardless of which agent (Orchestrator, Specialist,
-Architect, QA) initiated it. This pairs with the skill-layer gate (the
+the modification regardless of which agent (Sprint Coordinator, Specialist,
+Technical Architect, QA) initiated it. This pairs with the skill-layer gate (the
 user-facing explanation) to provide identity-independent runtime enforcement
 of the mode-switch invariant. See `claude/skills/switch-workflow-mode/SKILL.md`
 for the skill-layer rule and the hook script for the tool-layer
@@ -84,6 +97,7 @@ A track is **Done** only when ALL of the following are true:
 - [ ] `docs/context/plan.md` and `tracks.md` updated to reflect the completed track
 - [ ] [QA NAME] has issued a **PASS** verdict
 - [ ] [CONDUCTOR NAME] has given final approval (for tracks touching auth, schema, or payments)
+- [ ] MANUAL-mode exit-state sequence followed: Bandit APPROVED → Conductor confirms → Specialist commits → Conductor merges to main with `chore(merge): T<id> <slug> — Bandit APPROVED`. Full rule body: see `claude/agents/qa.md` §8. (AUTONOMOUS-mode variant: see `claude/agents/qa.md` §8a — auto-confirm rule, Tim-pause condition, and `[autonomous]` merge commit tag.)
 
 ### Skill Update DoD
 
@@ -137,7 +151,7 @@ Each Specialist agent definition includes `isolation: worktree` in its frontmatt
 
 ### Stability Rules
 - **Circuit Breaker:** 3 consecutive failures with the same root cause → STOP and escalate to the Conductor. Any single destructive or security-related failure triggers an immediate stop regardless of count.
-- **Same-pattern circuit breaker (binding).** If the same intervention pattern recurs 3 or more times within a single sprint — regardless of whether the triggering errors differ — it counts as the same root cause. The sprint threshold is 3 same-pattern interventions (not 3 consecutive failures). The canonical example: an Orchestrator-fills-the-gap pattern recurring 9–10 times in S17 across different tracks was the same root cause (protocol drift) despite varying surface triggers. When the threshold is hit, STOP and call the Architect for a Red Flag Analysis before any further dispatch. The detection mechanism (automated pattern recognition) is deferred to a research-first follow-up track; until then, the Conductor applies this rule manually by reviewing the sprint's intervention history at each circuit-breaker check.
+- **Same-pattern circuit breaker (binding).** If the same intervention pattern recurs 3 or more times within a single sprint — regardless of whether the triggering errors differ — it counts as the same root cause. The sprint threshold is 3 same-pattern interventions (not 3 consecutive failures). The canonical example: an Orchestrator-fills-the-gap pattern recurring 9–10 times in S17 across different tracks was the same root cause (protocol drift) despite varying surface triggers. When the threshold is hit, STOP and call the Technical Architect for a Red Flag Analysis before any further dispatch. The detection mechanism (automated pattern recognition) is deferred to a research-first follow-up track; until then, the Conductor applies this rule manually by reviewing the sprint's intervention history at each circuit-breaker check.
 - **Git Hygiene:** No commits unless directed. Use `git add` for staging only.
 - **Sentinel Proof:** Never trust an agent's verbal summary. Verify with `git diff` or direct file reads.
 
@@ -150,14 +164,14 @@ Each Specialist agent definition includes `isolation: worktree` in its frontmatt
 ### Handoff Logic
 - **Phase 1 (Verify):** Downstream specialist verifies upstream interface before any implementation begins.
 - **Phase 2 (Align):** Synchronize with `AGENTIC.md` and `tracks.md`.
-- **Phase 3 (Draft):** Architect drafts implementation plan.
-- **Phase 3a (Plan Doc):** Before any Bridge is issued, a plan doc must exist at `docs/sprint-plan-<sprint-id>.md` and must be approved by [CONDUCTOR NAME]. The plan doc must cover: (1) sprint scope, (2) tracks, (3) Red Flag Analysis, and (4) open questions for [CONDUCTOR NAME]. Any role may author it; the Architect is the default author. This step is mandatory for all sprints — including single-track sprints. An agent that issues a Bridge without a [CONDUCTOR NAME]-approved plan doc has violated protocol and is subject to removal from the team.
+- **Phase 3 (Draft):** Technical Architect drafts implementation plan.
+- **Phase 3a (Plan Doc):** Before any Bridge is issued, a plan doc must exist at `docs/sprint-plan-<sprint-id>.md` and must be approved by [CONDUCTOR NAME]. The plan doc must cover: (1) sprint scope, (2) tracks, (3) Red Flag Analysis, and (4) open questions for [CONDUCTOR NAME]. Any role may author it; the Technical Architect is the default author. This step is mandatory for all sprints — including single-track sprints. An agent that issues a Bridge without a [CONDUCTOR NAME]-approved plan doc has violated protocol and is subject to removal from the team.
 
   **Antigravity exception:** If antigravity automatically produces a plan doc covering all four required sections (scope, tracks, Red Flags, open questions for [CONDUCTOR NAME]), that document satisfies this requirement without a separate Agent-OS plan doc. If antigravity's output does not cover all four sections, produce a plan doc at `docs/sprint-plan-<sprint-id>.md` regardless.
 
   **Lifecycle:** After sprint close, plan docs are archived to `docs/archive/plan-docs/<sprint-id>.md`. They are not deleted.
 
-- **Phase 4 (Bridge):** Architect compresses Dynamic DNA into a Handoff Bridge for the Specialist. Before issuing the Bridge, the Architect must explicitly evaluate:
+- **Phase 4 (Bridge):** Technical Architect compresses Dynamic DNA into a Handoff Bridge for the Specialist. Before issuing the Bridge, the Architect must explicitly evaluate:
   - Does this track involve destructive or irreversible migrations? → populate `Migration Safety` and obtain Conductor acceptance if irreversible.
   - Does this track touch auth, payments, or schema? → populate `Security Review` and obtain Conductor acceptance.
   - Both fields must be explicitly set (not left as template placeholders) before the Bridge is issued.
@@ -166,11 +180,11 @@ Each Specialist agent definition includes `isolation: worktree` in its frontmatt
 
 **Anti-patterns that do NOT exempt a request from the Bridge requirement (Issue #2 precedent):** "sounds small", "quick fix", "it's just one line", "to match X", "just update", "matching reference", "small tactical fix". These phrasings are explicitly recorded as Issue #2 failure patterns — they caused a real protocol bypass. Any request using these patterns, or any close variant suggesting the change is too small to need a Bridge, triggers the same Bridge requirement.
 
-**Orchestrator acknowledgement (binding):** Before executing against any execution file, the Orchestrator MUST emit a one-line acknowledgement: `"This request touches <file> — Bridge required. Calling Architect."` Then surface to Conductor or call Architect. Skipping this acknowledgement is a circuit-breaker event.
+**Sprint Coordinator acknowledgement (binding):** Before executing against any execution file, the Sprint Coordinator MUST emit a one-line acknowledgement: `"This request touches <file> — Bridge required. Calling Technical Architect."` Then surface to Conductor or call Technical Architect. Skipping this acknowledgement is a circuit-breaker event.
 
 **Continuous improvement loop:** Fix locally → confirm it works → if it works, queue a targeted backlog item naming the specific canonical file to update → process that item as a normal sprint track. An improvement is not shipped until canonical reflects it. See §5.1 for the full enforcement rule.
 
-**Orchestrator no-execution cross-reference:** §3 Orchestrator Constraints defines a binding role-scoped rule that forbids the Orchestrator from any direct execution on execution files, even when a Specialist is blocked. The only two valid Orchestrator moves in that case are (1) surface to Conductor, or (2) call Architect for unblock plan. The rule is enforced at the protocol layer here (§3 / §5) and at the tool layer via the `PreToolUse` hook documented in `docs/bridges/S18.1-em-execution-hook.md`. See AGENTIC.md §3 for the canonical rule text — this cross-reference does not duplicate it. T20.4 reinforces the protocol layer ON TOP of the hook, not in place of it.
+**Sprint Coordinator no-execution cross-reference:** §3 Sprint Coordinator Constraints defines a binding role-scoped rule that forbids the Sprint Coordinator from any direct execution on execution files, even when a Specialist is blocked. The only two valid Sprint Coordinator moves in that case are (1) surface to Conductor, or (2) call Technical Architect for unblock plan. The rule is enforced at the protocol layer here (§3 / §5) and at the tool layer via the `PreToolUse` hook documented in `docs/bridges/S18.1-em-execution-hook.md`. See AGENTIC.md §3 Sprint Coordinator Constraints for the canonical rule text — this cross-reference does not duplicate it. T20.4 reinforces the protocol layer ON TOP of the hook, not in place of it.
 
 ### 5.1 Canonical Sync Before Sprint Close
 
@@ -191,6 +205,8 @@ The improvement does not count as "shipped" until the canonical owner reflects i
 ### Sprint-close `/clean-context` step (binding)
 
 After QA (Bandit) issues a final APPROVED verdict on the last track of a sprint, the Conductor must run `/clean-context` before the sprint is marked complete. This consolidates context archival, memory pruning, and worktree cleanup at sprint close so the next sprint opens against a clean baseline. The step runs after §5.1's canonical-sync gate is satisfied; together they define the two binding sprint-close prerequisites.
+
+**Push to origin (binding, sprint close):** After all sprint tracks are committed to `main` and `/clean-context` has run, Conductor must run `git push origin main`. This triggers the distribute and release workflows on the private repo. Without this push, the public mirror receives no updates. The push is the final step of every sprint close — it is not optional and not delegated.
 
 ---
 
@@ -214,22 +230,32 @@ refactor(ui): extract component into standalone file
 
 ## 8. Handoff Bridge Template
 
+Every Bridge has a named **Authoring Role** — the domain-expert role that owns the Bridge's content. The Sprint Coordinator routes the track and names the Authoring Role; the named domain author produces the Bridge. Valid Authoring Roles: **Technical Architect** (code-touching, config, hooks, skills, agents, DB schema), **Designer** (visual design, UI/UX, design system), **Marketing** (messaging, copy, campaigns), **Sprint Coordinator** (pure-process tracks: retrospectives, protocol updates, exit-state; no Specialist dispatch required). The Sprint Coordinator is the Authoring Role only for pure-process tracks where no Specialist is needed. For all other track categories, the routing table in §3 determines the Authoring Role.
+
+The Bridge Self-Check (all 8 gates) lives in `claude/agents/technical-architect.md` §3a. The Authoring Role runs all 8 gates before publishing any Bridge. For design Bridges, gates apply with Designer-specific interpretation: token references and Phase 1/Phase 2 routing serve as the scope-boundary verification criteria.
+
+When `Authoring Role: Designer`, the Bridge must include a `**Design Brief:**` field referencing the pre-design artifact the Designer authors at the start of Phase 1. For all other Authoring Roles, the field is `"N/A — non-design track"` or may be omitted entirely.
+
 ```markdown
 ### HANDOFF BRIDGE
 **Topic:** [Feature/Bug Name]
 **Track:** [ID from tracks.md]
-**Specialist:** [specialist name]
+**Specialist:** [fullstack / frontend / backend / database / skylar]
+**Authoring Role:** [Technical Architect / Designer / Marketing / Sprint Coordinator]
+**Design Brief:** [Link to Design Brief doc or "N/A — non-design track"]
 **Static DNA Check:** [Confirm alignment with AGENTIC.md tech/roles]
 **Dynamic DNA State:**
 - **Product Context:** [1-sentence summary of requirement]
-- **Current Plan:** [step in plan.md]
-- **Execution Files:** [list of files to modify]
+- **Current Plan:** [Link to specific step in plan.md]
+- **Execution Files (source):** [list of primary source/canonical files]
+- **Execution Files (tests):** [] — [one-line justification if empty]
+- **Execution Files (tooling/config):** [list of build/config/scaffold files; "[]" if none]
 **Migration Safety:** [N/A / Reversible / Irreversible — Conductor acceptance: YES (date) if irreversible]
 **Security Review:** [N/A / Auth / Payments / Schema — Conductor acceptance: YES (date) if any]
 **Worktree Setup:** Automatic — `isolation: worktree` in Specialist frontmatter + `worktree.baseRef: "head"` in `.claude/settings.json`. Verify both are present before Specialist begins. (`isolation: worktree` is a CWD setting — built-in file tools are governed by the permission system, not the worktree CWD; Bridge Execution Files scope is the protocol-layer compensating control.)
 **`.claude/` exception:** `.claude/settings.json` and `.claude/hooks/**` are not worktree-isolated. If this Bridge's Execution Files include either path, the Specialist edits them directly on `main` (absolute path). Note this explicitly in the Execution Files list when it applies.
-**Verification:** [specific command or URL]
-**Next Step:** [specific task for the Specialist]
+**Verification:** [Specific verification command or URL check]
+**Next Step:** [Specific task for the Specialist]
 ```
 
 ---
@@ -257,6 +283,8 @@ When a canonical change introduces a new field, renames an existing field, or re
 3. Missing fields must default to a documented value. For example: `provider:` absent → defaults to `claude` (per T9.2's confirmed shape).
 4. After the window closes, the old format is deprecated. Users who have not run `/refresh-agent-os` will see a warning nudge — not a hard break.
 5. The sprint that introduces the change starts the window clock. The window closes after 2 full sprints have completed with both formats valid.
+
+**T9.2 compatibility window:** The `provider:` field introduced in T9.2 is covered by this window starting from Sprint 9. Both `provider:` present and `provider:` absent parse cleanly through at least Sprint 10 and Sprint 11.
 
 ### 9.3 Upgrade Path
 
@@ -293,6 +321,8 @@ Release notes live at `docs/releases/v<semver>.md`. Each release note covers:
 5. **Compatibility window** — if any new frontmatter fields were added, state the window duration and the default values for missing fields.
 6. **User action required** — either "Run `/refresh-agent-os` to apply" or "No action required" if the release is source-repo only.
 
+The first release note is `docs/releases/v0.9.0.md`, covering Sprint 9's canonical-update protocol introduction.
+
 ### 9.6 Manifest Version Fields
 
 `skills-manifest.json` carries two version fields:
@@ -304,7 +334,7 @@ Both fields are additive — old consumers that only read `skills` and `renames`
 
 ### 9.7 Bridge Verification Requirements (canonical-change patterns)
 
-These two rules are **binding**. Any Bridge that triggers either condition must include the corresponding verification criterion before being issued. Failure to include it fails the Bridge Self-Check in `claude/agents/architect.md`.
+These two rules are **binding**. Any Bridge that triggers either condition must include the corresponding verification criterion before being issued. Failure to include it fails the Bridge Self-Check in `claude/agents/technical-architect.md`.
 
 #### 9.7.1 Absent-path precondition
 
@@ -346,7 +376,7 @@ All long-form structured output — planning docs, research findings, reports, a
 
 2. **Chat summary contract.** Chat contains a 1–2 sentence summary: (a) what the file is (one phrase, e.g. "Sprint 20 plan draft"), (b) the absolute path to the file.
 
-3. **Applies to all agents.** Orchestrator/EM, Architect, Specialist, QA — every agent in the system is bound by this rule.
+3. **Applies to all agents.** Sprint Coordinator/EM, Technical Architect, Specialist, QA — every agent in the system is bound by this rule.
 
 4. **Exceptions (exhaustive).** The rule does not apply to:
    - (a) Direct yes/no decision questions to the Conductor where the full answer fits in one sentence.

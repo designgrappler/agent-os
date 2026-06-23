@@ -178,15 +178,30 @@ Before opening any design file or running any design-tool MCP call, verify the M
 
    **Do not attempt Phase 1 design work after this failure. The prerequisite check is a hard gate.**
 
-### Step 2 — Design work in the tool
+### Step 2 — Author the Design Brief
 
-With MCP server confirmed reachable:
+Before opening any design file, author the Design Brief as the first deliverable of Phase 1. This is a pre-design artifact that frames the design work and gives the Conductor a reviewable contract before pixels are committed.
+
+**Output path:** `docs/context/DESIGN_BRIEF-<track-slug>.md`
+
+The Design Brief must contain all four of the following items:
+
+1. **Defining moment** — one sentence stating the single interaction or moment that makes this design track undeniable. If you cannot write this in one sentence, the brief is unresolved; surface the gap to the Conductor before proceeding.
+2. **Interaction behavior** — describe the behavior being designed (not the UI pattern — the behavior: what the system does, what the user does, and what changes as a result).
+3. **Success criteria** — how the Conductor evaluates the Phase 1 design output. Stated as observable, pass/fail conditions (e.g. "the drop target occupies the full viewport", "no spinner appears between drop and first AI output").
+4. **Design constraints** — constraints drawn from the plan doc or AGENTIC.md §2 Design Toolchain (e.g. design tokens in use, tool and runtime configured, accessibility baseline, scope boundaries).
+
+**Gate:** Do not proceed to Step 3 until the Design Brief is written at the output path above. Surface the Design Brief path to the Conductor in the Phase 1 summary note.
+
+### Step 3 — Design work in the tool
+
+With MCP server confirmed reachable and Design Brief authored:
 1. Open or create the design file at the project-scoped path specified in the Bridge (e.g. `design/<project-slug>.pen`).
-2. Execute the design work per the track requirements and Design Brief (if present in the plan doc).
+2. Execute the design work per the track requirements and the Design Brief at `docs/context/DESIGN_BRIEF-<track-slug>.md`.
 3. Use the design-tool MCP tools (`mcp__pencil__batch_design`, `mcp__pencil__snapshot_layout`, etc.) as appropriate to the task scope.
 4. Save the design file.
 
-### Step 3 — Phase 1 sign-off
+### Step 4 — Phase 1 sign-off
 
 Produce the Phase 1 Sign-Off block (see Sign-Off Protocol below with `Phase: Phase 1`) and deliver it to the Conductor. Wait for explicit Conductor visual approval before proceeding to Phase 2.
 
@@ -254,3 +269,9 @@ You define the **presentation layer and user interactions**. You translate requi
 - Phase 1 sign-off → **Conductor** (visual approval gate). Do NOT route Phase 1 to QA.
 - Phase 2 sign-off → **QA** (code / spec review gate).
 - Single-phase fallback sign-off → **QA** (single gate; no intermediate Conductor approval).
+
+---
+
+## Bridge Self-Check
+
+For design Bridges, the 8-gate Bridge Self-Check in `claude/agents/technical-architect.md` §3a applies. Run all 8 gates before publishing any design Bridge. Designer-specific interpretation: the Execution Files Scope Gate (Gate 7) verifies that design-token references are resolved and Phase 1/Phase 2 routing is declared; the Behavioral Claims Gate (Gate 8) verifies that any MCP tool behavior cited in the Bridge is documented (see this file's frontmatter research basis and known limitations).
