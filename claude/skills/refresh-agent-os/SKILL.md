@@ -20,12 +20,12 @@ When the user runs `/refresh-agent-os`, execute the following phases in order.
    - Continue to step 3.
 3. **If the line is present:** attempt to fetch the JSON from the URL.
 4. **Fallback:** if the URL fetch fails (network unavailable, 404, or any HTTP error), fall back to the local canonical clone:
-   - Manifest: `~/Developer/agent-os-private/skills-manifest.json`
-   - Skill files: `~/Developer/agent-os-private/claude/skills/` (each skill lives at `~/Developer/agent-os-private/claude/skills/<name>/SKILL.md`)
-   - Agent files: `~/Developer/agent-os-private/claude/agents/` (each agent lives at `~/Developer/agent-os-private/claude/agents/<name>.md`)
-   - Notify the user: "Could not reach the canonical URL — using local clone at `~/Developer/agent-os-private/` as fallback."
+   - Manifest: `~/Developer/agent-os/skills-manifest.json`
+   - Skill files: `~/Developer/agent-os/claude/skills/` (each skill lives at `~/Developer/agent-os/claude/skills/<name>/SKILL.md`)
+   - Agent files: `~/Developer/agent-os/claude/agents/` (each agent lives at `~/Developer/agent-os/claude/agents/<name>.md`)
+   - Notify the user: "Could not reach the canonical URL — using local clone at `~/Developer/agent-os/` as fallback."
 5. **If neither the URL nor the local clone resolves:** stop and ask the user to supply a path or URL. Do not proceed to Phase 2 until a canonical source is confirmed.
-6. **Blueprints manifest:** Locate `blueprints-manifest.json` at the same level as `skills-manifest.json` in the resolved canonical source (local clone path: `~/Developer/agent-os-private/blueprints-manifest.json`). If the file is absent (e.g. running against an older canonical clone that predates T19.2), treat the canonical blueprint set as empty and proceed without error — no URL fetch attempt is made for this manifest in S19 (canonical URL extension deferred to a future sprint).
+6. **Blueprints manifest:** Locate `blueprints-manifest.json` at the same level as `skills-manifest.json` in the resolved canonical source (local clone path: `~/Developer/agent-os/blueprints-manifest.json`). If the file is absent (e.g. running against an older canonical clone that predates T19.2), treat the canonical blueprint set as empty and proceed without error — no URL fetch attempt is made for this manifest in S19 (canonical URL extension deferred to a future sprint).
 
 ---
 
@@ -73,7 +73,7 @@ For each removed name:
 - First, check the manifest `renames` array. If an entry `{ "from": "<name>", "to": "<new-name>" }` matches (and the guard above did not fire), surface it as a **confirmed rename** (no guessing required).
 - For removed names not covered by any `renames` entry, apply a name-similarity heuristic (e.g. Levenshtein distance, shared prefix/suffix) as a **suggestion only**. Label it clearly as "possible rename" and require explicit user confirmation before treating it as a rename.
 
-**c. Drifted** — names present in both `~/.claude/skills/` and the canonical set, but whose file contents differ (a `diff` of the two `SKILL.md` files is non-empty). These are installed skills that have diverged from the canonical version.
+**c. Outdated** — names present in both `~/.claude/skills/` and the canonical set, but whose file contents differ (a `diff` of the two `SKILL.md` files is non-empty). These are installed skills that have diverged from the canonical version.
 
 **For agents** — produce three parallel lists by comparing the canonical agent set against the installed agent set:
 
@@ -83,9 +83,9 @@ These are agents available in canonical that you do not have installed.
 **b. Removed** — names present in `~/.claude/agents/` but absent from the canonical `agents` array.
 Apply the same rename-check logic as for skills: **cross-array invariant guard first** — when matching a candidate against the `renames` array, confirm the candidate is NOT present in the canonical `agents` array. If the candidate IS in canonical `agents`, skip the `renames` match entirely — treat the candidate as "current" (no rename, no removal) and surface: `Manifest invariant warning: <name> appears in both agents[] and renames[].from. Treating as canonical (no action).` Then check `renames` array first (confirmed rename), then heuristic-as-suggestion only.
 
-**c. Drifted** — names present in both `~/.claude/agents/` and the canonical set, but whose file contents differ (a `diff` of the two agent `.md` files is non-empty). These are installed agents that have diverged from the canonical version.
+**c. Outdated** — names present in both `~/.claude/agents/` and the canonical set, but whose file contents differ (a `diff` of the two agent `.md` files is non-empty). These are installed agents that have diverged from the canonical version.
 
-**Compatibility window check:** When diffing agents, if the canonical agent has a frontmatter field absent from the user's installed agent (e.g. `provider:`), surface this as a **drifted** entry with the note "new frontmatter field available — missing field defaults to `<value>` per compatibility window." Do not treat a missing-but-defaultable field as a breaking diff.
+**Compatibility window check:** When diffing agents, if the canonical agent has a frontmatter field absent from the user's installed agent (e.g. `provider:`), surface this as a **outdated** entry with the note "new frontmatter field available — missing field defaults to `<value>` per compatibility window." Do not treat a missing-but-defaultable field as a breaking diff.
 
 **For blueprints** — produce three parallel lists by comparing the canonical blueprint set against the installed blueprint set:
 
@@ -95,9 +95,9 @@ These are blueprints available in canonical that you do not have installed.
 **b. Removed** — names present in `~/.claude/blueprints/` but absent from the canonical `blueprints` array.
 Apply the same rename-check logic as for skills and agents: **cross-array invariant guard first** — when matching a candidate against the `renames` array, confirm the candidate is NOT present in the canonical `blueprints` array. If the candidate IS in canonical `blueprints`, skip the `renames` match entirely — treat the candidate as "current" (no rename, no removal) and surface: `Manifest invariant warning: <name> appears in both blueprints[] and renames[].from. Treating as canonical (no action).` Then check `renames` array first (confirmed rename), then heuristic-as-suggestion only.
 
-**c. Drifted** — names present in both `~/.claude/blueprints/` and the canonical set, but whose file contents differ (a `diff` of the two `<name>.md` files is non-empty). These are installed blueprints that have diverged from the canonical version.
+**c. Outdated** — names present in both `~/.claude/blueprints/` and the canonical set, but whose file contents differ (a `diff` of the two `<name>.md` files is non-empty). These are installed blueprints that have diverged from the canonical version.
 
-**Compatibility window check (blueprints):** if the canonical blueprint has a frontmatter field absent from the user's installed blueprint (e.g. a future `verification_command:` field), surface this as a **drifted** entry with the note "new frontmatter field available — missing field defaults to `<value>` per compatibility window." Do not treat a missing-but-defaultable field as a breaking diff. (For S19, no such optional fields exist — this clause is forward-compatible scaffolding only.)
+**Compatibility window check (blueprints):** if the canonical blueprint has a frontmatter field absent from the user's installed blueprint (e.g. a future `verification_command:` field), surface this as a **outdated** entry with the note "new frontmatter field available — missing field defaults to `<value>` per compatibility window." Do not treat a missing-but-defaultable field as a breaking diff. (For S19, no such optional fields exist — this clause is forward-compatible scaffolding only.)
 
 **CLAUDE.md reference scan (fires on rename or removal only):**
 
@@ -134,10 +134,10 @@ Then display the diff table. One row per skill, agent, blueprint, or CLAUDE.md r
 | refresh-agent-os                  | skill     | New         | Install → ~/.claude/skills/refresh-agent-os/                 |
 | start-sprint                      | skill     | Removed     | Confirmed rename → open-sprint (manifest)                    |
 | old-skill                         | skill     | Removed     | Possible rename → new-skill (suggestion)                     |
-| onboard-existing-project          | skill     | Drifted     | Update → overwrite with canonical SKILL.md                   |
+| onboard-existing-project          | skill     | Outdated     | Update → overwrite with canonical SKILL.md                   |
 | audit-security                    | skill     | Current     | Skip (no changes)                                            |
 | researcher                        | agent     | New         | Install → ~/.claude/agents/researcher.md                     |
-| ops                               | agent     | Drifted     | Update → overwrite with canonical ops.md                     |
+| ops                               | agent     | Outdated     | Update → overwrite with canonical ops.md                     |
 | sprint-coordinator                | agent     | New         | Install → ~/.claude/agents/sprint-coordinator.md             |
 | technical-architect               | agent     | New         | Install → ~/.claude/agents/technical-architect.md            |
 | task-coder                        | blueprint | New         | Install → ~/.claude/blueprints/task-coder.md                 |
