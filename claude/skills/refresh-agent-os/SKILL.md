@@ -238,6 +238,40 @@ Skills: <counts>. Agents: <counts>. Blueprints: <counts>. CLAUDE.md: <N> referen
 
 ---
 
+## Audit Scope and Known Boundaries
+
+### What refresh-agent-os covers
+
+This skill manages exactly three global directories:
+
+1. `~/.claude/skills/` — canonical skill files (`<name>/SKILL.md`)
+2. `~/.claude/agents/` — canonical agent files (`<name>.md`)
+3. `~/.claude/blueprints/` — canonical blueprint files (`<name>.md`)
+
+All diff, install, update, rename, and remove logic in Phases 2–5 operates exclusively on these three directories.
+
+### What refresh-agent-os does NOT cover — and why
+
+**`~/.claude/hooks/` (global hooks)**
+Currently empty by design. The Agent OS canonical install (`install-agent-scaffold`) does not install any global hooks — all hooks are installed at the project level (`.claude/hooks/`). Therefore `~/.claude/hooks/` has no canonical content to refresh against. If future canonical global hooks are introduced, this boundary must be revisited and a new Phase added.
+
+**`.claude/hooks/` (project-level hooks)**
+Update via sprint track only. These are load-bearing safety controls:
+- `block-orchestrator-execution.sh` — guards execution files from Sprint Coordinator writes
+- `block-manual-agent-spawn.sh` — controls Agent spawn approval flow in manual mode
+- `block-mode-violation.sh` — prevents config edits during tasks-in-flight
+
+Auto-refresh without Conductor review would risk silently modifying a safety control. A stale hook is a protocol gap, not a style gap. The correct update path is a sprint track with a Handoff Bridge authored by the Technical Architect, reviewed by the Conductor, and executed by a Specialist.
+
+**`AGENTIC.md`, `CLAUDE.md` (project configuration files)**
+Update via sprint track only. These files contain project-specific configuration, operating mode settings, sprint history references, and team-specific protocol language. A global refresh tool overwriting them would silently destroy project customizations. Canonical templates (`claude/templates/AGENTIC.md`, `claude/templates/CLAUDE.md`) are the reference for new installs; live project files diverge intentionally over time.
+
+### Conductor note — project-level hook updates
+
+If `.claude/hooks/` are out of date with canonical (e.g. a hook's exit behavior has changed), open a sprint track to update them. The canonical source for each hook change is the Handoff Bridge from the sprint that last modified the hook (e.g. `docs/bridges/S<N>-bridges.md`). Do not attempt to update hooks by running `/refresh-agent-os` — hooks are not in scope and the command will not surface them.
+
+---
+
 ## Verification Checklist (Internal — Run Before Reporting Complete)
 - [ ] Canonical source resolved before any prompt was shown (URL primary, local clone fallback)
 - [ ] If fallback was used, user was notified

@@ -144,3 +144,34 @@ CANNOT ALLOWLIST (compound commands, fewer than 3 occurrences or declined in Ste
   Compound constructs (&&, ||, |, ;, for/while loops) always prompt
   regardless of whether the constituent commands are safe.
 ```
+
+---
+
+## Named Profiles
+
+Two predefined presets map the old `operatingMode` labels to approval-frequency configurations. Run `/streamline-approvals` and invoke a profile name to batch-apply the preset.
+
+### `auto` profile
+
+Adds Agent-tool spawn to the approval allowlist — equivalent to the old AUTONOMOUS mode posture. With this profile active, the Sprint Coordinator's Agent tool calls proceed without a per-spawn permission prompt.
+
+**To apply:** Run `/streamline-approvals auto`
+
+Effect: adds `Agent` (or the equivalent Agent-tool pattern) to `~/.claude/settings.json` `permissions.allow`. The Sprint Coordinator can spawn Specialists inline without per-call prompts.
+
+### `manual` profile
+
+The default posture — no pre-approved Agent spawns. The Claude Code permission prompt fires on each Agent tool call. Equivalent to the post-T23.A.1 MANUAL mode behavior.
+
+**To apply:** Run `/streamline-approvals manual`
+
+Effect: removes any Agent-tool spawn entry from `~/.claude/settings.json` `permissions.allow` (if present). Every Sprint Coordinator Agent spawn requires an inline approve/deny decision from the Conductor.
+
+### When to use which
+
+| Profile | Use when |
+|---------|----------|
+| `auto` | You've established trust in the pipeline; want hands-off sprint execution |
+| `manual` | You want per-spawn approval; high-stakes sprints; onboarding a new Specialist |
+
+The profile names are intentionally identical to the old mode labels so existing mental models carry over cleanly.

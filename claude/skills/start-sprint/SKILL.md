@@ -47,6 +47,33 @@ If any tracks are marked **in progress** or **blocked**, surface them:
 
 Wait for confirmation before continuing.
 
+### Step 1a — Canonical Sync Sweep
+
+Run a git log sweep to surface merged changes that may need canonical sync. This step is read-only — the Sprint Coordinator does not make canonicality judgments here; it ensures nothing is invisible to Tim.
+
+**Find the last sprint-close anchor:**
+```
+git log --oneline --grep="sprint close" | head -1
+```
+Extract the SHA from the first matching line. If no match is found, fall back to the last 30 commits and note the fallback: *"No sprint-close anchor found — showing last 30 commits for manual triage."*
+
+**Run the sweep:**
+```
+git log <anchor-sha>..HEAD --oneline
+```
+
+**Surface the results** as a triage block:
+```
+Canonical sync triage — commits since S<N> sprint close:
+  <sha> <message>
+  <sha> <message>
+  ...
+Review: do any of these touch skills, agents, AGENTIC.md, CLAUDE.md, or settings.json?
+If yes, queue a canonical-sync track before dispatching Specialists.
+```
+
+The Sprint Coordinator does not make the canonicality judgment — it ensures Tim sees the list before sprint planning begins.
+
 ### Step 2 — Call Sprint Coordinator (Peaches)
 
 Call Peaches (Sprint Coordinator role agent) to author the sprint plan doc.
@@ -61,6 +88,16 @@ Peaches' plan doc must cover all four required sections:
 4. **Red flags surfaced** — Any architectural, security, or sequencing concerns to flag for the Technical Architect.
 
 The Sprint Coordinator (this skill) waits for Peaches' doc to be written before continuing.
+
+### Step 2a — Backlog Migration Triage
+
+If `docs/backlog.md` exists, read it and surface any items that are candidates for promotion into the new sprint as a triage list for Tim. The Sprint Coordinator does not promote items unilaterally — it surfaces candidates.
+
+> *"docs/backlog.md contains [N] items. Review and identify any to promote into Sprint [N] tracks."*
+
+Wait for Tim's direction. If Tim identifies items for promotion, Skylar migrates them into the active tracks section of `docs/context/tracks.md` (Skylar does the actual `tracks.md` write — Sprint Coordinator does not write to `docs/context/**` directly).
+
+If `docs/backlog.md` does not exist, print: `docs/backlog.md not found — skipping backlog triage.` and continue.
 
 ### Step 3 — Update Context Files
 

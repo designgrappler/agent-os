@@ -129,6 +129,16 @@ For each approved file:
 
 For declined files: log as `Retained — Conductor decision`.
 
+## Backlog file check
+
+Confirm `docs/backlog.md` exists. This file is the standalone backlog owned by Sprint Coordinator + Conductor and lives outside the hook-blocked `docs/context/**` path — do not archive or delete it.
+
+If `docs/backlog.md` is absent, print a warning: `docs/backlog.md not found — Sprint Coordinator backlog file is missing. Expected at docs/backlog.md (created by S23 T23.B).`
+
+If present, log: `docs/backlog.md present — no action taken (presence-check only).`
+
+**Do not modify the file contents.** This step is read-only and verification-only.
+
 ## Context Health update
 
 Open `docs/context/tracks.md`. Update the "Context Health" status line to reflect the current state (branches pruned, worktrees removed, scratchpads archived, memory hygiene scan run). Record the date.
