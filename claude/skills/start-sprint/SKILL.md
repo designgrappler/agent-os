@@ -47,6 +47,22 @@ If any tracks are marked **in progress** or **blocked**, surface them:
 
 Wait for confirmation before continuing.
 
+### Step 1b — Trim Prior Sprint
+
+After Tim confirms all unresolved tracks in Step 1 are resolved, check whether the prior sprint still has full content in `docs/context/plan.md` and `docs/context/tracks.md`.
+
+**Check:** Does the prior sprint section in `plan.md` contain more than a one-line pointer entry? (A one-line pointer looks like `## Completed Sprint: S<N> ✓ — see docs/archive/plan-docs/S<N>.md`.)
+
+- **If yes (full content present):** Collapse the prior sprint's full section in both `plan.md` and `tracks.md` to a one-line pointer:
+  ```
+  ## Completed Sprint: S<N> ✓ — see docs/archive/plan-docs/S<N>.md
+  ```
+  Replace the entire prior sprint section (all headings, goals, task lines, and trailing content under it) with this single line. Apply the same collapse to the corresponding sprint section in `docs/context/tracks.md`.
+
+- **If no (already a one-line pointer):** Skip silently — no edit, no message.
+
+This step runs only after Step 1 confirmation. It must not fire before Tim has confirmed all prior tracks are resolved. It must not touch any content belonging to the new (current) sprint being opened.
+
 ### Step 1a — Canonical Sync Sweep
 
 Run a git log sweep to surface merged changes that may need canonical sync. This step is read-only — the Sprint Coordinator does not make canonicality judgments here; it ensures nothing is invisible to Tim.

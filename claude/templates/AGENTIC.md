@@ -61,29 +61,19 @@ Violations of this rule bypass the Phase 3a plan-doc gate (§5) and produce unre
 
 **Tool-layer enforcement:** This rule is also enforced at the tool layer by the `PreToolUse` hook at `.claude/hooks/block-orchestrator-execution.sh`. The hook blocks Sprint Coordinator-authored Edit/Write calls to execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/**`) regardless of model state. See `docs/bridges/S18.1-em-execution-hook.md` for the Bridge and known bypass vectors.
 
-**Mode-aware dispatch rule (binding):** The Sprint Coordinator's Specialist-dispatch method is mode-dependent. The rule was codified in S20 close (Tim's explicit instruction) and formalized as Track T21.D in `docs/sprint-plan-S21.md` §3. **Tool-layer enforcement (T22.B.2):** Sprint Coordinator-initiated Agent tool calls in MANUAL mode are blocked at the tool layer by the `PreToolUse` hook at `.claude/hooks/block-manual-agent-spawn.sh`. The hook checks: `agent_id` absent (main-thread call) + `tool_name == "Agent"` or `"Task"` + `operatingMode == "manual"` → exit code 2 (block). Same identity mechanism as S18.1 (`block-orchestrator-execution.sh`). Source: `docs/temp-s22-autonomous-architecture-research.md` §3.
+**Mode-aware dispatch rule (binding):** The Sprint Coordinator's Specialist-dispatch method is mode-dependent. `operatingMode` (in `.claude/settings.json`) controls approval frequency — not pipeline topology. The rule was codified in S20 close and updated in S23 T23.A.2.
 
-- **MANUAL mode:** The Sprint Coordinator's only valid Specialist-dispatch method is outputting a kickoff card — two fenced blocks per track (one naming the worktree branch / context-loading instructions; one carrying the Bridge body or its absolute path) — for the Conductor to paste into a new Claude Code tab. **Inline Agent tool spawning is FORBIDDEN in MANUAL mode.** Tool-layer enforcement: see `.claude/hooks/block-manual-agent-spawn.sh` (T22.B.2).
+- **MANUAL mode:** The Sprint Coordinator may dispatch Specialists via the Agent tool. Each Agent spawn passes to the Claude Code permission prompt — the Conductor approves or denies inline. Kickoff cards (two fenced blocks per track) remain valid as an alternative dispatch method when inline spawning is not preferred. **Tool-layer behavior (T23.A.1):** `.claude/hooks/block-manual-agent-spawn.sh` informs on Agent spawns in MANUAL mode (stderr message) and exits 0 — it does NOT block. The permission prompt is the approval gate.
 
-- **AUTONOMOUS mode:** The Sprint Coordinator dispatches Specialists via the Agent tool inline. Conversation isolation is achieved via the Agent tool's native context isolation: each Specialist runs in its own context window and returns a bounded 3-field summary to the Sprint Coordinator:
+- **AUTONOMOUS mode:** The Sprint Coordinator dispatches Specialists via the Agent tool inline without per-spawn prompts. The `auto` profile in `/streamline-approvals` configures the allowlist for this posture. Conversation isolation is achieved via the Agent tool's native context isolation: each Specialist runs in its own context window and returns a bounded 3-field summary to the Sprint Coordinator:
   ```
   Track: T<id> <slug>
   Verdict: Bandit APPROVED | BLOCKED
   Commit: <hash> | N/A (if BLOCKED)
   ```
-  Kickoff cards remain valid as a fallback when inline spawning is unavailable (e.g. running outside an Agent-tool-capable environment). Multi-track parallel execution uses `background: true` on the Skylar agent definition to allow concurrent execution without blocking the Sprint Coordinator's main context.
+  Kickoff cards remain valid as a fallback when inline spawning is unavailable. Multi-track parallel execution uses `background: true` on the Skylar agent definition.
 
-**Mode-switch tool-layer enforcement:** The `/switch-workflow-mode` skill's
-Phase 1 feasibility gate (no Edit/Write while any task is `CLAIMED` or
-`IN_PROGRESS`) is also enforced at the tool layer by the `PreToolUse` hook at
-`.claude/hooks/block-mode-violation.sh`. The hook reads `docs/tasks.json` on
-every Edit/Write call and exits code 2 if any task is in flight, blocking
-the modification regardless of which agent (Sprint Coordinator, Specialist,
-Technical Architect, QA) initiated it. This pairs with the skill-layer gate (the
-user-facing explanation) to provide identity-independent runtime enforcement
-of the mode-switch invariant. See `claude/skills/switch-workflow-mode/SKILL.md`
-for the skill-layer rule and the hook script for the tool-layer
-implementation.
+**Tasks-in-flight Edit/Write guard:** The `PreToolUse` hook at `.claude/hooks/block-mode-violation.sh` reads `docs/tasks.json` on every Edit/Write call and exits code 2 if any task is `CLAIMED` or `IN_PROGRESS`. This blocks file modifications during active sprint work regardless of which agent initiated them. See the hook script for the implementation.
 
 ---
 
@@ -121,7 +111,8 @@ When a track modifies or adds a skill, ALL of the following must also be true:
 
 ## 1. DNA Taxonomy
 - **Static DNA:** Foundational tech, team roles, and protocol constraints (this file).
-- **Dynamic DNA:** High-churn task state, roadmap, and requirements (`docs/context/`).
+- **Dynamic DNA:** High-churn task state, roadmap, and requirements (`docs/context/` plan, product, tracks).
+- **Canonical skills manifest URL:** `https://raw.githubusercontent.com/designgrappler/agent-os/main/skills-manifest.json`
 - **Blueprint schema:** `claude/blueprints-schema.md` — canonical specification for task blueprint files (four-column schema, field reference, naming convention, deferred decisions).
 
 ### Memory Authoring Convention
@@ -150,10 +141,9 @@ Each Specialist agent definition includes `isolation: worktree` in its frontmatt
 ## 5. Conductor Protocols
 
 ### Stability Rules
-- **Circuit Breaker:** 3 consecutive failures with the same root cause → STOP and escalate to the Conductor. Any single destructive or security-related failure triggers an immediate stop regardless of count.
+- **Circuit Breaker:** 3 consecutive failures with the **same root cause** = STOP & escalate to [CONDUCTOR NAME]. Different error types reset the counter. Any single destructive, irreversible, or security-related failure triggers an immediate stop regardless of count.
 - **Same-pattern circuit breaker (binding).** If the same intervention pattern recurs 3 or more times within a single sprint — regardless of whether the triggering errors differ — it counts as the same root cause. The sprint threshold is 3 same-pattern interventions (not 3 consecutive failures). The canonical example: an Orchestrator-fills-the-gap pattern recurring 9–10 times in S17 across different tracks was the same root cause (protocol drift) despite varying surface triggers. When the threshold is hit, STOP and call the Technical Architect for a Red Flag Analysis before any further dispatch. The detection mechanism (automated pattern recognition) is deferred to a research-first follow-up track; until then, the Conductor applies this rule manually by reviewing the sprint's intervention history at each circuit-breaker check.
-- **Git Hygiene:** No commits unless directed. Use `git add` for staging only.
-- **Sentinel Proof:** Never trust an agent's verbal summary. Verify with `git diff` or direct file reads.
+- **Git Hygiene:** No commits unless directed. Use `git add` for staging.
 
 **Commit-before-dispatch (binding).** Before dispatching a Specialist on any track, the Conductor must commit all staged changes on `main`. Uncommitted working-tree changes on `main` do **not** reach Specialist worktrees: `worktree.baseRef: "head"` branches the worktree from the current HEAD **commit**, not from the working tree. Dispatching with uncommitted state silently strands the Specialist on a stale baseline. Verify with `git status` (clean working tree) immediately before invoking the Specialist.
 
@@ -162,7 +152,7 @@ Each Specialist agent definition includes `isolation: worktree` in its frontmatt
 **Pre-staging hygiene check (binding).** Before staging any track's files for commit (`git add`), run `git status` and confirm no unrelated dirty files are present in the working tree. If unrelated changes exist, commit or stash them on a separate branch or commit **first**. This prevents accidental co-mingling of unrelated work in a track commit and preserves the per-track authorship record S18.3 relies on.
 
 ### Handoff Logic
-- **Phase 1 (Verify):** Downstream specialist verifies upstream interface before any implementation begins.
+- **Phase 1 (Verify):** Confirm interfaces match before implementation begins.
 - **Phase 2 (Align):** Synchronize with `AGENTIC.md` and `tracks.md`.
 - **Phase 3 (Draft):** Technical Architect drafts implementation plan.
 - **Phase 3a (Plan Doc):** Before any Bridge is issued, a plan doc must exist at `docs/sprint-plan-<sprint-id>.md` and must be approved by [CONDUCTOR NAME]. The plan doc must cover: (1) sprint scope, (2) tracks, (3) Red Flag Analysis, and (4) open questions for [CONDUCTOR NAME]. Any role may author it; the Technical Architect is the default author. This step is mandatory for all sprints — including single-track sprints. An agent that issues a Bridge without a [CONDUCTOR NAME]-approved plan doc has violated protocol and is subject to removal from the team.
@@ -250,6 +240,7 @@ When `Authoring Role: Designer`, the Bridge must include a `**Design Brief:**` f
 - **Execution Files (source):** [list of primary source/canonical files]
 - **Execution Files (tests):** [] — [one-line justification if empty]
 - **Execution Files (tooling/config):** [list of build/config/scaffold files; "[]" if none]
+- **Context files (always include):** `docs/context/plan.md`, `docs/context/tracks.md` — always updated as part of DoD; always list them here even if the only change is a status update
 **Migration Safety:** [N/A / Reversible / Irreversible — Conductor acceptance: YES (date) if irreversible]
 **Security Review:** [N/A / Auth / Payments / Schema — Conductor acceptance: YES (date) if any]
 **Worktree Setup:** Automatic — `isolation: worktree` in Specialist frontmatter + `worktree.baseRef: "head"` in `.claude/settings.json`. Verify both are present before Specialist begins. (`isolation: worktree` is a CWD setting — built-in file tools are governed by the permission system, not the worktree CWD; Bridge Execution Files scope is the protocol-layer compensating control.)
