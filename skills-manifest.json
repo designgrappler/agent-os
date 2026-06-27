@@ -1,5 +1,5 @@
 {
-  "release-version": "v0.11.1",
+  "release-version": "v0.11.2",
   "frontmatter-version": 2,
   "skills": [
     "audit-security",
@@ -60,10 +60,6 @@
     {
       "from": "architect",
       "to": "sprint-coordinator"
-    },
-    {
-      "from": "switch-workflow-mode",
-      "to": "streamline-approvals"
     }
   ]
 }

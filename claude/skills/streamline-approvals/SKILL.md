@@ -5,6 +5,35 @@ description: Scans recent Claude Code transcripts, identifies common read-only t
 # Streamline Approvals
 Scans recent Claude Code transcripts, identifies common read-only tool calls, and writes an optimized allowlist to `~/.claude/settings.json` (global) to reduce permission prompts across all projects. Focuses exclusively on read-only operations — nothing that writes, deletes, pushes, or installs.
 
+## Profile Argument-Detection (runs before everything else)
+
+If the skill is invoked with an argument, process it here and **exit** — do NOT continue to the transcript scanner.
+
+### `auto` argument
+1. Read `~/.claude/settings.json`. If the file does not exist, create it with `{"permissions":{"allow":[]}}`. If `permissions.allow` is missing, create it as an empty array.
+2. Use `jq` to append `"Agent"` and `"Task"` to `permissions.allow` if not already present. De-duplicate. Write back atomically (write to a temp file in the same directory, then `mv` — never use `>` redirect).
+3. Verify: `jq '.permissions.allow | index("Agent")' ~/.claude/settings.json` must return a non-null index. Same for `"Task"`. Verify all other top-level keys are unchanged.
+4. Report: `Applied 'auto' profile. Agent and Task allowlisted in ~/.claude/settings.json. Sprint Coordinator Agent spawns will proceed without per-call prompts.`
+5. Exit. Do not run the transcript scanner.
+
+### `manual` argument
+1. Read `~/.claude/settings.json`. If the file does not exist or `permissions.allow` is missing or empty, report `Already in 'manual' posture — no Agent allowlist entry present.` and exit zero (idempotent).
+2. Use `jq` to remove any element of `permissions.allow` equal to `"Agent"` or `"Task"`. Preserve all other entries. De-duplicate. Write back atomically.
+3. Verify: `jq '.permissions.allow | index("Agent")' ~/.claude/settings.json` must return `null`. Same for `"Task"`. Verify other entries are preserved.
+4. Report: `Applied 'manual' profile. Agent allowlist entry removed from ~/.claude/settings.json. Sprint Coordinator Agent spawns will now require a per-call permission prompt.`
+5. Exit. Do not run the transcript scanner.
+
+### Unknown argument
+If the argument is any other non-empty string, surface this error and exit — do NOT run the transcript scanner:
+```
+Unknown profile: <arg>. Valid profiles: auto, manual. Run /streamline-approvals (no argument) for the transcript scanner.
+```
+
+### No argument
+Fall through to the transcript scanner (Steps 1–10 below).
+
+---
+
 ## Auto-Trigger
 Invoke when the user says:
 - "reduce permission prompts", "fewer prompts", "stop asking me about permissions"

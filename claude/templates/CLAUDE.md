@@ -14,7 +14,7 @@ The Orchestrator coordinates specialists and writes no code. It does not plan.
 
 Current: MANUAL (autonomous loop inactive — Tim triggers each handoff)
 
-To change: `/switch-workflow-mode autonomous` or `/switch-workflow-mode manual` (sprint boundary only — see feasibility gate).
+To change approval frequency: run `/streamline-approvals manual` or `/streamline-approvals auto`. See `AGENTIC.md` §3 for the mode-aware dispatch model.
 
 **Specialist dispatch protocol (mode-dependent):** The full binding rule lives in `AGENTIC.md` §3 Sprint Coordinator Constraints (T7.5 — one rule, one place). Summary:
 - **MANUAL mode:** kickoff card only — two fenced blocks per track for the Conductor to paste into a new tab. Inline Agent tool spawning is FORBIDDEN.
@@ -28,7 +28,7 @@ Before any work, read:
 1. `AGENTIC.md` — Static DNA (tech stack, team, protocols, hard constraints)
 2. `docs/context/plan.md` — Current sprint objective
 3. `docs/context/tracks.md` — Active tracks and their status
-4. **Operating mode mismatch check:** Compare the `operatingMode` field in `.claude/settings.json` against the `## Operating Mode` section in this file. If they differ, surface this warning at the top of the session: `Operating mode mismatch detected: settings.json says <X>, CLAUDE.md says <Y>. Run /switch-workflow-mode to reconcile.` Session continues; the warning persists until reconciled.
+4. **Operating mode mismatch check:** Compare the `operatingMode` field in `.claude/settings.json` against the `## Operating Mode` section in this file. If they differ, surface this warning at the top of the session: `Operating mode mismatch detected: settings.json says <X>, CLAUDE.md says <Y>. Run /streamline-approvals manual or /streamline-approvals auto to reconcile.` Session continues; the warning persists until reconciled.
 
 ---
 
