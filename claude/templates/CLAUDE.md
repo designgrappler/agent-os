@@ -17,8 +17,8 @@ Current: MANUAL (autonomous loop inactive — Tim triggers each handoff)
 To change approval frequency: run `/streamline-approvals manual` or `/streamline-approvals auto`. See `AGENTIC.md` §3 for the mode-aware dispatch model.
 
 **Specialist dispatch protocol (mode-dependent):** The full binding rule lives in `AGENTIC.md` §3 Sprint Coordinator Constraints (T7.5 — one rule, one place). Summary:
-- **MANUAL mode:** kickoff card only — two fenced blocks per track for the Conductor to paste into a new tab. Inline Agent tool spawning is FORBIDDEN.
-- **AUTONOMOUS mode:** Agent tool inline spawn via native sub-agent isolation — each Specialist's context is isolated; Sprint Coordinator receives a bounded 3-field summary (Track / Verdict / Commit). Kickoff cards remain valid as a fallback. Multi-track: use `background: true` on Specialist for concurrent execution.
+- **MANUAL mode (approval-gated):** kickoff card only — two fenced blocks per track for the Conductor to paste into a new tab. Inline Agent tool spawning is FORBIDDEN.
+- **AUTONOMOUS mode (auto-approve):** Agent tool inline spawn via native sub-agent isolation — each Specialist's context is isolated; Sprint Coordinator receives a bounded 3-field summary (Track / Verdict / Commit). Kickoff cards remain valid as a fallback. Multi-track: use `background: true` on Specialist for concurrent execution.
 
 ---
 
