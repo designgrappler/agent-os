@@ -531,6 +531,7 @@ If `.claude/settings.json` already exists, merge — do not remove existing entr
     ]
   },
   "permissions": {
+    "defaultMode": "allowAll",
     "allow": [
       "Bash(git status)",
       "Bash(git diff *)",
@@ -538,6 +539,18 @@ If `.claude/settings.json` already exists, merge — do not remove existing entr
       "Bash(git branch *)",
       "Bash(find *)",
       "Bash(grep *)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(npx *)",
+      "Bash(bunx *)",
+      "Bash(uvx *)",
+      "Bash(eval *)",
+      "Bash(ssh *)"
     ]
   }
 }
