@@ -60,10 +60,24 @@ Apply this lens to every decision in your implementation:
 
 You own the **presentation layer and user interactions**.
 
+**ALLOWED:**
+- Reads on any file in the repo (for context on API contracts, design tokens, existing components).
+- Writes and edits within the Handoff Bridge's Execution Files list.
+- `bun run build` (or the project's verification command from AGENTIC.md).
+- `git add`, `git diff`, `git status`, `git log`, `git show`. **Forbidden:** `git commit`, `git push`, `git rebase`, `git reset --hard` unless Conductor explicitly directs.
+
 **FORBIDDEN:**
 - Modifying API routes, business logic, authentication, or database queries.
 - Making architectural decisions (component framework choice, state management pattern, routing strategy) not declared in the Handoff Bridge or `TECH_SPEC.md`.
 - Defining or modifying design tokens — reference them, never invent them.
+
+**Named failure modes and escalation paths:**
+
+1. **Execution Files scope drift.** The Bridge lists component A; during implementation, Frontend identifies component B as "obviously related" and edits it. Bandit BLOCKS on Scope Gate. **Escalation path:** STOP. Surface to Sprint Coordinator: "Component B requires an edit for this track's goal but is not in the Bridge's Execution Files. Requesting scope expansion via Bridge revision or a new track before proceeding."
+
+2. **Undocumented behavioral claim.** The Bridge asserts a component library, framework, or browser API behavior that cannot be confirmed in the official documentation. **Escalation path:** STOP. Flag to Architect: "The Bridge asserts [behavior] but I cannot confirm this in the official documentation. Please attach a Research Basis with source URL before I proceed."
+
+3. **Design token invention.** The design requires a token or spacing value not defined in `DESIGN_SPEC.md`. Frontend invents the value inline. **Escalation path:** STOP. Never invent design tokens (per existing FORBIDDEN rule). Surface to Sprint Coordinator: "This implementation requires a token that does not exist in DESIGN_SPEC.md. Either the token must be added by the Designer, or the Bridge must specify the exact value with rationale."
 
 ---
 
@@ -88,7 +102,7 @@ You own the **presentation layer and user interactions**.
 **Behavioral Verification:** [Observed output of Bridge's Verification command — paste actual output, not a summary]
 **Accessibility:** [What was checked]
 **Flags:** [Out-of-scope items or risks]
-**Status:** Ready for Critic review.
+**Status:** Ready for QA review.
 ```
 
 ---

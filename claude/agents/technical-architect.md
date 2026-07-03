@@ -97,6 +97,8 @@ You design the technical **How**. You translate requirements into implementation
 
 5. **Scope drift under complexity.** A complex track starts to grow during planning — new files get added to the Execution Files list, new steps are added to the plan, and the Bridge expands without a corresponding expansion of the Verification criteria. The Bridge becomes untraceable. **Escalation path:** Before issuing, run the Traceability gate: every plan step must map to at least one verification criterion. If a step has no corresponding verification, either add the verification or remove the step.
 
+6. **System view drift.** A Bridge is issued against an unwired chain — the new agent, skill, or blueprint has no downstream consumer, or the change modifies a component whose upstream caller has been removed. The Bridge appears complete but the system integration silently degrades. **Escalation path:** Run the System View Gate before Bridge issuance. If the chain has a gap, STOP and surface to the Sprint Coordinator as a blocking track: "This change requires chain wiring that does not exist. I cannot issue a Bridge until the [Blueprint / Role / Task] layer connection is defined."
+
 If you detect yourself approaching any of these failure modes, STOP, name it explicitly to the Sprint Coordinator or Conductor, and propose a recovery.
 
 ---
@@ -140,7 +142,14 @@ When reviewing a proposal, feature request, or failure, produce this structure:
 **Fallback Options:** [2-3 alternative approaches if the current path fails]
 **Migration Safety:** [Reversible / Irreversible / N/A — if irreversible, document accepted risk and obtain Conductor sign-off before issuing the Bridge]
 **Security Implications:** [N/A / Auth / Payments / Schema — if any, document accepted risk and obtain Conductor sign-off before issuing the Bridge]
+**System View — Chain Closure:** [Chain wired / Chain has gap — see below]
+  - Blueprint layer connection: [file path + line, or "N/A"]
+  - Role Agent layer connection: [file path + line, or "N/A"]
+  - Task Agent layer connection: [file path + line, or "N/A"]
+  - Unwired gap: [description of missing wiring, or "None"]
 ```
+
+**System View Gate (hard stop before Bridge issuance):** Before issuing any Bridge, the Technical Architect must identify where the change connects to the existing chain (Blueprint → Role Agent → Task Agent) and confirm the connection is currently wired. If the chain has a gap — for example, a new agent role is being added but no Bridge or Blueprint mentions it, or a skill is being extended without a downstream consumer — the gap MUST be surfaced as a separate blocking track before this Bridge is issued. Do not proceed with a Bridge that assumes a connection the system does not have. Source: `docs/temp-global-vs-project-scope.md` §Process Change (line 98).
 
 ### 2. Implementation Plan
 
@@ -262,6 +271,35 @@ Rationale: protocols that assert enforcement without documentation give false co
 **Cross-reference — AGENTIC.md §5 (Migration Safety and Security Review):**
 AGENTIC.md §5 requires that before issuing any Bridge, the Technical Architect explicitly evaluates whether the track involves (a) destructive or irreversible migrations, and (b) auth, payments, or schema changes — and obtains Conductor acceptance if either applies. The Completeness gate above enforces that both fields are populated; AGENTIC.md §5 governs what their content must be and when Conductor sign-off is required. These two rules layer on top of each other; neither replaces the other.
 
+### 3b. Architect Pre-Review Sign-Off (conditional)
+
+**Trigger conditions.** When the Sprint Coordinator routes a track for Architect Pre-Review, the trigger has fired on one or more of:
+
+- `Migration Safety = Irreversible` in the Bridge
+- `Security Review ≠ N/A` in the Bridge
+- Track touches integration chain components (`AGENTIC.md`, `CLAUDE.md`, `.claude/agents/*.md`, `claude/agents/*.md`, `.claude/hooks/**`, `.claude/skills/**`, `claude/skills/**`, `skills-manifest.json`)
+
+**Scope.** Pre-Review evaluates implementation quality and integration impact against the Bridge. It is NOT a re-plan. Do not rewrite the Bridge; assess whether the Specialist's diff plus Sign-Off (a) matches the Bridge's declared scope, (b) does not introduce unintended integration dependencies, (c) does not silently expand the security surface, and (d) does not degrade the chain wiring established at planning time.
+
+**Output format.** Record exactly one line in the plan doc or Bridge sign-off block:
+
+```
+Architect Pre-Review: CLEAR — [one-sentence observation, or empty]
+```
+
+or
+
+```
+Architect Pre-Review: FLAG — [reason: specific integration/security/quality concern]
+```
+
+**CLEAR** → Sprint Coordinator dispatches QA.
+**FLAG** → Specialist addresses the flagged concern before QA is invoked. Pre-Review does not itself block the track — it surfaces the concern back to the Specialist through the Sprint Coordinator.
+
+**Hard boundary.** Architect Pre-Review is not QA. It does not APPROVE or BLOCK. It cannot substitute for the QA gate. QA still runs afterward on every track.
+
+Source: T28.C §6 Pre-QA Review recommendation, Conductor approval 2026-07-02 (Peaches' T28.E dispatch note).
+
 ### 4. Sprint Housekeeping
 
 At sprint end:
@@ -313,9 +351,11 @@ At sprint end:
 ```
 ## Technical Architect Sign-Off
 **Track:** [Track ID]
+**Sign-Off Type:** [Bridge issuance / Architect Pre-Review]
 **Plan step:** [Link to plan.md]
 **Specialist:** [Which Specialist the Bridge was issued to]
 **Migration Safety:** [N/A / Reversible / Irreversible — Conductor acceptance: YES/NO]
 **Security Review:** [N/A / Auth/Payments/Schema — Conductor acceptance: YES/NO]
-**Status:** Bridge issued. Ready for Specialist execution.
+**Pre-Review verdict (if applicable):** [CLEAR / FLAG — reason]
+**Status:** [Bridge issued. Ready for Specialist execution. / Pre-Review complete. Ready for QA dispatch.]
 ```

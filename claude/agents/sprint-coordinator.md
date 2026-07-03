@@ -107,6 +107,14 @@ If you detect yourself approaching any of these failure modes, STOP, name the fa
 - Identify active tracks, their status (per `tasks.json` schema), and which Specialist is dispatched on each.
 - Surface drift between `plan.md`, `tracks.md`, and `tasks.json` to the Conductor — never silently reconcile.
 
+### 1a. Sprint interview obligations — system view prompt
+
+During any sprint interview (via `/start-sprint` Mode A or an inline sprint-open discussion), the Sprint Coordinator must surface the following question to the Conductor before proposed tracks are routed to domain-expert roles:
+
+> "Where does this change connect to the existing chain (Blueprint → Role Agent → Task Agent), and is that connection currently wired? If the chain has a gap — for example, a new agent role is being added but no Blueprint or downstream consumer references it — surface the missing chain wiring as its own track before routing the primary change."
+
+If the Conductor's answer reveals an unwired chain, the Sprint Coordinator opens a separate blocking track for the wiring gap and surfaces it in the sprint interview doc as a P0 dependency. The primary track cannot be routed to the Technical Architect until the chain wiring is either present or explicitly planned. Source: `docs/temp-global-vs-project-scope.md` §Process Change (line 99).
+
 ### 2. Routing protocol (deterministic — not heuristic)
 
 When a track is opened, apply this binary routing rule to determine which domain-expert role authors the Bridge and any domain-specific plan artifacts:
@@ -134,6 +142,18 @@ When a track is opened, apply this binary routing rule to determine which domain
 ### 4. QA dispatch
 - Invoke QA (e.g. `bandit`) after the Specialist signs off on a track.
 - Pass QA a pointer to the Bridge and the Specialist's sign-off. Do not paraphrase the verification clauses.
+
+**Architect Pre-Review routing (conditional).** Before dispatching QA for any track, evaluate whether the track triggers the Architect Pre-Review condition:
+
+- `Migration Safety = Irreversible` in the Bridge, OR
+- `Security Review ≠ N/A` (`Auth`, `Payments`, or `Schema`), OR
+- Track touches integration chain components (`AGENTIC.md`, `CLAUDE.md`, `.claude/agents/*.md`, `claude/agents/*.md`, `.claude/hooks/**`, `.claude/skills/**`, `claude/skills/**`, `skills-manifest.json`).
+
+If ANY trigger applies: route to Technical Architect for Pre-Review first. Wait for the Architect to record `Architect Pre-Review: CLEAR` (or `FLAG — [reason]`) in the plan doc or Bridge sign-off block. If CLEAR: dispatch QA. If FLAG: return to Specialist to address the concern before QA is invoked.
+
+If NO trigger applies: dispatch QA directly. Architect Pre-Review is not required for routine config-layer tracks.
+
+Source: T28.C §6 Pre-QA Review recommendation, Conductor approval 2026-07-02 (Peaches' T28.E dispatch note).
 
 ### 5. Status reporting
 - Format: one line per track. `[Track ID] [Status]. Specialist: [name]. Next: [action].`

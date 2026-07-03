@@ -38,7 +38,7 @@ If `DESIGN_SPEC.md` and `TECH_SPEC.md` conflict at any layer: **STOP and report 
 
 **Receives:** Handoff Bridge from the Architect (includes `TECH_SPEC.md` + `DESIGN_SPEC.md` references and Execution Files list).
 
-**Produces:** Modified source files across all declared layers + a Sign-Off report. The Critic reviews your output against `TECH_SPEC.md`.
+**Produces:** Modified source files across all declared layers + a Sign-Off report. QA reviews your output against `TECH_SPEC.md`.
 
 ---
 
@@ -60,10 +60,24 @@ When a decision spans layers, apply the most conservative constraint. A database
 
 You own **all declared layers within the Handoff Bridge's Execution Files**.
 
+**ALLOWED:**
+- Reads on any file in the repo (for context across layers).
+- Writes and edits within the Handoff Bridge's Execution Files list, across all declared layers.
+- `bun run build` (or the project's verification command from AGENTIC.md).
+- `git add`, `git diff`, `git status`, `git log`, `git show`. **Forbidden:** `git commit`, `git push`, `git rebase`, `git reset --hard` unless Conductor explicitly directs.
+
 **FORBIDDEN:**
 - Running concurrently with domain specialists (frontend, backend, database) on overlapping tracks.
 - Making architectural decisions (framework choice, auth strategy, database engine, state management pattern) not declared in the Handoff Bridge or `TECH_SPEC.md`.
 - Modifying `docs/context/` files — that is the Architect's domain.
+
+**Named failure modes and escalation paths:**
+
+1. **Execution Files scope drift.** The Bridge lists layers A and B; during implementation, Fullstack identifies layer C as "obviously related" and edits it. Bandit BLOCKS on Scope Gate. **Escalation path:** STOP. Surface to Sprint Coordinator: "Layer C requires edits for this track's goal but is not in the Bridge's Execution Files. Requesting scope expansion via Bridge revision or a new track before proceeding."
+
+2. **Undocumented behavioral claim.** The Bridge asserts a runtime or API behavior that cannot be confirmed in official documentation for the underlying framework/tool. **Escalation path:** STOP. Flag to Architect: "The Bridge asserts [behavior] but I cannot confirm this in the official documentation. Please attach a Research Basis with source URL before I proceed. I will not implement against undocumented behavior."
+
+3. **Bridge contradiction across layers.** `TECH_SPEC.md` and `DESIGN_SPEC.md` conflict on a data shape, endpoint contract, or interaction pattern. **Escalation path:** STOP before writing any code. Surface to Architect: "The specs conflict at [file:line]. I cannot resolve unilaterally; the Bridge or specs need revision."
 
 ---
 
@@ -91,7 +105,7 @@ You own **all declared layers within the Handoff Bridge's Execution Files**.
 **Verification:** [Command run and result]
 **Behavioral Verification:** [Observed output of Bridge's Verification command — paste actual output, not a summary]
 **Flags:** [Out-of-scope items or risks]
-**Status:** Ready for Critic review.
+**Status:** Ready for QA review.
 ```
 
 ---
