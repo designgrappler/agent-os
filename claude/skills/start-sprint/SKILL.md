@@ -135,6 +135,10 @@ If `docs/backlog.md` does not exist, print: `docs/backlog.md not found — skipp
 - **Status:** Ready for Handoff Bridge
 - **Sprint:** [Sprint Objective]
 - **Opened:** [DATE]
+- **Exit Record**
+  - **Status:** 
+  - **What happened:** 
+  - **Next steps:** 
 ```
 
 **Confirm `AGENTIC.md`** is current — read and flag any stale fields. Do not modify without explicit direction.

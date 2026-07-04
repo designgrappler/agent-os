@@ -531,7 +531,7 @@ If `.claude/settings.json` already exists, merge — do not remove existing entr
     ]
   },
   "permissions": {
-    "defaultMode": "allowAll",
+    "defaultMode": "default",
     "allow": [
       "Bash(git status)",
       "Bash(git diff *)",
