@@ -325,7 +325,7 @@ chore(deps): upgrade dependencies
 
 Current: MANUAL (autonomous loop inactive — Tim triggers each handoff)
 
-To change: `/switch-workflow-mode autonomous` or `/switch-workflow-mode manual` (sprint boundary only — see feasibility gate).
+To change approval frequency: run `/streamline-approvals auto` or `/streamline-approvals manual`. See `AGENTIC.md` §3 for the mode-aware dispatch model.
 
 ---
 
@@ -335,7 +335,7 @@ Before any work, read:
 1. `AGENTIC.md` — Static DNA (tech stack, team, protocols, hard constraints)
 2. `docs/context/plan.md` — Current sprint objective
 3. `docs/context/tracks.md` — Active tracks and their status
-4. **Operating mode mismatch check:** Compare the `operatingMode` field in `.claude/settings.json` against the `## Operating Mode` section in this file. If they differ, surface this warning at the top of the session: `Operating mode mismatch detected: settings.json says <X>, CLAUDE.md says <Y>. Run /switch-workflow-mode to reconcile.` Session continues; the warning persists until reconciled.
+4. **Operating mode mismatch check:** Compare the `operatingMode` field in `.claude/settings.json` against the `## Operating Mode` section in this file. If they differ, surface this warning at the top of the session: `Operating mode mismatch detected: settings.json says <X>, CLAUDE.md says <Y>. Run /streamline-approvals manual or /streamline-approvals auto to reconcile.` Session continues; the warning persists until reconciled.
 
 ---
 
@@ -588,7 +588,7 @@ If `.claude/settings.json` already exists, merge — do not remove existing entr
 
 After `.claude/settings.json` is written, introduce operating mode to the user and verify the freshly generated `CLAUDE.md` contains the `## Operating Mode` section.
 
-**Agent OS defaults to MANUAL mode on every fresh install.** In MANUAL mode, the Conductor (you) triggers each handoff — the Orchestrator coordinates on request, not autonomously. Autonomous mode is a deliberate posture change made via `/switch-workflow-mode`.
+**Agent OS defaults to MANUAL mode on every fresh install.** In MANUAL mode, the Conductor (you) triggers each handoff — the Orchestrator coordinates on request, not autonomously. Autonomous mode is a deliberate posture change made via `/streamline-approvals auto`.
 
 No mode-selection prompt is shown at install time. The default is always manual. Switching modes is always a deliberate, named action.
 
@@ -599,11 +599,11 @@ Verify that the freshly generated `CLAUDE.md` contains a `## Operating Mode` sec
 
 Current: MANUAL (autonomous loop inactive — Tim triggers each handoff)
 
-To change: `/switch-workflow-mode autonomous` or `/switch-workflow-mode manual` (sprint boundary only — see feasibility gate).
+To change approval frequency: run `/streamline-approvals auto` or `/streamline-approvals manual`. See `AGENTIC.md` §3 for the mode-aware dispatch model.
 ```
 
 Tell the user:
-> **Operating mode:** Agent OS is installed in **MANUAL** mode (default). Tim triggers each handoff. To switch to autonomous orchestration in a future sprint, run `/switch-workflow-mode autonomous` at a sprint boundary. The skill includes a feasibility gate and requires explicit confirmation.
+> **Operating mode:** Agent OS is installed in **MANUAL** mode (default). Tim triggers each handoff. To switch to autonomous orchestration, run `/streamline-approvals auto`. To return to manual approval gating, run `/streamline-approvals manual`.
 
 
 ### 4j. `.gitignore` additions
@@ -806,7 +806,7 @@ Your first move: open a sprint session with `@[SPRINT_COORDINATOR]`.
 
 **Verification:** Run `[BUILD_CMD]` to confirm the build environment is clean.
 
-**Operating mode:** MANUAL (default). To switch to autonomous orchestration, run `/switch-workflow-mode autonomous` at a sprint boundary.
+**Operating mode:** MANUAL (default). To switch to autonomous orchestration, run `/streamline-approvals auto`. To return to manual approval gating, run `/streamline-approvals manual`.
 
 
 **Activate skills:** Close and reopen your IDE window — installed skills load on session start.

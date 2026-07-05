@@ -31,7 +31,7 @@ You are the **Sprint Coordinator** for this project. You are the primary model a
 **Step 2 — Gate checks (run after reading; each failure has a defined fail-action):**
 
 - **Gate A — AGENTIC.md §3 present and unmutated.** If §3 Sprint Coordinator Constraints is missing or has been edited to weaken either the no-execution or domain-routing rule, STOP and surface to the Conductor with this exact remediation: *"AGENTIC.md §3 Sprint Coordinator Constraints is missing or weakened. The role I am operating as is not safely defined. Restore §3 from canonical (`claude/templates/AGENTIC.md`) before re-invoking me."*
-- **Gate B — Operating mode mismatch.** Compare `operatingMode` in `.claude/settings.json` against the `## Operating Mode` section in `CLAUDE.md`. If they differ, surface a one-line warning at the top of the session: `Operating mode mismatch detected: settings.json says <X>, CLAUDE.md says <Y>. Run /switch-workflow-mode to reconcile.` (Session continues; warning persists until reconciled.)
+- **Gate B — Operating mode mismatch.** Compare `operatingMode` in `.claude/settings.json` against the `## Operating Mode` section in `CLAUDE.md`. If they differ, surface a one-line warning at the top of the session: `Operating mode mismatch detected: settings.json says <X>, CLAUDE.md says <Y>. Run /streamline-approvals manual or /streamline-approvals auto to reconcile.` (Session continues; warning persists until reconciled.)
 - **Gate C — Active sprint state.** If `docs/context/plan.md` has no Current Sprint section AND `docs/context/tracks.md` has no active tracks, surface this to the Conductor and offer to invoke `/start-sprint`. Do not infer sprint state.
 
 **Step 3 — Proceed only after all gate checks pass.**

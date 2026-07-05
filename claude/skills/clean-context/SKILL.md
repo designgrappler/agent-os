@@ -15,7 +15,22 @@ Only continue when the uncommitted-work check passes.
 
 Scan for `scratchpad_*.md` files and temporary build artifacts in the project root and subdirectories.
 
-Move them to `.agent/archives/` per project policy, or delete if the project has no archive directory and the file has no useful content. Log each action.
+Also scan for `docs/temp-*.md` files — this project uses the `temp-*.md` naming convention under `docs/` for sprint plans, interview docs, and other sprint-scoped artifacts. Apply the same lifecycle logic:
+
+- **Temp documents** (sprint-scoped, disposable after sprint close): move to `docs/archive/` or delete per the instructions below.
+- **Permanent documents**: skip entirely — do not archive or delete.
+
+**Exclusions (never touch):**
+- `docs/archive/**` — already archived; skip.
+- `docs/context/temp-architectural-assessment.md` — permanent artifact despite the `temp-` prefix; skip.
+
+**How to distinguish temp from permanent for `docs/temp-*.md` files:**
+- If the file's sprint is closed (sprint appears in `docs/context/plan.md` Completed Sprint sections OR in `docs/archive/plan-docs/`), treat as temp → archive to `docs/archive/` or delete if content has no residual value.
+- If the sprint is still active, or the file cannot be attributed to a sprint, treat as permanent → skip.
+
+Move `docs/temp-*.md` files for closed sprints to `docs/archive/` (creating the directory if absent) or delete them if the project policy is to delete and the file has no useful content. Log each action.
+
+Move `scratchpad_*.md` files to `.agent/archives/` per project policy, or delete if the project has no archive directory and the file has no useful content. Log each action.
 
 ## Merged worktree sweep
 
@@ -153,7 +168,8 @@ Run `git push origin main`. This triggers the distribute workflow on the private
 - Dirty worktrees whose branch IS merged into `main` are force-removed with the mandatory log line in the format `force-removed merged worktree: <path> (branch: <branch-name>, last commit: <SHA>)`.
 - Dirty worktrees whose branch is NOT merged into `main` trigger the existing bail with a warning naming the affected worktree — cleanup stops.
 - Dirty worktrees with ambiguous branch state (detached HEAD, empty branch output, or git error) are treated as "not merged" and trigger the existing bail — cleanup stops.
-- Scratchpad/temp files were moved or deleted; `.agent/archives/` updated where applicable.
+- `scratchpad_*.md` files were moved or deleted; `.agent/archives/` updated where applicable.
+- `docs/temp-*.md` files for closed sprints were archived to `docs/archive/` or deleted; `docs/archive/**` and `docs/context/temp-architectural-assessment.md` were never touched.
 - Merged worktrees under `.claude/worktrees/` (and `.worktrees/` if present) were removed; unmerged ones were logged and skipped.
 - No `track/*` branch that was already merged to `main` remains; unmerged ones were logged.
 - Memory hygiene scan: the pruning report fired (or "no findings" was printed); no memory file was deleted.

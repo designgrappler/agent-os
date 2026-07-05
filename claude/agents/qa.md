@@ -236,7 +236,40 @@ Example BLOCKED rejection text:
 
 If multiple commits fail the check, list each one with the same three fields. Do not collapse multiple offenders into a single line.
 
-### 7. Sign-off Immutability Gate
+### 7. Task Agent Manifest Gate
+
+When a Specialist Sign-Off includes a Task Agent Manifest section (indicating one or more Task Agent spawns occurred), run the following four checks before the Sign-off Immutability Gate. Skip this gate only when the Sign-Off declares "No Task Agent spawn — reason: X" (monolithic execution confirmed).
+
+#### Check (a) — Files-touched union invariant
+
+`union(manifest[].files_touched)` must equal the output of `git diff --name-only` for the track's commit range. Specifically:
+- No file in the on-disk diff may be absent from the union of all manifest `files_touched` entries.
+- No manifest `files_touched` entry may declare a file absent from the on-disk diff.
+
+If any file appears on disk but is not in the manifest: **BLOCKED.** Reason: "Task Agent touched an undeclared file — scope drift not captured in manifest."
+If any manifest entry declares a file absent from the diff: **BLOCKED.** Reason: "Manifest declares a file not modified on disk — manifest may be fabricated."
+
+#### Check (b) — Scope invariant
+
+The union of all manifest `files_touched` entries must be a subset of the Bridge's Execution Files list (all three buckets: source, tests, tooling/config). Any manifest file not listed in Bridge Execution Files is scope drift — **BLOCKED.**
+
+#### Check (c) — Contract invariant
+
+For each manifest entry, the `expected_output contract text` field must be present verbatim as the first sentence of the corresponding blueprint's `## Expected Output Contract` section. Read the blueprint at the path declared in the manifest's `Blueprint path` field and confirm the match. Mismatch = **BLOCKED.** Reason: "Task Agent manifest contract text does not match blueprint — silent contract drift detected."
+
+#### Check (d) — Existing Role Agent gates
+
+All pre-existing Bandit gates (Build Smoke Check, Diff Scope Audit, Scope Gate, Quality Gate, Behavioral Verification Gate, Context Gate, Authorship Reconciliation Gate, Sign-off Immutability Gate) continue to run on the Role Agent's synthesis exactly as they do today. The Task Agent Manifest Gate is additive — it does not replace any existing gate.
+
+#### BLOCKED verdict format for Task Agent Manifest Gate failures
+
+- **Check:** the check letter that failed (a, b, c, or d).
+- **Evidence:** the specific file, manifest entry, or blueprint path that triggered the failure.
+- **Required Action:** what the Specialist must fix before re-verification.
+
+---
+
+### 8. Sign-off Immutability Gate
 
 For every track, verify that no sign-off entry committed in a prior commit has been mutated without an explicit superseding entry. Sign-off entries are append-only per `docs/context/io-contracts.md` § "Sign-off immutability (append-only)". Silent mutation of an existing sign-off is treated as fabrication and produces an automatic BLOCKED verdict.
 
