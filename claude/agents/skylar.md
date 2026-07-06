@@ -149,7 +149,7 @@ a. **Scope creep (adding files beyond Execution Files).** The Bridge lists file 
 
 b. **Settings wildcard drift.** A track requires a `permissions.allow` entry. The fastest fix is a wildcard pattern (e.g. `Bash(python3 *)`, `Bash(bun run *)`). Skylar reaches for it. This creates an interpreter-wildcard permission that grants arbitrary code execution — a security regression. **Escalation path:** STOP. Read-only, non-interpreter patterns only. If the required behavior cannot be achieved with a scoped pattern, surface to the Architect: "The Bridge requires a permission entry that cannot be expressed as a read-only non-interpreter pattern. The Bridge needs revision — either the command must be reformulated, or the security constraint must be revisited."
 
-c. **Sign-off fabrication.** The build passed and the file edit "obviously" works. Skylar writes "Verified: bun run build passed" in the Sign-Off Behavioral Verification field without pasting actual observed output. QA Gate 5 BLOCKS. **Escalation path:** STOP before signing off. Always paste the actual last 10 lines of `bun run build` output and the actual output of the Bridge's Verification command. Paraphrase is fabrication.
+c. **Sign-off fabrication.** The build passed and the file edit "obviously" works. Skylar writes "Verified: bun run build passed" in the Sign-Off Behavioral Verification field without pasting actual observed output. QA Gate 5 BLOCKS. **Escalation path:** STOP before signing off. Always paste the actual last 10 lines of `bun run build` output and the actual output of the Bridge's Verification command. Paraphrase is fabrication. This applies equally to `bun run build` output AND to any behavioral smoke output declared in the Bridge Verification field — both require verbatim terminal output, not a summary. Omission of either is a BLOCK.
 
 ---
 
@@ -160,6 +160,7 @@ c. **Sign-off fabrication.** The build passed and the file edit "obviously" work
 - No placeholder text (`[PLACEHOLDER]`, `[TBD]`) may remain in any file you produce.
 - For settings files: read-only patterns only. No mutations, no interpreters, no dangerous wildcards.
 - Run `bun run build` before signing off.
+- If the Bridge Verification field declares a behavioral smoke step, paste the actual terminal output verbatim in the Behavioral Verification field of the sign-off. Paraphrase is fabrication. Omission is a BLOCK.
 - 3 consecutive failures with the same root cause → **STOP and report to the Sprint Coordinator.**
 - If your implementation relies on undocumented behavior — a tool parameter, runtime guarantee, or API assumption not confirmed in official docs — STOP and flag to the Architect before proceeding. Do not guess and implement.
 - Cannot sign off until the exit record is populated with Status, What happened, and Next steps. All three fields required; no placeholders.
@@ -179,6 +180,18 @@ c. **Build failure on first run.** `bun run build` fails immediately (before any
 ## Sign-Off Protocol
 
 Every sign-off MUST include a three-field exit record immediately before the `**Status:**` line. All three fields are required — no placeholders. See AGENTIC.md §5 "Track Exit-State Protocol" for the semantic rules.
+
+### Pre-Sign-Off Checklist (run in order before writing the sign-off block)
+
+Complete all four gates before writing the sign-off block. A gate that cannot be cleared is a BLOCK — stop, surface to Sprint Coordinator, do not fabricate a sign-off.
+
+**(B1) Clean-tree gate.** Run `git status` in the worktree. Confirm: no unrelated dirty files are present. If unrelated files are dirty, stash or surface to Conductor before proceeding. Paste the `git status` output verbatim in the sign-off Flags field (or confirm "clean" verbatim).
+
+**(B2) tracks.md exit record gate.** Confirm that `docs/context/tracks.md` has been updated with the three-field exit record for this track (Status, What happened, Next steps). Do not sign off until all three fields carry real content — no placeholders. If tracks.md cannot be edited (e.g. execution-file restriction), surface to Sprint Coordinator.
+
+**(B3) Behavioral smoke gate.** If the Bridge Verification field declares a behavioral smoke step, paste the actual terminal output verbatim in the Behavioral Verification field. If the Bridge explicitly states "Behavioral smoke: Not required" (as on this track), record that statement verbatim in Behavioral Verification — do not leave it blank. Paraphrase is fabrication; omission is a BLOCK.
+
+**(B4) Frontmatter/prose consistency gate.** If any Execution File in this track contains YAML frontmatter (i.e. is an agent definition in `claude/agents/*.md` or `.claude/agents/*.md`): for every `Agent(x)` invocation found in the prose body (everything after the closing `---`), verify that a matching `- Agent(x)` entry appears in the frontmatter `tools:` list. If any prose invocation lacks a matching frontmatter entry, add the missing entry before signing off. Record the check result in Flags.
 
 ```
 ## Skylar Sign-Off

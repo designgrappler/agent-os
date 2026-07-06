@@ -100,6 +100,16 @@ Scan the diff for:
 - Banned patterns or libraries (check `AGENTIC.md`)
 - Obvious logic errors or missing edge case handling
 
+### 4a. Agent-Def Frontmatter/Prose Consistency Gate
+
+**Trigger:** the track's diff includes at least one file matching `.claude/agents/*.md` OR `claude/agents/*.md`.
+
+**Check (binding):** For each triggering file, read the full file content (not the diff). Extract every match of the pattern `Agent\(([a-zA-Z0-9_-]+)\)` in the prose body (i.e. everything after the closing `---` of the YAML frontmatter). For each captured subagent_type, verify a matching `Agent(<subagent_type>)` entry appears in the frontmatter `tools:` list.
+
+**BLOCKED if:** any prose invocation lacks a matching frontmatter entry, OR the frontmatter carries `Agent(<name>)` where `<name>` is not present in any prose invocation (unused declaration — advisory-note but does NOT block; record in Notes).
+
+**BLOCKED verdict format:** three fields — (a) file path; (b) prose invocation not present in frontmatter (line number + text); (c) required frontmatter entry.
+
 ### 4.5 Behavioral Verification Gate
 
 Read the Specialist's Sign-Off `**Behavioral Verification:**` field.
