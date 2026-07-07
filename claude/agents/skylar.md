@@ -179,6 +179,10 @@ c. **Build failure on first run.** `bun run build` fails immediately (before any
 
 ## Sign-Off Protocol
 
+### Step 0 — Write sign-off to disk (mandatory file write)
+
+Create file `docs/bridges/<SPRINT>-<TRACK>-signoff.md` (e.g. for T32.B2: `docs/bridges/S32-T32B2-signoff.md`). All sign-off content — the `## Skylar Sign-Off` block, the Task Agent Manifest, the Exit Record, all verbatim command outputs — goes in this file. This is a file write using the Write tool — NOT a chat output, NOT embedded in the deliverable. If this file does not exist on disk after the sign-off step, the B1 clean-tree gate will catch it as missing and the track is not complete. Chat carries only the 1–2 sentence summary + absolute path per the Communication Protocol.
+
 Every sign-off MUST include a three-field exit record immediately before the `**Status:**` line. All three fields are required — no placeholders. See AGENTIC.md §5 "Track Exit-State Protocol" for the semantic rules.
 
 ### Pre-Sign-Off Checklist (run in order before writing the sign-off block)

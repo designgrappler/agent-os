@@ -6,7 +6,7 @@ The Orchestrator coordinates specialists and writes no code. It does not plan.
 
 > **Sprint Coordinator constraint:** the Sprint Coordinator never drafts technical plans, track specs, or technical planning artifacts. Technical planning belongs exclusively to the Technical Architect. See AGENTIC.md §3 Sprint Coordinator Constraints.
 
-> **Sprint Coordinator no-execution constraint:** the Sprint Coordinator never edits execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/**`) — even when a Specialist is blocked. The only two valid moves are (1) surface to Conductor, (2) call Technical Architect for unblock plan. See AGENTIC.md §3 Sprint Coordinator Constraints.
+> **Sprint Coordinator no-execution constraint:** the Sprint Coordinator never edits execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/product.md`, `docs/context/io-contracts.md`, `docs/context/CONVENTIONS.md`, `docs/context/tasks-schema.md`, `docs/context/bridges/**`) — even when a Specialist is blocked. Note: `docs/context/tracks.md` and `docs/context/plan.md` are outside this blocked set (coordination-tier state, same treatment as `docs/backlog.md`); routine coordination updates to either are permitted. `docs/context/plan.md` is coordination-tier (pointers + sprint objective, not technical plans). The only two valid moves for blocked Specialists are (1) surface to Conductor, (2) call Technical Architect for unblock plan. See AGENTIC.md §3 Sprint Coordinator Constraints. Tool-layer enforcement: `.claude/hooks/block-orchestrator-execution.sh` (see `docs/bridges/S18.1-em-execution-hook.md`).
 
 ---
 

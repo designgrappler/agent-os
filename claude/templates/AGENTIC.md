@@ -54,12 +54,13 @@ The Sprint Coordinator coordinates specialists and routes domain work. It does n
 - **FORBIDDEN:** Drafting technical track specs, Red Flag Analysis, Handoff Bridges for technical tracks, or any domain-specific planning artifact — even as "rough scaffolding" or a "starting point." Those belong to the Technical Architect.
 - **FORBIDDEN:** Writing planning content to `docs/context/plan.md`, `docs/context/tracks.md`, or any sprint plan doc for technical tracks. Only the Technical Architect writes technical planning content; the Conductor approves; the Sprint Coordinator coordinates the handoff.
 - **REQUIRED:** After any context-setup step (e.g. `/start-sprint`, `/onboard-existing-project`), the next action is to invoke the Technical Architect for technical tracks. If sprint scope was discussed in chat, summarize it as a one-line briefing to the Technical Architect — do not translate it into track specs.
-- **FORBIDDEN:** Direct execution of any kind on execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/**`) — even when a Specialist is blocked, even when the fix is "obvious", even when the urgency feels high. The Sprint Coordinator coordinates; it does not edit.
+- **FORBIDDEN:** Direct execution of any kind on execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/product.md`, `docs/context/io-contracts.md`, `docs/context/CONVENTIONS.md`, `docs/context/tasks-schema.md`, `docs/context/bridges/**`) — even when a Specialist is blocked, even when the fix is "obvious", even when the urgency feels high. Note: `docs/context/tracks.md` and `docs/context/plan.md` are outside this blocked set (coordination-tier state — pointers + sprint objective / status updates, same treatment as `docs/backlog.md`); the Sprint Coordinator may write routine coordination updates to either directly. The Sprint Coordinator coordinates; it does not author technical planning content.
 - **REQUIRED (when a Specialist is blocked):** The only two valid Sprint Coordinator moves are (1) surface the blocker to the Conductor, or (2) call the Technical Architect for an unblock plan. Direct execution is forbidden regardless of urgency.
+- **REQUIRED (post-merge smoke-test finding routing):** When a post-merge smoke test surfaces a defect, the Sprint Coordinator surfaces the finding to the Conductor (one-line description + proposed fix) and waits for explicit Conductor confirmation before dispatching any hotfix track. Autonomous hotfix dispatch on "obviously correct" framing is forbidden — the same No-Bridge anti-pattern (§5) applies to hotfixes routed around the Bridge requirement by not being named as tracks. This rule is not conditional on the severity of the finding — every post-merge smoke-test defect is surfaced before dispatch, no exceptions.
 
 Violations of this rule bypass the Phase 3a plan-doc gate (§5) and produce unreviewed plans that look official but aren't. This is a protocol violation and is treated as a circuit-breaker event.
 
-**Tool-layer enforcement:** This rule is also enforced at the tool layer by the `PreToolUse` hook at `.claude/hooks/block-orchestrator-execution.sh`. The hook blocks Sprint Coordinator-authored Edit/Write calls to execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/**`) regardless of model state. See `docs/bridges/S18.1-em-execution-hook.md` for the Bridge and known bypass vectors.
+**Tool-layer enforcement:** This rule is also enforced at the tool layer by the `PreToolUse` hook at `.claude/hooks/block-orchestrator-execution.sh`. The hook blocks Sprint Coordinator-authored Edit/Write calls to execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/product.md`, `docs/context/io-contracts.md`, `docs/context/CONVENTIONS.md`, `docs/context/tasks-schema.md`, `docs/context/bridges/**`) regardless of model state. Note: `docs/context/tracks.md` and `docs/context/plan.md` are outside the blocked set (coordination-tier state — Sprint Coordinator may write routine coordination updates directly). See `docs/bridges/S18.1-em-execution-hook.md` for the Bridge and known bypass vectors.
 
 **Mode-aware dispatch rule (binding):** The Sprint Coordinator's Specialist-dispatch method is mode-dependent. `operatingMode` (in `.claude/settings.json`) controls approval frequency — not pipeline topology. The rule was codified in S20 close and updated in S23 T23.A.2.
 
@@ -142,7 +143,11 @@ Each Specialist agent definition includes `isolation: worktree` in its frontmatt
 
 ### Stability Rules
 - **Circuit Breaker:** 3 consecutive failures with the **same root cause** = STOP & escalate to [CONDUCTOR NAME]. Different error types reset the counter. Any single destructive, irreversible, or security-related failure triggers an immediate stop regardless of count.
-- **Same-pattern circuit breaker (binding).** If the same intervention pattern recurs 3 or more times within a single sprint — regardless of whether the triggering errors differ — it counts as the same root cause. The sprint threshold is 3 same-pattern interventions (not 3 consecutive failures). The canonical example: an Orchestrator-fills-the-gap pattern recurring 9–10 times in S17 across different tracks was the same root cause (protocol drift) despite varying surface triggers. When the threshold is hit, STOP and call the Technical Architect for a Red Flag Analysis before any further dispatch. The detection mechanism (automated pattern recognition) is deferred to a research-first follow-up track; until then, the Conductor applies this rule manually by reviewing the sprint's intervention history at each circuit-breaker check.
+- **Cross-track circuit breaker (binding).** When the same root cause appears in two different tracks within a single sprint, the Sprint Coordinator STOPS, surfaces the pattern to [CONDUCTOR NAME], and waits for a go/no-go before dispatching the next track.
+
+  Two-condition definition:
+  1. **Same root cause** = same named failure mode (e.g. uncommitted files at sign-off, scope drift beyond Bridge Execution Files, missing behavioral smoke, frontmatter/prose divergence) appearing in two different tracks. Intra-track self-correction (Bandit BLOCKED → Skylar fixes → Bandit APPROVED) does NOT count — the loop is Bandit's job and is expected.
+  2. **Surface, don't dispatch.** The Sprint Coordinator surfaces the two occurrences to [CONDUCTOR NAME] in one message; [CONDUCTOR NAME] decides: continue, or call the Technical Architect for a Red Flag Analysis before the next track dispatches.
 - **Git Hygiene:** No commits unless directed. Use `git add` for staging.
 
 **Commit-before-dispatch (binding).** Before dispatching a Specialist on any track, the Conductor must commit all staged changes on `main`. Uncommitted working-tree changes on `main` do **not** reach Specialist worktrees: `worktree.baseRef: "head"` branches the worktree from the current HEAD **commit**, not from the working tree. Dispatching with uncommitted state silently strands the Specialist on a stale baseline. Verify with `git status` (clean working tree) immediately before invoking the Specialist.
@@ -150,6 +155,24 @@ Each Specialist agent definition includes `isolation: worktree` in its frontmatt
 **`.claude/` is worktree-unsafe (binding).** Worktree isolation (`isolation: worktree` + `worktree.baseRef: "head"`) covers the project CWD only. `.claude/settings.json` and `.claude/hooks/**` are read by the Claude Code runtime from a path that is **not** isolated by the worktree CWD. Any track that requires changes to `.claude/settings.json` or `.claude/hooks/**` must make those changes directly on `main` (absolute path against the source repo, not the worktree). The Bridge for any such track must call out the `.claude/`-on-main exception in its Execution Files block.
 
 **Pre-staging hygiene check (binding).** Before staging any track's files for commit (`git add`), run `git status` and confirm no unrelated dirty files are present in the working tree. If unrelated changes exist, commit or stash them on a separate branch or commit **first**. This prevents accidental co-mingling of unrelated work in a track commit and preserves the per-track authorship record S18.3 relies on.
+
+**Track integration — `git merge --no-ff` (binding).** After Bandit issues an APPROVED verdict and the Specialist commits any uncommitted track work, the Conductor integrates the track branch into `main` using:
+
+```
+git merge --no-ff <track-branch>
+```
+
+Never use `git cherry-pick` for per-track integration. `git merge --no-ff` ensures subsequent worktrees (branched from HEAD) include the full track history and eliminates the stale-baseline class caused by cherry-pick + sequential dispatch.
+
+Merge commit message format: see §7 DoD (MANUAL mode) and §8a in `claude/agents/qa.md` (AUTONOMOUS mode) — do not restate here.
+
+**Post-merge HEAD verification (binding).** After `git merge --no-ff` completes, the Conductor runs:
+
+```
+git log --oneline -1
+```
+
+Confirm the SHA shown matches the expected merge commit before dispatching the next Specialist. If the SHA does not match (e.g. fast-forward occurred, or the merge silently no-op'd), STOP and diagnose before any further dispatch. A clean merge always produces a new merge commit SHA distinct from any prior commit SHA.
 
 ### Handoff Logic
 - **Phase 1 (Verify):** Confirm interfaces match before implementation begins.
@@ -192,11 +215,45 @@ The improvement does not count as "shipped" until the canonical owner reflects i
 
 **I/O contracts:** see `docs/context/io-contracts.md` for the result.json schema, role-agent structured output schema, and Bridge file schema.
 
+### 5.2 Canonical-Sync Sprint
+
+The theme model is the release-boundary batching implementation of §5.1's canonical-sync obligation.
+
+**Two sprint types.** Agent OS sprints are either *execution sprints* (feature/track work; canonical-sync items queued per §5.1 but not executed) or *canonical-sync sprints* (one sprint dedicated to draining queued items and cutting a semver release).
+
+**Theme declaration.** At sprint open, the Conductor names the theme for the upcoming set of execution sprints — one sentence naming the shipping story (e.g. "Permission Model release", "Blueprint Chain release"). Execution sprints under that theme build toward it. When the Conductor declares the theme's execution scope complete, the next sprint opens as a canonical-sync sprint.
+
+**What happens in a canonical-sync sprint.** At sprint open, the Sprint Coordinator runs a `git log <last-sync-sha>..HEAD` sweep and surfaces a delta table of every canonical file touched since the last sync. The Conductor approves the scope. Each approved item becomes one Skylar track, with a Bridge authored by the Technical Architect. Bandit gates each track. The sprint closes with a semver release and release notes covering the theme.
+
+**Semver policy (per §9.4).** Canonical-sync sprints are always minor version bumps by default. Major bump only if a §9.2 compatibility window closes or a canonical delta explicitly removes a frontmatter field — in either case the Technical Architect flags it and the Conductor approves at sprint open. Patch bump is reserved for bug-fix-only sync sprints (rare). Each theme's release version is determined by this rule.
+
+**`/start-sprint` Mode A variant.** Deferred — validate the model with one real canonical-sync sprint first, then codify the skill variant against observed behavior.
+
 ### Sprint-close `/clean-context` step (binding)
 
 After QA (Bandit) issues a final APPROVED verdict on the last track of a sprint, the Conductor must run `/clean-context` before the sprint is marked complete. This consolidates context archival, memory pruning, and worktree cleanup at sprint close so the next sprint opens against a clean baseline. The step runs after §5.1's canonical-sync gate is satisfied; together they define the two binding sprint-close prerequisites.
 
 **Push to origin (binding, sprint close):** After all sprint tracks are committed to `main` and `/clean-context` has run, Conductor must run `git push origin main`. This triggers the distribute and release workflows on the private repo. Without this push, the public mirror receives no updates. The push is the final step of every sprint close — it is not optional and not delegated.
+
+### Track Exit-State Protocol
+
+Every track must have a completed exit record before Skylar signs off. The exit record is a three-field compact schema — no more, no less:
+
+```markdown
+**Status:** DONE | BLOCKED | DEFERRED
+**What happened:** [1-2 sentences — key outcomes + what was affected]
+**Next steps:** [1 sentence — what the next actor (QA / Sprint Coordinator / Conductor) should do; "N/A" if none]
+```
+
+**Status semantics:**
+
+- **DONE** — work completed and ready for Bandit review. Bandit may still BLOCK; that does not retroactively change the exit-record Status to BLOCKED. Status names the Specialist's self-assessment, not the QA verdict.
+- **BLOCKED** — Specialist could not complete the work as scoped. `What happened` names the blocker; `Next steps` names the escalation (typically "Return to Sprint Coordinator" or "Return to Technical Architect for Bridge revision").
+- **DEFERRED** — work was descoped mid-track by Conductor or Sprint Coordinator. `What happened` names the descope; `Next steps` names where the descoped work goes (new track, backlog, next sprint).
+
+**Hard gate (Skylar):** Skylar cannot sign off until all three fields are populated with real content — no placeholders. See `claude/agents/skylar.md` Sign-Off Protocol for the full sign-off template.
+
+**Track entry template (start-sprint):** When `start-sprint` adds a new track entry to `docs/context/tracks.md`, it includes exit-record stubs as empty fields. Skylar populates them at sign-off. See `claude/skills/start-sprint/SKILL.md` Step 3 for the template.
 
 ---
 
@@ -384,3 +441,72 @@ Every `.md` file authored under the long-form-to-file rule belongs to exactly on
 2. **Permanent docs (`docs/<category>/<topic>.md`):** Content that serves as a long-term source of truth — architectural analyses, finalized audits, release notes, plan docs at sprint close (`docs/archive/plan-docs/<N>.md`), I/O contracts, schema specs. No `temp-` prefix.
 
 3. **Author obligation:** Before writing any long-form `.md` file, every agent decides which category the file belongs in and uses the matching path prefix. If unsure, default to `docs/temp-` and surface the question to the Conductor in the chat summary.
+
+---
+
+## 11. Blueprint → Role Agent → Task Agent Execution Chain
+
+This section codifies the runtime model for decomposed execution in Agent OS. Role Agents (Skylar) may decompose a Handoff Bridge into Task Agent spawns — one spawn per logical task within the Bridge's Execution Files scope. Each spawn uses a named blueprint from `claude/blueprints/` as the task's system prompt strategy.
+
+### 11.1 Chain shape
+
+```
+Conductor
+    ↓ issues sprint, sets Bridge
+Sprint Coordinator
+    ↓ dispatches Role Agent per Bridge
+Role Agent (Skylar — executor)
+    ↓ reads Bridge; for each logical task:
+    ↓ Reads blueprint from claude/blueprints/<name>.md
+    ↓ spawns task-executor subagent (Agent tool, Mechanic A)
+Task Agent (task-executor subagent)
+    ↓ executes single task; returns structured output per expected_output contract
+Role Agent (Skylar)
+    ↓ collects Task Agent outputs; synthesizes Sign-Off + Task Agent Manifest
+Bandit (QA)
+    ↓ gates the Role Agent synthesis AND the Task Agent manifest (four checks)
+Conductor
+    ↓ approves; commit; merge
+```
+
+### 11.2 Spawn mechanic (Mechanic A — the only supported path)
+
+Blueprints in `claude/blueprints/` are Markdown templates, not registered subagents. The Claude Code subagent scope list is a closed set: managed settings, `--agents` CLI flag, `.claude/agents/`, `~/.claude/agents/`, and plugin `agents/` directories. `claude/blueprints/` is not a valid scope — attempting to spawn with `subagent_type: task-coder` (or any blueprint name) will fail with an unknown-subagent error.
+
+**Mechanic A (binding):** the Role Agent **Read**s the blueprint file, extracts the body (everything after the YAML frontmatter's closing `---`), and spawns the Agent tool with `subagent_type: task-executor` passing the blueprint body + task-specific context as the prompt. The `task-executor` subagent is registered in `.claude/agents/task-executor.md` and `~/.claude/agents/task-executor.md`.
+
+### 11.3 Task Agent manifest requirement
+
+Every Role Agent Sign-Off that includes one or more Task Agent spawns MUST include a Task Agent Manifest block. The manifest schema (one entry per spawn) is defined in `claude/agents/skylar.md` §"Task Agent manifest schema". Required fields per entry:
+- Blueprint name and path
+- Spawn subagent_type (always `task-executor`)
+- Task prompt summary (one sentence)
+- Files touched (absolute paths from Task Agent output)
+- expected_output contract text (verbatim from the blueprint)
+- Tool calls summary
+- Task Agent verdict
+
+If no Task Agents were spawned (monolithic execution), the Role Agent records: "No Task Agent spawn — reason: X."
+
+### 11.4 Bandit manifest gate
+
+Bandit runs four checks on the Task Agent Manifest before the Sign-off Immutability Gate:
+
+1. **Files-touched union invariant:** `union(manifest[].files_touched)` = `git diff --name-only` for the track. No on-disk file absent from the manifest; no manifest file absent from the diff.
+2. **Scope invariant:** `union(manifest[].files_touched)` ⊆ Bridge's Execution Files. Any file in the manifest but outside Bridge scope = BLOCKED.
+3. **Contract invariant:** each manifest entry's `expected_output contract text` matches the first sentence of the corresponding blueprint's `## Expected Output Contract` section verbatim.
+4. **Existing Role Agent gates:** all pre-existing Bandit gates continue to run on the Role Agent synthesis — the manifest gate is additive, not a replacement.
+
+Full gate specification: `claude/agents/qa.md` §7 (Task Agent Manifest Gate) and `.claude/agents/bandit.md` §7b.
+
+### 11.5 Depth limit
+
+The Claude Code subagent depth limit is **5 levels** below the main conversation (fixed, non-configurable). A Role Agent spawning a Task Agent is depth 2; that Task Agent spawning another is depth 3. Chains beyond depth 5 are not supported and will fail silently. No current Agent OS workflow requires more than depth 3; this note is for awareness if nested Task Agent chains are introduced in future sprints.
+
+### 11.6 Deferred extensions
+
+The following extensions to this chain are deferred and are NOT part of the current implementation:
+- Sprint Coordinator "domain-topics at sprint open" integration.
+- Additional blueprints beyond the current three (`task-coder`, `task-writer`, `task-researcher`).
+- Blueprint schema v2.
+- Any `blueprints-manifest.json` changes beyond current verification coverage.
