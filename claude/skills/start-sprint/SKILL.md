@@ -51,15 +51,26 @@ Wait for confirmation before continuing.
 
 After Tim confirms all unresolved tracks in Step 1 are resolved, check whether the prior sprint still has full content in `docs/context/plan.md` and `docs/context/tracks.md`.
 
-**Check:** Does the prior sprint section in `plan.md` contain more than a one-line pointer entry? (A one-line pointer looks like `## Completed Sprint: S<N> ✓ — see docs/archive/plan-docs/S<N>.md`.)
+**Prior sprint identification:** The prior sprint is the sprint whose number is one less than the sprint being opened (e.g., if opening S33, the prior sprint is S32).
 
-- **If yes (full content present):** Collapse the prior sprint's full section in both `plan.md` and `tracks.md` to a one-line pointer:
+**Check order — run these three cases in sequence (stop at the first that applies):**
+
+- **Case 1 — Prior sprint section is absent from plan.md entirely:** If no section for the prior sprint exists in `plan.md` (e.g., no `## Completed Sprint: S<N>` or `## Current Sprint: S<N>` heading for that sprint number), emit the following one-line warning to the operator and insert the closed pointer before continuing:
+
+  > *Warning: Prior sprint S<N> has no section in plan.md — adding closed pointer.*
+
+  Insert the closed pointer `## Completed Sprint: S<N> ✓ — see docs/archive/plan-docs/S<N>.md` into `plan.md` at the correct position:
+  - If `plan.md` already contains one or more `## Completed Sprint:` pointer lines, insert the new pointer in numerical order alongside them (highest sprint number first).
+  - If no `## Completed Sprint:` pointer lines exist, insert the new pointer under a `## Sprint History` heading (create the heading if absent) at the end of the file.
+  - Do NOT touch the current-sprint section or any other content.
+
+- **Case 2 — Prior sprint section is present with full content:** If the prior sprint section exists and contains more than a one-line pointer entry, collapse it in both `plan.md` and `tracks.md` to a one-line pointer:
   ```
   ## Completed Sprint: S<N> ✓ — see docs/archive/plan-docs/S<N>.md
   ```
   Replace the entire prior sprint section (all headings, goals, task lines, and trailing content under it) with this single line. Apply the same collapse to the corresponding sprint section in `docs/context/tracks.md`.
 
-- **If no (already a one-line pointer):** Skip silently — no edit, no message.
+- **Case 3 — Prior sprint section is already a one-line pointer:** Skip silently — no edit, no message.
 
 This step runs only after Step 1 confirmation. It must not fire before Tim has confirmed all prior tracks are resolved. It must not touch any content belonging to the new (current) sprint being opened.
 
