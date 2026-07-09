@@ -297,6 +297,7 @@ When `Authoring Role: Designer`, the Bridge must include a `**Design Brief:**` f
 - **Execution Files (source):** [list of primary source/canonical files]
 - **Execution Files (tests):** [] — [one-line justification if empty]
 - **Execution Files (tooling/config):** [list of build/config/scaffold files; "[]" if none]
+- **Sign-off file (produced artifact):** `docs/bridges/<SPRINT>-<TRACK>-signoff.md` — Specialist writes this file to disk at sign-off (see `claude/agents/skylar.md` Sign-Off Protocol Step 0). Every track produces one; Bandit's B1 clean-tree gate checks its existence. Not a Specialist-selectable input file — always this exact path shape.
 - **Context files (always include):** `docs/context/plan.md`, `docs/context/tracks.md` — always updated as part of DoD; always list them here even if the only change is a status update
 **Migration Safety:** [N/A / Reversible / Irreversible — Conductor acceptance: YES (date) if irreversible]
 **Security Review:** [N/A / Auth / Payments / Schema — Conductor acceptance: YES (date) if any]

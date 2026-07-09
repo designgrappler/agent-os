@@ -103,9 +103,16 @@ The Sprint Coordinator does not make the canonicality judgment — it ensures Ti
 
 ### Step 2 — Call Sprint Coordinator (Peaches)
 
-Call Peaches (Sprint Coordinator role agent) to author the sprint plan doc.
+**Imperative action: invoke the Sprint Coordinator role agent (`peaches`) to author the sprint plan doc. The invoking agent MUST NOT author the plan doc or interview questions directly — that is the Sprint Coordinator's exclusive artifact (AGENTIC.md §3). If the invoking agent finds itself writing plan content, STOP — that is the §3 planning-drift failure mode.**
 
-Peaches authors `docs/temp-sprintN-plan.md` (where `N` is the sprint number, inferred from the track IDs or the sprint objective context; if ambiguous, use the next sequential number after the highest sprint number found in `docs/context/tracks.md`).
+> **FORBIDDEN:** Authoring `docs/temp-sprintN-plan.md` or any sprint interview questions inline. Route to the Sprint Coordinator immediately.
+
+**Mode-aware invocation:**
+
+- **AUTONOMOUS mode:** Invoke Peaches via Agent-tool call (inline spawn, no permission prompt required). Pass the sprint number and any context needed to author the plan doc.
+- **MANUAL mode:** Output a Sprint Coordinator kickoff card (two fenced blocks: tab name + prompt) for the Conductor to dispatch manually. Do not proceed past this step until Peaches' doc exists.
+
+Peaches authors `docs/temp-sprintN-plan.md` (where `N` is the sprint number, inferred from the track IDs or the sprint objective context; if ambiguous, use the next sequential number after the highest sprint number found in `docs/context/tracks.md`). The interview and plan doc are the same file — no separate interview file.
 
 Peaches' plan doc must cover all four required sections:
 
@@ -114,15 +121,20 @@ Peaches' plan doc must cover all four required sections:
 3. **Open questions for Tim** — Any unresolved decisions, tradeoffs, or risks Tim should weigh in on before planning starts.
 4. **Red flags surfaced** — Any architectural, security, or sequencing concerns to flag for the Technical Architect.
 
-The Sprint Coordinator (this skill) waits for Peaches' doc to be written before continuing.
+The invoking agent waits for Peaches' doc to be written before continuing. Confirm the file exists at `docs/temp-sprintN-plan.md` before proceeding to Step 2a.
 
 ### Step 2a — Backlog Migration Triage
 
-If `docs/backlog.md` exists, read it and surface any items that are candidates for promotion into the new sprint as a triage list for Tim. The Sprint Coordinator does not promote items unilaterally — it surfaces candidates.
+**This step is mandatory and unconditional.** Run it whether or not Tim has previously mentioned the backlog. Do not skip even if the backlog appears empty on first read.
+
+If `docs/backlog.md` exists, read it and surface any items that are candidates for promotion into the new sprint as a triage list for Tim. The Sprint Coordinator does not promote items unilaterally — it surfaces candidates; Tim directs.
 
 > *"docs/backlog.md contains [N] items. Review and identify any to promote into Sprint [N] tracks."*
 
-Wait for Tim's direction. If Tim identifies items for promotion, Skylar migrates them into the active tracks section of `docs/context/tracks.md` (Skylar does the actual `tracks.md` write — Sprint Coordinator does not write to `docs/context/**` directly).
+Wait for Tim's direction. When Tim identifies items for promotion:
+
+1. Skylar migrates the promoted items into the active tracks section of `docs/context/tracks.md` (Skylar does the actual `tracks.md` write — Sprint Coordinator does not write to `docs/context/**` directly).
+2. **Skylar simultaneously removes the promoted items from `docs/backlog.md`.** This removal is mandatory — not optional, not deferred. A promoted item must not remain in `docs/backlog.md` after it has been added to `tracks.md`. Both writes happen in the same operation.
 
 If `docs/backlog.md` does not exist, print: `docs/backlog.md not found — skipping backlog triage.` and continue.
 

@@ -16,7 +16,7 @@ When the user runs `/refresh-agent-os`, execute the following phases in order.
 2. **If the line is absent:**
    - Ask the user: "No canonical manifest URL found in `AGENTIC.md`. Please confirm the URL for `skills-manifest.json` (e.g. `https://raw.githubusercontent.com/<owner>/agent-os/main/skills-manifest.json`)."
    - Once the user confirms, write the following line to `AGENTIC.md` immediately after the `Dynamic DNA` bullet under §1 DNA Taxonomy: `- **Canonical skills manifest URL:** \`<confirmed-url>\``
-   - This is the **only** write this skill ever makes outside `~/.claude/skills/` and `~/.claude/agents/`, and it only happens on first run after explicit user confirmation.
+   - This is the **only** write this skill ever makes to `AGENTIC.md` — and it only happens on first run after explicit user confirmation. See the Hard Constraints section for the full enumerated write-target list.
    - Continue to step 3.
 3. **If the line is present:** attempt to fetch the JSON from the URL.
 4. **Fallback:** if the URL fetch fails (network unavailable, 404, or any HTTP error), fall back to the local canonical clone:
@@ -186,6 +186,74 @@ Never apply an action the user did not explicitly approve.
 
 ---
 
+## Phase 5.5: Post-Deploy Project-Local Sync
+
+**Condition:** Runs automatically after Phase 5 (Apply) completes, whenever at least one action was applied. If no actions were applied (all skipped or no diff), skip Phase 5.5 silently.
+
+This phase re-syncs the project-local artifact directories (`.claude/skills/`, `.claude/agents/`, `.claude/blueprints/`) against the global install directories (`~/.claude/skills/`, `~/.claude/agents/`, `~/.claude/blueprints/`). Global is canonical — any file present in global but absent or diverged locally is overwritten with the global copy.
+
+### Step 1 — Determine project-local root
+
+Identify whether a `.claude/` directory exists in the working directory. If absent, skip Phase 5.5 silently — the project has no project-local artifact directories to sync.
+
+### Step 2 — Check project-local target directories
+
+For each of the three artifact types, check whether the project-local directory exists:
+
+- `.claude/skills/` — project-local skills directory
+- `.claude/agents/` — project-local agents directory
+- `.claude/blueprints/` — project-local blueprints directory (if applicable)
+
+**Absent-path handling (§9.7.1 binding):** if a project-local target directory is absent, create it silently (`mkdir -p .claude/<dir>/`). Treat the local install as empty — all artifacts that exist globally will sync in. Never crash on an absent local directory. Never prompt the user about the creation.
+
+### Step 3 — Diff global against project-local and sync
+
+For each artifact type:
+
+**Skills** (`~/.claude/skills/<name>/SKILL.md` vs `.claude/skills/<name>/SKILL.md`):
+- For each skill present in `~/.claude/skills/`:
+  - If `.claude/skills/<name>/SKILL.md` is **absent**: copy the global file to the project-local path. Create the subdirectory (`mkdir -p .claude/skills/<name>/`) if needed.
+  - If `.claude/skills/<name>/SKILL.md` is **present but diverged** (diff is non-empty): overwrite the local file with the global version.
+  - If **in sync** (diff is empty): no action.
+
+**Agents** (`~/.claude/agents/<name>.md` vs `.claude/agents/<name>.md`):
+- For each agent present in `~/.claude/agents/`:
+  - If `.claude/agents/<name>.md` is **absent**: copy the global file to the project-local path.
+  - If `.claude/agents/<name>.md` is **present but diverged** (diff is non-empty): overwrite the local file with the global version.
+  - If **in sync** (diff is empty): no action.
+
+**Blueprints** (`~/.claude/blueprints/<name>.md` vs `.claude/blueprints/<name>.md`):
+- For each blueprint present in `~/.claude/blueprints/`:
+  - If `.claude/blueprints/<name>.md` is **absent**: copy the global file to the project-local path.
+  - If `.claude/blueprints/<name>.md` is **present but diverged** (diff is non-empty): overwrite the local file with the global version.
+  - If **in sync** (diff is empty): no action.
+
+### Step 4 — Surface per-artifact status lines
+
+After processing all three artifact types, print a status block:
+
+```
+Post-deploy project-local sync:
+  skills/refresh-agent-os    synced
+  skills/start-sprint        already-in-sync
+  agents/skylar              synced
+  agents/bandit              already-in-sync
+  blueprints/task-coder      already-in-sync
+```
+
+Each line uses exactly one of three status tokens:
+
+- **`synced`** — the global copy was written to the project-local path (either because the file was absent or diverged).
+- **`already-in-sync`** — the project-local file was already identical to the global file; no write performed.
+- **`warning — sync failed: <reason>`** — the copy operation failed (e.g. permission error, disk full). The reason is appended. This is a non-fatal warning — Phase 5.5 continues with the next artifact.
+
+If a project-local `.claude/` directory did not exist (and was created in Step 2), prepend the status block with:
+```
+  (created .claude/<dir>/ — no prior local install)
+```
+
+---
+
 ## Phase 6: Summary
 
 After all approved actions are complete, print a one-line summary:
@@ -225,7 +293,20 @@ Skills: <counts>. Agents: <counts>. Blueprints: <counts>. CLAUDE.md: <N> referen
 
 ## Hard Constraints
 
-- **Never write outside `~/.claude/skills/`, `~/.claude/agents/`, and `~/.claude/blueprints/`**, with the **single** documented exception of adding the `Canonical skills manifest URL:` line to `AGENTIC.md` on first run — and only after explicit user confirmation. CLAUDE.md reference updates (Phase 5) are an additional in-scope write when explicitly approved by the user in Phase 4.
+- **Write targets are enumerated.** This skill writes only to the following paths:
+  1. `~/.claude/skills/<name>/SKILL.md` — global skill install (Phases 2–5)
+  2. `~/.claude/agents/<name>.md` — global agent install (Phases 2–5)
+  3. `~/.claude/blueprints/<name>.md` — global blueprint install (Phases 2–5)
+  4. `.claude/skills/<name>/SKILL.md` — project-local skill sync (Phase 5.5 only, for artifacts that exist in global)
+  5. `.claude/agents/<name>.md` — project-local agent sync (Phase 5.5 only, for artifacts that exist in global)
+  6. `.claude/blueprints/<name>.md` — project-local blueprint sync (Phase 5.5 only, for artifacts that exist in global, if directory is used)
+  7. `AGENTIC.md` — adding the `Canonical skills manifest URL:` line on first run only, after explicit user confirmation
+  8. `CLAUDE.md` — reference updates (Phase 5) when explicitly approved by the user in Phase 4
+
+  The Phase 5.5 project-local sync writes (items 4–6) are unconditional once Phase 5 applies at least one change — they do not require additional user confirmation. They are bounded to artifacts that exist in global (`~/.claude/`) and are never used to introduce new content that was not already applied globally.
+
+  **Never write to any other path**, including but not limited to: `AGENTIC.md` (except the one-time first-run URL write), other project config files, `.claude/hooks/`, or any path outside the explicitly enumerated list above.
+- **Phase 5.5 absent-path handling (§9.7.1 binding):** if `.claude/skills/`, `.claude/agents/`, or `.claude/blueprints/` is absent when Phase 5.5 runs, create the directory silently (`mkdir -p`) and treat the local install as empty. Never crash on an absent project-local directory. Never prompt the user. Surface an error only if directory creation itself fails.
 - **Never delete a file or directory the user has not explicitly approved for removal.** A skill or agent in the Removed list is not deleted until the user says so.
 - **If neither the canonical URL nor the local clone resolves**, stop and ask the user to supply a path or URL. Do not proceed without a confirmed source.
 - **Phase 3 Diff must prefer the manifest's `renames` array over any name-similarity heuristic.** The heuristic is suggestion-only and requires user confirmation before any rename action is taken.
@@ -242,13 +323,19 @@ Skills: <counts>. Agents: <counts>. Blueprints: <counts>. CLAUDE.md: <N> referen
 
 ### What refresh-agent-os covers
 
-This skill manages exactly three global directories:
+This skill manages exactly three global directories and their project-local mirrors:
 
+**Global install directories (Phases 2–5):**
 1. `~/.claude/skills/` — canonical skill files (`<name>/SKILL.md`)
 2. `~/.claude/agents/` — canonical agent files (`<name>.md`)
 3. `~/.claude/blueprints/` — canonical blueprint files (`<name>.md`)
 
-All diff, install, update, rename, and remove logic in Phases 2–5 operates exclusively on these three directories.
+**Project-local directories (Phase 5.5 only — sync from global, post-deploy):**
+4. `.claude/skills/` — project-local skill files (`<name>/SKILL.md`)
+5. `.claude/agents/` — project-local agent files (`<name>.md`)
+6. `.claude/blueprints/` — project-local blueprint files (`<name>.md`, if the directory is used)
+
+All diff, install, update, rename, and remove logic in Phases 2–5 operates exclusively on the three global directories. Phase 5.5 is the only phase that writes to project-local directories, and only to sync them from global (global is canonical).
 
 ### What refresh-agent-os does NOT cover — and why
 
@@ -256,12 +343,12 @@ All diff, install, update, rename, and remove logic in Phases 2–5 operates exc
 Currently empty by design. The Agent OS canonical install (`install-agent-scaffold`) does not install any global hooks — all hooks are installed at the project level (`.claude/hooks/`). Therefore `~/.claude/hooks/` has no canonical content to refresh against. If future canonical global hooks are introduced, this boundary must be revisited and a new Phase added.
 
 **`.claude/hooks/` (project-level hooks)**
-Update via sprint track only. These are load-bearing safety controls:
+**No refresh path. Update via sprint track only.** These are load-bearing safety controls:
 - `block-orchestrator-execution.sh` — guards execution files from Sprint Coordinator writes
 - `block-manual-agent-spawn.sh` — controls Agent spawn approval flow in manual mode
 - `block-mode-violation.sh` — prevents config edits during tasks-in-flight
 
-Auto-refresh without Conductor review would risk silently modifying a safety control. A stale hook is a protocol gap, not a style gap. The correct update path is a sprint track with a Handoff Bridge authored by the Technical Architect, reviewed by the Conductor, and executed by a Specialist.
+Auto-refresh without Conductor review would risk silently modifying a safety control. A stale hook is a protocol gap, not a style gap. The correct update path is a sprint track with a Handoff Bridge authored by the Technical Architect, reviewed by the Conductor, and executed by a Specialist. This boundary is **unchanged** by the Phase 5.5 project-local sync addition — Phase 5.5 explicitly excludes `.claude/hooks/` from its write scope.
 
 **`AGENTIC.md`, `CLAUDE.md` (project configuration files)**
 Update via sprint track only. These files contain project-specific configuration, operating mode settings, sprint history references, and team-specific protocol language. A global refresh tool overwriting them would silently destroy project customizations. Canonical templates (`claude/templates/AGENTIC.md`, `claude/templates/CLAUDE.md`) are the reference for new installs; live project files diverge intentionally over time.
@@ -295,3 +382,5 @@ If `.claude/hooks/` are out of date with canonical (e.g. a hook's exit behavior 
 - [ ] CLAUDE.md updates applied after skill/agent changes in Phase 5 (if any were approved)
 - [ ] Phase 6 summary printed at end with per-type counts including CLAUDE.md reference count
 - [ ] Phase 7 ran (if diff changes occurred); CLAUDE.md checked against every renames[].from value; user-approved patches applied
+- [ ] Phase 5.5 ran (if at least one action was applied in Phase 5); project-local `.claude/skills/`, `.claude/agents/`, `.claude/blueprints/` checked for absent dirs (silently created) and diverged files (overwritten from global); per-artifact status lines printed (`synced` / `already-in-sync` / `warning — sync failed: <reason>`)
+- [ ] Phase 5.5 did NOT modify `.claude/hooks/` or any file outside the explicitly enumerated write targets
