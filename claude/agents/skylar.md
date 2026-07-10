@@ -90,7 +90,7 @@ Skylar uses Mechanic A exclusively. Blueprints in `claude/blueprints/` are Markd
    - Any constraints or preconditions specific to this invocation.
 4. **Spawn** the Agent tool with `subagent_type: task-executor` and the composed prompt.
 5. **Capture** the Task Agent's structured output (files touched, build result, flags).
-6. **Record** one Task Agent manifest entry per spawn (see Manifest schema below).
+6. **Record** one Task Agent manifest entry per spawn (see Manifest schema below). When recording Files touched, convert Task Agent paths to Role-Agent-worktree relative paths (the form `git diff --name-only` emits). Absolute paths in the manifest will fail Bandit's files-touched union invariant (§11.4).
 
 Do NOT attempt Mechanic B (spawning with `subagent_type: task-coder` or any blueprint name directly). The Claude Code subagent scope list is closed to `.claude/agents/`, `~/.claude/agents/`, plugin `agents/`, managed settings, and `--agents` flag. `claude/blueprints/` is not a valid scope. Any spawn with a blueprint name as `subagent_type` will fail with an unknown-subagent error.
 
@@ -108,7 +108,7 @@ Every Task Agent spawn produces one manifest entry. Skylar aggregates all entrie
 - **Blueprint path:** <absolute path to the blueprint file Skylar Read>
 - **Spawn subagent_type:** task-executor
 - **Task prompt summary:** <1-sentence description of the task delegated>
-- **Files touched:** <newline-separated list of absolute paths from the Task Agent's structured output>
+- **Files touched:** <newline-separated list of Role-Agent-worktree relative paths (as they appear in `git diff --name-only`) — the Role Agent normalizes Task Agent paths to this form before recording>
 - **expected_output contract text:** <verbatim first sentence from the blueprint's ## Expected Output Contract section>
 - **Tool calls summary:** <count per tool, e.g. Edit: 3, Read: 2, Bash: 1>
 - **Task Agent verdict:** <one-line summary the Task Agent returned>
@@ -191,7 +191,7 @@ Complete all four gates before writing the sign-off block. A gate that cannot be
 
 **(B1) Clean-tree gate.** Run `git status` in the worktree. Confirm: no unrelated dirty files are present. If unrelated files are dirty, stash or surface to Conductor before proceeding. Paste the `git status` output verbatim in the sign-off Flags field (or confirm "clean" verbatim).
 
-**(B2) tracks.md exit record gate.** Confirm that `docs/context/tracks.md` has been updated with the three-field exit record for this track (Status, What happened, Next steps). Do not sign off until all three fields carry real content — no placeholders. If tracks.md cannot be edited (e.g. execution-file restriction), surface to Sprint Coordinator.
+**(B2) tracks.md exit record gate.** Confirm that the three-field exit record for this track (Status, What happened, Next steps) is authored in the sign-off file (Step 0 artifact). It is NOT written to `docs/context/tracks.md` in the worktree unless the Bridge's Execution Files list explicitly includes `docs/context/tracks.md`. When `docs/context/tracks.md` is not Bridge-listed, the Sprint Coordinator reflects the exit record into `tracks.md` at coordination time (consistent with AGENTIC.md §3 — `tracks.md` is coordination-tier / Sprint-Coordinator-written). Do not sign off until all three fields carry real content — no placeholders.
 
 **(B3) Behavioral smoke gate.** If the Bridge Verification field declares a behavioral smoke step, paste the actual terminal output verbatim in the Behavioral Verification field. If the Bridge explicitly states "Behavioral smoke: Not required" (as on this track), record that statement verbatim in Behavioral Verification — do not leave it blank. Paraphrase is fabrication; omission is a BLOCK.
 
@@ -217,6 +217,8 @@ If no Task Agents were spawned: "No Task Agent spawn — reason: <X>"]
 
 **Status:** Ready for Bandit review.
 ```
+
+**Important — Status semantics for sign-off:** Skylar's self-assessed `Status` at sign-off is `DONE`, `BLOCKED`, or `DEFERRED` only. The `— Bandit APPROVED [autonomous]` suffix seen in merged `tracks.md` entries is applied by the Sprint Coordinator at merge time (per `qa.md` §8a). It is never Skylar's to write at sign-off.
 
 ---
 

@@ -114,10 +114,29 @@ Conductor (approval)
   → Specialist opens isolated workspace for the track   [Physical: isolation]
   → Specialist verifies upstream interface              [Behavioral: Technical Handshake]
   → Specialist implements, scope-locked to declared files [Behavioral + Physical: tool scope]
+  → Role Agent (Specialist) reads blueprint, spawns task-executor subagents [Physical: worktree isolation per spawn]
+  → Task Agents execute; Role Agent collects outputs + Task Agent Manifest   [Behavioral: manifest gate]
   → QA reads diff — cannot write, issues PASS/BLOCKED [Physical: tool lock + binary gate]
   → Automated gate validates build before merge         [Physical: pre-merge check]
   → Conductor approves merge                            [Human: final checkpoint]
 ```
+
+---
+
+## Blueprint-Driven Decomposition
+
+When a Handoff Bridge covers multiple distinct files or spans both code and documentation, the Role Agent (Specialist) may decompose execution into Task Agent spawns rather than running monolithically. Each spawn handles exactly one logical task within the Bridge's declared Execution Files scope.
+
+The chain: the Role Agent reads a blueprint file from `claude/blueprints/<name>.md`, extracts the body (everything after the YAML frontmatter's closing `---`), and spawns the Agent tool with `subagent_type: task-executor`, passing the blueprint body plus a task-specific context block as the prompt. This is called **Mechanic A** and is the only supported spawn path. The `task-executor` subagent is registered in `.claude/agents/task-executor.md`.
+
+After all spawns complete, the Role Agent produces a **Task Agent Manifest** — one entry per spawn. QA gates the manifest via four checks before the Sign-Off Immutability Gate:
+
+1. **Files-touched union invariant** — the union of all files touched by Task Agents must equal the set of files changed in the track diff. No on-disk file may be absent from the manifest; no manifest file may be absent from the diff.
+2. **Scope invariant** — every file touched by a Task Agent must be within the Bridge's declared Execution Files. Any out-of-scope file is a BLOCK.
+3. **Contract invariant** — each manifest entry's expected-output contract text must match the first sentence of the corresponding blueprint's `## Expected Output Contract` section verbatim.
+4. **Existing Role Agent gates** — all pre-existing QA gates continue to run on the Role Agent's overall sign-off. The manifest gate is additive, not a replacement.
+
+Full specification: `AGENTIC.md` §11.
 
 ---
 

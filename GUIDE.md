@@ -354,5 +354,36 @@ These skills work on any project — no Agent OS installation required.
 
 ---
 
+## Blueprint Decomposition
+
+Blueprint decomposition is a pattern for splitting a Handoff Bridge into discrete, independently-executed tasks. The Role Agent (Skylar, the Skills Engineer) decides whether to decompose when reading the Bridge: if the Bridge names two or more distinct Execution Files, or if it spans both code/config files and documentation files, decomposition is appropriate. Single-file tracks or naturally atomic tracks do not require it — monolithic execution is correct for those.
+
+### How Skylar spawns Task Agents (Mechanic A)
+
+Mechanic A is the only supported spawn path. When decomposing, the Role Agent:
+
+1. Reads the blueprint file at `claude/blueprints/<name>.md`
+2. Extracts the body — everything after the closing `---` of the YAML frontmatter
+3. Composes a task prompt: the blueprint body plus a task-specific context block that names the Execution Files in scope, a one-sentence task description, the verification command, and any constraints specific to this invocation
+4. Spawns the Agent tool with `subagent_type: task-executor` using the composed prompt
+
+Each spawn handles exactly one logical task and returns structured output per the blueprint's Expected Output Contract. The Role Agent collects all Task Agent outputs, then synthesizes the Sign-Off and Task Agent Manifest for QA review.
+
+Blueprints are Markdown templates, not registered subagents — attempting to use a blueprint name as `subagent_type` directly fails with an unknown-subagent error and is not supported.
+
+### Blueprint discovery
+
+Blueprints live at `claude/blueprints/<name>.md` in the repo. Current blueprints:
+
+| Blueprint | Purpose |
+| :--- | :--- |
+| `task-coder` | Code edits — source file modifications and configuration changes |
+| `task-writer` | Documentation authoring — structured Markdown file creation and revision |
+| `task-researcher` | Read-only research — analysis and findings without file writes |
+
+Each blueprint has YAML frontmatter (`name`, `description`, `tools`, `expected_output`, `model`, `schema_version`) and three required body sections: System Prompt Strategy, Expected Output Contract, and Allowed Tool Bindings — Reasoning.
+
+---
+
 **Inspired by Google Conductor.**
 *(c) 2026 DZNR VENTURES®*

@@ -12,7 +12,7 @@ The Orchestrator coordinates specialists and writes no code. It does not plan.
 
 ## Operating Mode
 
-Current: MANUAL (autonomous loop inactive — Tim triggers each handoff)
+Current: MANUAL (autonomous loop inactive — [CONDUCTOR NAME] triggers each handoff)
 
 To change approval frequency: run `/streamline-approvals manual` or `/streamline-approvals auto`. See `AGENTIC.md` §3 for the mode-aware dispatch model.
 
@@ -67,6 +67,8 @@ A Handoff Bridge looks like:
 **`.claude/` exception (binding):** `.claude/settings.json` and `.claude/hooks/**` are not worktree-isolated; edit on `main` (absolute path). Canonical rule: AGENTIC.md §5; Bridge template guidance: AGENTIC.md §8.
 
 **Pre-staging hygiene (binding):** Run `git status` before `git add`; commit or stash unrelated dirty files first. Canonical rule: AGENTIC.md §5.
+
+**Blueprint → Task Agent chain (AGENTIC.md §11):** Role Agents (the Specialist) may decompose execution into Task Agent spawns using blueprints from `claude/blueprints/`. Each spawn uses `subagent_type: task-executor` (Mechanic A — the only supported path; see AGENTIC.md §11.2 for why Mechanic B is not supported). Every spawn produces one Task Agent Manifest entry in the Role Agent's Sign-Off; QA gates the manifest via four checks (files-touched union, scope, contract, and existing gates). Full chain specification: AGENTIC.md §11.
 
 ---
 

@@ -21,6 +21,8 @@ Each agent has a defined role and can only use the tools that role allows. An Ar
 **3. A quality gate before work ships**
 No task is complete until a dedicated QA reviews it and issues a binary verdict: PASS or BLOCKED. QA is read-only by design — it can't fix what it finds, which means problems have to go back to the specialist before anything ships. This is the checkpoint that stops bad work from compounding.
 
+In AUTONOMOUS mode (auto-approve), the Sprint Coordinator dispatches Specialists via the Agent tool inline, with each Specialist running in isolated context — no manual kickoff required. For complex multi-file tracks, the Skills Engineer can decompose a Handoff Bridge into Task Agent spawns: the Role Agent reads a blueprint from `claude/blueprints/`, extracts the task body, and spawns a `task-executor` subagent for each logical task. This keeps complex work reliable and auditable — every file touched traces back to a named blueprint and a bounded task scope.
+
 ---
 
 ## Conversation Hygiene

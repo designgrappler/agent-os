@@ -16,17 +16,17 @@ If the skill is invoked with an argument, process it here and **exit** — do NO
 4. Report: `Applied 'auto' profile. Agent and Task allowlisted in ~/.claude/settings.json. Sprint Coordinator Agent spawns will proceed without per-call prompts.`
 5. Exit. Do not run the transcript scanner.
 
-### `manual` argument
-1. Read `~/.claude/settings.json`. If the file does not exist or `permissions.allow` is missing or empty, report `Already in 'manual' posture — no Agent allowlist entry present.` and exit zero (idempotent).
+### `gated` argument
+1. Read `~/.claude/settings.json`. If the file does not exist or `permissions.allow` is missing or empty, report `Already in 'gated' posture — no Agent allowlist entry present.` and exit zero (idempotent).
 2. Use `jq` to remove any element of `permissions.allow` equal to `"Agent"` or `"Task"`. Preserve all other entries. De-duplicate. Write back atomically.
 3. Verify: `jq '.permissions.allow | index("Agent")' ~/.claude/settings.json` must return `null`. Same for `"Task"`. Verify other entries are preserved.
-4. Report: `Applied 'manual' profile. Agent allowlist entry removed from ~/.claude/settings.json. Sprint Coordinator Agent spawns will now require a per-call permission prompt.`
+4. Report: `Applied 'gated' profile. Agent allowlist entry removed from ~/.claude/settings.json. Sprint Coordinator Agent spawns will now require a per-call permission prompt.`
 5. Exit. Do not run the transcript scanner.
 
 ### Unknown argument
 If the argument is any other non-empty string, surface this error and exit — do NOT run the transcript scanner:
 ```
-Unknown profile: <arg>. Valid profiles: auto, manual. Run /streamline-approvals (no argument) for the transcript scanner.
+Unknown profile: <arg>. Valid profiles: auto, gated. Run /streamline-approvals (no argument) for the transcript scanner.
 ```
 
 ### No argument
@@ -182,17 +182,17 @@ Two predefined presets map the old `operatingMode` labels to approval-frequency 
 
 ### `auto` profile
 
-Adds Agent-tool spawn to the approval allowlist — equivalent to the old AUTONOMOUS mode posture. With this profile active, the Sprint Coordinator's Agent tool calls proceed without a per-spawn permission prompt.
+Adds Agent-tool spawn to the approval allowlist — equivalent to the auto-approve mode posture. With this profile active, the Sprint Coordinator's Agent tool calls proceed without a per-spawn permission prompt.
 
 **To apply:** Run `/streamline-approvals auto`
 
 Effect: adds `Agent` (or the equivalent Agent-tool pattern) to `~/.claude/settings.json` `permissions.allow`. The Sprint Coordinator can spawn Specialists inline without per-call prompts.
 
-### `manual` profile
+### `gated` profile
 
-The default posture — no pre-approved Agent spawns. The Claude Code permission prompt fires on each Agent tool call. Equivalent to the post-T23.A.1 MANUAL mode behavior.
+The default posture — no pre-approved Agent spawns. The Claude Code permission prompt fires on each Agent tool call. Equivalent to the post-T23.A.1 gated-approve mode behavior.
 
-**To apply:** Run `/streamline-approvals manual`
+**To apply:** Run `/streamline-approvals gated`
 
 Effect: removes any Agent-tool spawn entry from `~/.claude/settings.json` `permissions.allow` (if present). Every Sprint Coordinator Agent spawn requires an inline approve/deny decision from the Conductor.
 
@@ -201,6 +201,6 @@ Effect: removes any Agent-tool spawn entry from `~/.claude/settings.json` `permi
 | Profile | Use when |
 |---------|----------|
 | `auto` | You've established trust in the pipeline; want hands-off sprint execution |
-| `manual` | You want per-spawn approval; high-stakes sprints; onboarding a new Specialist |
+| `gated` | You want per-spawn approval; high-stakes sprints; onboarding a new Specialist |
 
-The profile names are intentionally identical to the old mode labels so existing mental models carry over cleanly.
+The profile shorthand (`gated`/`auto`) maps to the mode labels (`gated-approve`/`auto-approve`) — `gated` selects `gated-approve` mode, `auto` selects `auto-approve` mode.

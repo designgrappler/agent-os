@@ -69,10 +69,10 @@ Violations of this rule bypass the Phase 3a plan-doc gate (§5) and produce unre
 - **AUTONOMOUS mode (auto-approve):** The Sprint Coordinator dispatches Specialists via the Agent tool inline without per-spawn prompts. The `auto` profile in `/streamline-approvals` configures the allowlist for this posture. Conversation isolation is achieved via the Agent tool's native context isolation: each Specialist runs in its own context window and returns a bounded 3-field summary to the Sprint Coordinator:
   ```
   Track: T<id> <slug>
-  Verdict: Bandit APPROVED | BLOCKED
+  Verdict: QA APPROVED | BLOCKED
   Commit: <hash> | N/A (if BLOCKED)
   ```
-  Kickoff cards remain valid as a fallback when inline spawning is unavailable. Multi-track parallel execution uses `background: true` on the Skylar agent definition.
+  Kickoff cards remain valid as a fallback when inline spawning is unavailable. Multi-track parallel execution uses `background: true` on the Role Agent's definition.
 
 **Tasks-in-flight Edit/Write guard:** The `PreToolUse` hook at `.claude/hooks/block-mode-violation.sh` reads `docs/tasks.json` on every Edit/Write call and exits code 2 if any task is `CLAIMED` or `IN_PROGRESS`. This blocks file modifications during active sprint work regardless of which agent initiated them. See the hook script for the implementation.
 
@@ -88,7 +88,7 @@ A track is **Done** only when ALL of the following are true:
 - [ ] `docs/context/plan.md` and `tracks.md` updated to reflect the completed track
 - [ ] [QA NAME] has issued a **PASS** verdict
 - [ ] [CONDUCTOR NAME] has given final approval (for tracks touching auth, schema, or payments)
-- [ ] MANUAL-mode exit-state sequence followed: Bandit APPROVED → Conductor confirms → Specialist commits → Conductor merges to main with `chore(merge): T<id> <slug> — Bandit APPROVED`. Full rule body: see `claude/agents/qa.md` §8. (AUTONOMOUS-mode variant: see `claude/agents/qa.md` §8a — auto-confirm rule, Tim-pause condition, and `[autonomous]` merge commit tag.)
+- [ ] MANUAL-mode exit-state sequence followed: QA APPROVED → Conductor confirms → Specialist commits → Conductor merges to main with `chore(merge): T<id> <slug> — QA APPROVED`. Full rule body: see `claude/agents/qa.md` §8. (AUTONOMOUS-mode variant: see `claude/agents/qa.md` §8a — auto-confirm rule, [CONDUCTOR NAME]-pause condition, and `[autonomous]` merge commit tag.)
 
 ### Skill Update DoD
 
@@ -146,7 +146,7 @@ Each Specialist agent definition includes `isolation: worktree` in its frontmatt
 - **Cross-track circuit breaker (binding).** When the same root cause appears in two different tracks within a single sprint, the Sprint Coordinator STOPS, surfaces the pattern to [CONDUCTOR NAME], and waits for a go/no-go before dispatching the next track.
 
   Two-condition definition:
-  1. **Same root cause** = same named failure mode (e.g. uncommitted files at sign-off, scope drift beyond Bridge Execution Files, missing behavioral smoke, frontmatter/prose divergence) appearing in two different tracks. Intra-track self-correction (Bandit BLOCKED → Skylar fixes → Bandit APPROVED) does NOT count — the loop is Bandit's job and is expected.
+  1. **Same root cause** = same named failure mode (e.g. uncommitted files at sign-off, scope drift beyond Bridge Execution Files, missing behavioral smoke, frontmatter/prose divergence) appearing in two different tracks. Intra-track self-correction (QA BLOCKED → Specialist fixes → QA APPROVED) does NOT count — the loop is QA's job and is expected.
   2. **Surface, don't dispatch.** The Sprint Coordinator surfaces the two occurrences to [CONDUCTOR NAME] in one message; [CONDUCTOR NAME] decides: continue, or call the Technical Architect for a Red Flag Analysis before the next track dispatches.
 - **Git Hygiene:** No commits unless directed. Use `git add` for staging.
 
@@ -156,7 +156,7 @@ Each Specialist agent definition includes `isolation: worktree` in its frontmatt
 
 **Pre-staging hygiene check (binding).** Before staging any track's files for commit (`git add`), run `git status` and confirm no unrelated dirty files are present in the working tree. If unrelated changes exist, commit or stash them on a separate branch or commit **first**. This prevents accidental co-mingling of unrelated work in a track commit and preserves the per-track authorship record S18.3 relies on.
 
-**Track integration — `git merge --no-ff` (binding).** After Bandit issues an APPROVED verdict and the Specialist commits any uncommitted track work, the Conductor integrates the track branch into `main` using:
+**Track integration — `git merge --no-ff` (binding).** After QA issues an APPROVED verdict and the Specialist commits any uncommitted track work, the Conductor integrates the track branch into `main` using:
 
 ```
 git merge --no-ff <track-branch>
@@ -223,7 +223,7 @@ The theme model is the release-boundary batching implementation of §5.1's canon
 
 **Theme declaration.** At sprint open, the Conductor names the theme for the upcoming set of execution sprints — one sentence naming the shipping story (e.g. "Permission Model release", "Blueprint Chain release"). Execution sprints under that theme build toward it. When the Conductor declares the theme's execution scope complete, the next sprint opens as a canonical-sync sprint.
 
-**What happens in a canonical-sync sprint.** At sprint open, the Sprint Coordinator runs a `git log <last-sync-sha>..HEAD` sweep and surfaces a delta table of every canonical file touched since the last sync. The Conductor approves the scope. Each approved item becomes one Skylar track, with a Bridge authored by the Technical Architect. Bandit gates each track. The sprint closes with a semver release and release notes covering the theme.
+**What happens in a canonical-sync sprint.** At sprint open, the Sprint Coordinator runs a `git log <last-sync-sha>..HEAD` sweep and surfaces a delta table of every canonical file touched since the last sync. The Conductor approves the scope. Each approved item becomes one Specialist track, with a Bridge authored by the Technical Architect. QA gates each track. The sprint closes with a semver release and release notes covering the theme.
 
 **Semver policy (per §9.4).** Canonical-sync sprints are always minor version bumps by default. Major bump only if a §9.2 compatibility window closes or a canonical delta explicitly removes a frontmatter field — in either case the Technical Architect flags it and the Conductor approves at sprint open. Patch bump is reserved for bug-fix-only sync sprints (rare). Each theme's release version is determined by this rule.
 
@@ -231,13 +231,13 @@ The theme model is the release-boundary batching implementation of §5.1's canon
 
 ### Sprint-close `/clean-context` step (binding)
 
-After QA (Bandit) issues a final APPROVED verdict on the last track of a sprint, the Conductor must run `/clean-context` before the sprint is marked complete. This consolidates context archival, memory pruning, and worktree cleanup at sprint close so the next sprint opens against a clean baseline. The step runs after §5.1's canonical-sync gate is satisfied; together they define the two binding sprint-close prerequisites.
+After QA issues a final APPROVED verdict on the last track of a sprint, the Conductor must run `/clean-context` before the sprint is marked complete. This consolidates context archival, memory pruning, and worktree cleanup at sprint close so the next sprint opens against a clean baseline. The step runs after §5.1's canonical-sync gate is satisfied; together they define the two binding sprint-close prerequisites.
 
 **Push to origin (binding, sprint close):** After all sprint tracks are committed to `main` and `/clean-context` has run, Conductor must run `git push origin main`. This triggers the distribute and release workflows on the private repo. Without this push, the public mirror receives no updates. The push is the final step of every sprint close — it is not optional and not delegated.
 
 ### Track Exit-State Protocol
 
-Every track must have a completed exit record before Skylar signs off. The exit record is a three-field compact schema — no more, no less:
+Every track must have a completed exit record before the Specialist signs off. The exit record is a three-field compact schema — no more, no less:
 
 ```markdown
 **Status:** DONE | BLOCKED | DEFERRED
@@ -247,13 +247,13 @@ Every track must have a completed exit record before Skylar signs off. The exit 
 
 **Status semantics:**
 
-- **DONE** — work completed and ready for Bandit review. Bandit may still BLOCK; that does not retroactively change the exit-record Status to BLOCKED. Status names the Specialist's self-assessment, not the QA verdict.
+- **DONE** — work completed and ready for QA review. QA may still BLOCK; that does not retroactively change the exit-record Status to BLOCKED. Status names the Specialist's self-assessment, not the QA verdict.
 - **BLOCKED** — Specialist could not complete the work as scoped. `What happened` names the blocker; `Next steps` names the escalation (typically "Return to Sprint Coordinator" or "Return to Technical Architect for Bridge revision").
 - **DEFERRED** — work was descoped mid-track by Conductor or Sprint Coordinator. `What happened` names the descope; `Next steps` names where the descoped work goes (new track, backlog, next sprint).
 
-**Hard gate (Skylar):** Skylar cannot sign off until all three fields are populated with real content — no placeholders. See `claude/agents/skylar.md` Sign-Off Protocol for the full sign-off template.
+**Hard gate (Specialist):** The Specialist cannot sign off until all three fields are populated with real content — no placeholders. See `claude/agents/skylar.md` Sign-Off Protocol for the full sign-off template.
 
-**Track entry template (start-sprint):** When `start-sprint` adds a new track entry to `docs/context/tracks.md`, it includes exit-record stubs as empty fields. Skylar populates them at sign-off. See `claude/skills/start-sprint/SKILL.md` Step 3 for the template.
+**Track entry template (start-sprint):** When `start-sprint` adds a new track entry to `docs/context/tracks.md`, it includes exit-record stubs as empty fields. The Specialist populates them at sign-off. See `claude/skills/start-sprint/SKILL.md` Step 3 for the template.
 
 ---
 
@@ -287,7 +287,7 @@ When `Authoring Role: Designer`, the Bridge must include a `**Design Brief:**` f
 ### HANDOFF BRIDGE
 **Topic:** [Feature/Bug Name]
 **Track:** [ID from tracks.md]
-**Specialist:** [fullstack / frontend / backend / database / skylar]
+**Specialist:** [fullstack / frontend / backend / database / specialist-name]
 **Authoring Role:** [Technical Architect / Designer / Marketing / Sprint Coordinator]
 **Design Brief:** [Link to Design Brief doc or "N/A — non-design track"]
 **Static DNA Check:** [Confirm alignment with AGENTIC.md tech/roles]
@@ -297,7 +297,7 @@ When `Authoring Role: Designer`, the Bridge must include a `**Design Brief:**` f
 - **Execution Files (source):** [list of primary source/canonical files]
 - **Execution Files (tests):** [] — [one-line justification if empty]
 - **Execution Files (tooling/config):** [list of build/config/scaffold files; "[]" if none]
-- **Sign-off file (produced artifact):** `docs/bridges/<SPRINT>-<TRACK>-signoff.md` — Specialist writes this file to disk at sign-off (see `claude/agents/skylar.md` Sign-Off Protocol Step 0). Every track produces one; Bandit's B1 clean-tree gate checks its existence. Not a Specialist-selectable input file — always this exact path shape.
+- **Sign-off file (produced artifact):** `docs/bridges/<SPRINT>-<TRACK>-signoff.md` — Specialist writes this file to disk at sign-off (see `claude/agents/skylar.md` Sign-Off Protocol Step 0). Every track produces one; QA's B1 clean-tree gate checks its existence. Not a Specialist-selectable input file — always this exact path shape.
 - **Context files (always include):** `docs/context/plan.md`, `docs/context/tracks.md` — always updated as part of DoD; always list them here even if the only change is a status update
 **Migration Safety:** [N/A / Reversible / Irreversible — Conductor acceptance: YES (date) if irreversible]
 **Security Review:** [N/A / Auth / Payments / Schema — Conductor acceptance: YES (date) if any]
@@ -447,7 +447,7 @@ Every `.md` file authored under the long-form-to-file rule belongs to exactly on
 
 ## 11. Blueprint → Role Agent → Task Agent Execution Chain
 
-This section codifies the runtime model for decomposed execution in Agent OS. Role Agents (Skylar) may decompose a Handoff Bridge into Task Agent spawns — one spawn per logical task within the Bridge's Execution Files scope. Each spawn uses a named blueprint from `claude/blueprints/` as the task's system prompt strategy.
+This section codifies the runtime model for decomposed execution in Agent OS. Role Agents (the Specialist) may decompose a Handoff Bridge into Task Agent spawns — one spawn per logical task within the Bridge's Execution Files scope. Each spawn uses a named blueprint from `claude/blueprints/` as the task's system prompt strategy.
 
 ### 11.1 Chain shape
 
@@ -456,15 +456,15 @@ Conductor
     ↓ issues sprint, sets Bridge
 Sprint Coordinator
     ↓ dispatches Role Agent per Bridge
-Role Agent (Skylar — executor)
+Role Agent (Specialist — executor)
     ↓ reads Bridge; for each logical task:
     ↓ Reads blueprint from claude/blueprints/<name>.md
     ↓ spawns task-executor subagent (Agent tool, Mechanic A)
 Task Agent (task-executor subagent)
     ↓ executes single task; returns structured output per expected_output contract
-Role Agent (Skylar)
+Role Agent (Specialist)
     ↓ collects Task Agent outputs; synthesizes Sign-Off + Task Agent Manifest
-Bandit (QA)
+QA
     ↓ gates the Role Agent synthesis AND the Task Agent manifest (four checks)
 Conductor
     ↓ approves; commit; merge
@@ -489,14 +489,14 @@ Every Role Agent Sign-Off that includes one or more Task Agent spawns MUST inclu
 
 If no Task Agents were spawned (monolithic execution), the Role Agent records: "No Task Agent spawn — reason: X."
 
-### 11.4 Bandit manifest gate
+### 11.4 QA manifest gate
 
-Bandit runs four checks on the Task Agent Manifest before the Sign-off Immutability Gate:
+QA runs four checks on the Task Agent Manifest before the Sign-off Immutability Gate:
 
 1. **Files-touched union invariant:** `union(manifest[].files_touched)` = `git diff --name-only` for the track. No on-disk file absent from the manifest; no manifest file absent from the diff.
 2. **Scope invariant:** `union(manifest[].files_touched)` ⊆ Bridge's Execution Files. Any file in the manifest but outside Bridge scope = BLOCKED.
 3. **Contract invariant:** each manifest entry's `expected_output contract text` matches the first sentence of the corresponding blueprint's `## Expected Output Contract` section verbatim.
-4. **Existing Role Agent gates:** all pre-existing Bandit gates continue to run on the Role Agent synthesis — the manifest gate is additive, not a replacement.
+4. **Existing Role Agent gates:** all pre-existing QA gates continue to run on the Role Agent synthesis — the manifest gate is additive, not a replacement.
 
 Full gate specification: `claude/agents/qa.md` §7 (Task Agent Manifest Gate) and `.claude/agents/bandit.md` §7b.
 
