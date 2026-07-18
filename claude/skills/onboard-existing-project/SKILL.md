@@ -185,7 +185,7 @@ Initialize with the following seed entry:
 ```markdown
 ## Track 0 — Project adoption
 
-**Status:** DONE — Bandit APPROVED, committed <hash> (<date>)
+**Status:** DONE — QA APPROVED, committed <hash> (<date>)
 
 **Goal:** Onboard existing project into Agent OS.
 

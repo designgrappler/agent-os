@@ -79,6 +79,25 @@ git branch -d <branch>
 
 **Never use `-D` (force-delete).** If a branch is not fully merged, log it and skip.
 
+## Bridge file sweep
+
+Delete all files in `docs/bridges/` except `README.md`. Bridge files (both `*-bridge.md` and `*-signoff.md`) are working documents — once a sprint is closed and its tracks are merged to `main`, git history is the complete audit record. No archival is needed; deletion is the policy.
+
+This step runs **unconditionally** at clean-context time — it does not check sprint boundaries. Any bridge file present at clean-context time is by definition from a closed sprint, because clean-context only runs after sprint close.
+
+Steps:
+
+1. Check that `docs/bridges/` exists. If absent, log `docs/bridges/ not found — skipping` and continue without error.
+2. Delete all files in `docs/bridges/` except `README.md`:
+   ```
+   find docs/bridges/ -maxdepth 1 -type f ! -name 'README.md' -delete
+   ```
+3. Stage the deletions:
+   ```
+   git add -A docs/bridges/
+   ```
+4. Log the count of files deleted. If zero, log `docs/bridges/ — no bridge files to delete`.
+
 ## Memory hygiene scan
 
 Run after the merged-branch sweep and before the Context Health update.
@@ -175,3 +194,4 @@ Run `git push origin main`. This triggers the distribute workflow on the private
 - Memory hygiene scan: the pruning report fired (or "no findings" was printed); no memory file was deleted.
 - `tracks.md` Context Health entry updated with the current date.
 - `git push origin main` was run successfully (or surfaced to Conductor on failure with no force-push attempt).
+- `docs/bridges/` was swept: all bridge/sign-off files deleted except `README.md`, and deletions staged with `git add -A docs/bridges/` — or `docs/bridges/ not found — skipping` / `no bridge files to delete` was logged when applicable.

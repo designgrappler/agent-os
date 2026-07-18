@@ -1,5 +1,5 @@
 {
-  "release-version": "v0.15.0",
+  "release-version": "v0.17.0",
   "frontmatter-version": 2,
   "skills": [
     "audit-security",
@@ -31,6 +31,9 @@
     "researcher",
     "sprint-coordinator",
     "strategist",
+    "task-coder",
+    "task-researcher",
+    "task-writer",
     "technical-architect"
   ],
   "renames": [

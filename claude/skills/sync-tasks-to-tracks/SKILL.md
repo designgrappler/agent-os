@@ -50,7 +50,7 @@ Status rendering:
 - `OPEN` → `OPEN`
 - `CLAIMED` → `CLAIMED`
 - `IN_PROGRESS` → `IN PROGRESS`
-- `DONE` → `DONE — Bandit APPROVED`
+- `DONE` → `DONE — QA APPROVED`
 - `BLOCKED` → `BLOCKED`
 - `FAILED` → `FAILED`
 

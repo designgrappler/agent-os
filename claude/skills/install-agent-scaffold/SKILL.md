@@ -161,12 +161,12 @@ The table below is **guidance, not a hard rule.** [OWNER] retains the right to o
 | Sprint Coordinator | Coordination / synthesis | `claude` | `sonnet` | Sprint synthesis, routing, sprint interview docs |
 | Technical Architect | Strategic / planning | `claude` | `opus` | Heavy reasoning, plan synthesis, Red Flag Analysis |
 | Strategist | Strategic / planning | `claude` | `opus` | Pre-planning, market and product framing |
-| Specialist (Skylar) | Implementation / coding | `claude` | `sonnet` | Code execution at speed |
+| Specialist | Implementation / coding | `claude` | `sonnet` | Code execution at speed |
 | Backend / Frontend / Fullstack / Database | Implementation / coding | `claude` | `sonnet` | Standard implementation work |
 | Designer | Implementation / craft | `claude` | `sonnet` | Visual / UX deliverables |
 | PM | Implementation / writing | `claude` | `sonnet` | Requirements drafting, ticket grooming |
 | Marketing | Implementation / writing | `claude` | `sonnet` | Copy and positioning |
-| Critic / QA / Bandit | Lightweight review | `claude` | `sonnet` | Fast read-only verdict (Sonnet preferred for nuance; Haiku acceptable for purely-mechanical checks) |
+| Critic / QA | Lightweight review | `claude` | `sonnet` | Fast read-only verdict (Sonnet preferred for nuance; Haiku acceptable for purely-mechanical checks) |
 | Lightweight / fast tasks | Routine | `claude` | `haiku` | Quick reformat, summarization, simple lookups |
 
 ---
@@ -215,7 +215,7 @@ Projects with no Designer-class agent leave this section as a stub or omit it en
 - **[OWNER] (Conductor):** Vision & Approval.
 - **[ORCHESTRATOR] (Orchestrator):** Coordinates specialists, no direct execution.
 - **[SPRINT_COORDINATOR] (Sprint Coordinator):** Coordination hub. Zero-code. Sprint synthesis, routing.
-- **[TECHNICAL_ARCHITECT] (Technical Architect):** Technical planning authority. Zero-code. Plans and produces Handoff Bridges.
+- **[TECHNICAL_ARCHITECT] (Technical Architect):** Technical Architect role agent. Zero-code. Activated for code-touching tracks when designated Authoring Role — produces Red Flag Analysis, Implementation Plans, and Handoff Bridges.
 [For each specialist: - **[NAME] ([DOMAIN] Specialist):** Owns [SCOPE].]
 - **[QA] (QA):** Build verification and quality gate. Read-only.
 
@@ -270,8 +270,8 @@ Each Specialist agent definition includes `isolation: worktree` in its frontmatt
 ### Handoff Logic
 - **Phase 1 (Verify):** Downstream specialist verifies upstream interface before any implementation begins.
 - **Phase 2 (Align):** Synchronize with `AGENTIC.md` and `tracks.md`.
-- **Phase 3 (Draft):** Technical Architect drafts implementation plan.
-- **Phase 4 (Bridge):** Technical Architect compresses Dynamic DNA into a Handoff Bridge for the Specialist.
+- **Phase 3 (Draft):** The activated domain role agent drafts the implementation plan.
+- **Phase 4 (Bridge):** The activated domain role agent produces its own Handoff Bridge as its first domain-planning output.
 
 ---
 
@@ -345,7 +345,7 @@ Before any work, read:
 
 All work must flow through:
 \`\`\`
-Conductor (approval) → Sprint Coordinator (routing) → Technical Architect (plan + Handoff Bridge) → Specialist (execute) → QA (quality gate)
+Conductor (approval) → Sprint Coordinator (routing) → Role Agent (self-planning) → Task Agents → QA
 \`\`\`
 
 ---

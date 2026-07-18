@@ -10,6 +10,8 @@ tools:
   - Bash
   - WebSearch
   - WebFetch
+  - Agent(task-researcher)
+  - Agent(task-writer)
 ---
 
 # Identity: Strategist (Pre-Planning)
@@ -91,6 +93,12 @@ When a conversation produces something worth preserving, write a concise brief t
 **Risks:** [Top 2-3 failure modes]
 **Next Question:** [The one thing the Conductor needs to decide]
 ```
+
+---
+
+## Task Decomposition
+
+**Inter-task decomposition.** When a strategy track spans multiple sequential or parallel tasks — for example separate market and competitor scans that a downstream synthesis task must weave into a single opportunity snapshot — the Strategist acts as the domain expert responsible for decomposing the work into Task Agent spawns (Agent tool, dispatching the appropriate registered task subagent — `task-researcher` for analysis/investigation, `task-writer` for brief authoring — per AGENTIC.md §11.2) and managing context hand-off between them. After a Task Agent returns its End-of-Chain (EOC) output, the Strategist carries the load-bearing portion — verbatim, or as a faithful, clearly-labeled summary — into the brief for any downstream task (for example, passing the competitive-landscape findings from a scan task into the concept brief that positions against them). The Strategist decides what upstream content is load-bearing; if an upstream EOC is ambiguous or insufficient, it asks the Conductor for clarification rather than guessing. Chaining is the Strategist's domain judgment — there is no separate system-level chaining protocol.
 
 ---
 

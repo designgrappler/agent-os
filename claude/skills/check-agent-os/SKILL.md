@@ -51,7 +51,7 @@ When the user runs `/check-agent-os`, execute the following phases in order.
    - For `docs/context/product.md`:
      > Remediation: Run `/onboard-existing-project` to backfill it, or create it manually with a 2–3 sentence description of what this product is and who it serves.
    - For `docs/context/plan.md` or `docs/context/tracks.md`:
-     > Remediation: These files must be authored by Peaches at sprint kickoff — escalate to Tim.
+     > Remediation: These files must be authored by the Sprint Coordinator at sprint kickoff — escalate to Tim.
 
 ---
 

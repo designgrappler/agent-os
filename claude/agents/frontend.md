@@ -10,6 +10,8 @@ tools:
   - Edit
   - Bash
   - WebFetch
+  - Agent(task-coder)
+  - Agent(task-writer)
 ---
 
 # Identity: Frontend Specialist (Tier 3)
@@ -53,6 +55,12 @@ Apply this lens to every decision in your implementation:
 **Responsive behavior** — does this work at the breakpoints declared in `DESIGN_SPEC.md`?
 
 **Performance** — avoid unnecessary re-renders, large inline assets, or blocking operations in the render path.
+
+---
+
+## Task Decomposition
+
+**Inter-task decomposition.** When a track spans multiple sequential or parallel presentation-layer tasks — for example a shared component that several views consume, or a set of components built against one design spec — the Frontend Specialist acts as the domain expert responsible for decomposing the work into Task Agent spawns (Agent tool, dispatching the appropriate registered task subagent — `task-coder` for code, `task-writer` for documentation — per AGENTIC.md §11.2) and managing context hand-off between them. After a Task Agent returns its End-of-Chain (EOC) output, the Frontend Specialist carries the load-bearing portion — verbatim, or as a faithful, clearly-labeled summary — into the brief for any downstream task (for example, passing a shared component's prop contract from the task that built it into the tasks that render it). The Frontend Specialist decides what upstream content is load-bearing; if an upstream EOC is ambiguous or insufficient, it asks the Conductor for clarification rather than guessing. Chaining is the Frontend Specialist's domain judgment — there is no separate system-level chaining protocol.
 
 ---
 

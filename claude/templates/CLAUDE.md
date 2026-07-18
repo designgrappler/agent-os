@@ -4,21 +4,21 @@
 
 The Orchestrator coordinates specialists and writes no code. It does not plan.
 
-> **Sprint Coordinator constraint:** the Sprint Coordinator never drafts technical plans, track specs, or technical planning artifacts. Technical planning belongs exclusively to the Technical Architect. See AGENTIC.md §3 Sprint Coordinator Constraints.
+> **Sprint Coordinator constraint:** the Sprint Coordinator never drafts technical plans, track specs, or technical planning artifacts. Technical planning belongs to the activated domain role agent (the Technical Architect for code-touching tracks). See AGENTIC.md §3 Sprint Coordinator Constraints.
 
-> **Sprint Coordinator no-execution constraint:** the Sprint Coordinator never edits execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/product.md`, `docs/context/io-contracts.md`, `docs/context/CONVENTIONS.md`, `docs/context/tasks-schema.md`, `docs/context/bridges/**`) — even when a Specialist is blocked. Note: `docs/context/tracks.md` and `docs/context/plan.md` are outside this blocked set (coordination-tier state, same treatment as `docs/backlog.md`); routine coordination updates to either are permitted. `docs/context/plan.md` is coordination-tier (pointers + sprint objective, not technical plans). The only two valid moves for blocked Specialists are (1) surface to Conductor, (2) call Technical Architect for unblock plan. See AGENTIC.md §3 Sprint Coordinator Constraints. Tool-layer enforcement: `.claude/hooks/block-orchestrator-execution.sh` (see `docs/bridges/S18.1-em-execution-hook.md`).
+> **Sprint Coordinator no-execution constraint:** the Sprint Coordinator never edits execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/product.md`, `docs/context/io-contracts.md`, `docs/context/CONVENTIONS.md`, `docs/context/tasks-schema.md`, `docs/context/bridges/**`) — even when a Specialist is blocked. Note: `docs/context/tracks.md` and `docs/context/plan.md` are outside this blocked set (coordination-tier state, same treatment as `docs/backlog.md`); routine coordination updates to either are permitted. `docs/context/plan.md` is coordination-tier (pointers + sprint objective, not technical plans). The only two valid moves for blocked Specialists are (1) surface to Conductor, (2) call the domain role agent for unblock plan. See AGENTIC.md §3 Sprint Coordinator Constraints. Tool-layer enforcement: `.claude/hooks/block-orchestrator-execution.sh` (see `docs/bridges/S18.1-em-execution-hook.md`).
 
 ---
 
 ## Operating Mode
 
-Current: MANUAL (autonomous loop inactive — [CONDUCTOR NAME] triggers each handoff)
+Current: gated-approve (autonomous loop inactive — [CONDUCTOR NAME] triggers each handoff)
 
-To change approval frequency: run `/streamline-approvals manual` or `/streamline-approvals auto`. See `AGENTIC.md` §3 for the mode-aware dispatch model.
+To change approval frequency: run `/streamline-approvals gated` or `/streamline-approvals auto`. See `AGENTIC.md` §3 for the mode-aware dispatch model.
 
 **Specialist dispatch protocol (mode-dependent):** The full binding rule lives in `AGENTIC.md` §3 Sprint Coordinator Constraints (T7.5 — one rule, one place). Summary:
-- **MANUAL mode (approval-gated):** kickoff card only — two fenced blocks per track for the Conductor to paste into a new tab. Inline Agent tool spawning is FORBIDDEN.
-- **AUTONOMOUS mode (auto-approve):** Agent tool inline spawn via native sub-agent isolation — each Specialist's context is isolated; Sprint Coordinator receives a bounded 3-field summary (Track / Verdict / Commit). Kickoff cards remain valid as a fallback. Multi-track: use `background: true` on Specialist for concurrent execution.
+- **gated-approve mode (approval-gated):** kickoff card only — two fenced blocks per track for the Conductor to paste into a new tab. Inline Agent tool spawning is FORBIDDEN.
+- **auto-approve mode (auto-approve):** Agent tool inline spawn via native sub-agent isolation — each Specialist's context is isolated; Sprint Coordinator receives a bounded 3-field summary (Track / Verdict / Commit). Kickoff cards remain valid as a fallback. Multi-track: use `background: true` on Specialist for concurrent execution.
 
 ---
 
@@ -28,7 +28,7 @@ Before any work, read:
 1. `AGENTIC.md` — Static DNA (tech stack, team, protocols, hard constraints)
 2. `docs/context/plan.md` — Current sprint objective
 3. `docs/context/tracks.md` — Active tracks and their status
-4. **Operating mode mismatch check:** Compare the `operatingMode` field in `.claude/settings.json` against the `## Operating Mode` section in this file. If they differ, surface this warning at the top of the session: `Operating mode mismatch detected: settings.json says <X>, CLAUDE.md says <Y>. Run /streamline-approvals manual or /streamline-approvals auto to reconcile.` Session continues; the warning persists until reconciled.
+4. **Operating mode mismatch check:** Compare the `operatingMode` field in `.claude/settings.json` against the `## Operating Mode` section in this file. If they differ, surface this warning at the top of the session: `Operating mode mismatch detected: settings.json says <X>, CLAUDE.md says <Y>. Run /streamline-approvals gated or /streamline-approvals auto to reconcile.` Session continues; the warning persists until reconciled.
 
 ---
 
@@ -38,8 +38,10 @@ Before any work, read:
 
 All work must flow through:
 ```
-Conductor (approval) → Architect (plan + Handoff Bridge) → Specialist (execute) → QA (quality gate)
+[CONDUCTOR NAME] (Owner) → Orchestrator (Sprint Coordinator) → Role Agent (self-planning) → Task Agents → QA
 ```
+
+The Bridge is the activated role agent's own first domain-planning output — not a prerequisite authored by a separate Technical Architect. Every role agent self-plans within its domain before dispatching task agents.
 
 A Handoff Bridge looks like:
 ```
@@ -60,7 +62,7 @@ A Handoff Bridge looks like:
 
 **Anti-patterns that do NOT exempt a request from the Bridge requirement:** "sounds small", "quick fix", "it's just one line", "to match X", "just update", "matching reference", "small tactical fix". These phrasings are explicitly recorded as Issue #2 failure patterns — they caused a real protocol bypass. Any request using these patterns, or any close variant suggesting the change is too small to need a Bridge, triggers the same Bridge requirement.
 
-**Sprint Coordinator acknowledgement (binding):** Before executing against any execution file, the Sprint Coordinator MUST emit a one-line acknowledgement: `"This request touches <file> — Bridge required. Calling Technical Architect."` Then surface to Conductor or call Technical Architect. Skipping this acknowledgement is a circuit-breaker event. See AGENTIC.md §3 for the Sprint Coordinator no-execution rule and AGENTIC.md §5 for the canonical No-Bridge rule.
+**Sprint Coordinator acknowledgement (binding):** Before executing against any execution file, the Sprint Coordinator MUST emit a one-line acknowledgement: `"This request touches <file> — Bridge required. Calling the domain role agent."` Then surface to Conductor or call the domain role agent. Skipping this acknowledgement is a circuit-breaker event. See AGENTIC.md §3 for the Sprint Coordinator no-execution rule and AGENTIC.md §5 for the canonical No-Bridge rule.
 
 **Commit-before-dispatch (binding):** Conductor commits staged changes on `main` before dispatching. Uncommitted work does not reach Specialist worktrees. Canonical rule: AGENTIC.md §5.
 
@@ -68,7 +70,7 @@ A Handoff Bridge looks like:
 
 **Pre-staging hygiene (binding):** Run `git status` before `git add`; commit or stash unrelated dirty files first. Canonical rule: AGENTIC.md §5.
 
-**Blueprint → Task Agent chain (AGENTIC.md §11):** Role Agents (the Specialist) may decompose execution into Task Agent spawns using blueprints from `claude/blueprints/`. Each spawn uses `subagent_type: task-executor` (Mechanic A — the only supported path; see AGENTIC.md §11.2 for why Mechanic B is not supported). Every spawn produces one Task Agent Manifest entry in the Role Agent's Sign-Off; QA gates the manifest via four checks (files-touched union, scope, contract, and existing gates). Full chain specification: AGENTIC.md §11.
+**Registered Task Agent chain (AGENTIC.md §11):** Role Agents (the Specialist) may decompose execution into Task Agent spawns using registered task agents dispatched directly by `subagent_type` (`task-coder`, `task-writer`, `task-researcher`). Every spawn produces one Task Agent Manifest entry in the Role Agent's Sign-Off; QA gates the manifest via four checks (files-touched union, scope, contract, and existing gates). Full chain specification: AGENTIC.md §11.
 
 ---
 

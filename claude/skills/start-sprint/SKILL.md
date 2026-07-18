@@ -1,9 +1,9 @@
 ---
 name: start-sprint
-description: Unified sprint-start skill with two modes — Mode A (sprint-setup) opens a new sprint, calls the Sprint Coordinator (Peaches) to author the plan doc, and updates context files; Mode B (parallel-kickoff) reads tracks.md and outputs a parallel tab kickoff card for all OPEN tracks.
+description: Unified sprint-start skill with two modes — Mode A (sprint-setup) opens a new sprint, calls the Sprint Coordinator to author the plan doc, and updates context files; Mode B (parallel-kickoff) reads tracks.md and outputs a parallel tab kickoff card for all OPEN tracks.
 ---
 # Start Sprint
-Unified sprint-start skill with two modes. **Mode A (sprint-setup)** opens a new sprint with a clean setup — surfaces unresolved prior work, calls the Sprint Coordinator (Peaches) to author the sprint plan doc, and updates context files. **Mode B (parallel-kickoff)** reads `docs/context/tracks.md`, finds all OPEN tracks (no dependency blockers), and outputs a parallel tab kickoff card — one entry per open track with a tab name and a ready-to-paste opening prompt. BLOCKED tracks are listed separately with their blocker noted.
+Unified sprint-start skill with two modes. **Mode A (sprint-setup)** opens a new sprint with a clean setup — surfaces unresolved prior work, calls the Sprint Coordinator to author the sprint plan doc, and updates context files. **Mode B (parallel-kickoff)** reads `docs/context/tracks.md`, finds all OPEN tracks (no dependency blockers), and outputs a parallel tab kickoff card — one entry per open track with a tab name and a ready-to-paste opening prompt. BLOCKED tracks are listed separately with their blocker noted.
 
 ## Auto-Trigger
 Invoke when the user says:
@@ -33,7 +33,7 @@ Before executing any steps, read `docs/context/plan.md` and `docs/context/tracks
 
 ## Mode A — Sprint Setup
 
-Opens a new sprint. Surfaces unresolved work, calls the Sprint Coordinator (Peaches) to author the plan doc, and updates context files. The counterpart to `clean-context`.
+Opens a new sprint. Surfaces unresolved work, calls the Sprint Coordinator to author the plan doc, and updates context files. The counterpart to `clean-context`.
 
 ### Step 1 — Prior Sprint Check
 
@@ -101,7 +101,7 @@ If yes, queue a canonical-sync track before dispatching Specialists.
 
 The Sprint Coordinator does not make the canonicality judgment — it ensures Tim sees the list before sprint planning begins.
 
-### Step 2 — Call Sprint Coordinator (Peaches)
+### Step 2 — Call Sprint Coordinator
 
 **Imperative action: invoke the Sprint Coordinator role agent (`peaches`) to author the sprint plan doc. The invoking agent MUST NOT author the plan doc or interview questions directly — that is the Sprint Coordinator's exclusive artifact (AGENTIC.md §3). If the invoking agent finds itself writing plan content, STOP — that is the §3 planning-drift failure mode.**
 
@@ -109,19 +109,19 @@ The Sprint Coordinator does not make the canonicality judgment — it ensures Ti
 
 **Mode-aware invocation:**
 
-- **AUTONOMOUS mode:** Invoke Peaches via Agent-tool call (inline spawn, no permission prompt required). Pass the sprint number and any context needed to author the plan doc.
-- **MANUAL mode:** Output a Sprint Coordinator kickoff card (two fenced blocks: tab name + prompt) for the Conductor to dispatch manually. Do not proceed past this step until Peaches' doc exists.
+- **AUTONOMOUS mode:** Invoke the Sprint Coordinator via Agent-tool call (inline spawn, no permission prompt required). Pass the sprint number and any context needed to author the plan doc.
+- **MANUAL mode:** Output a Sprint Coordinator kickoff card (two fenced blocks: tab name + prompt) for the Conductor to dispatch manually. Do not proceed past this step until the Sprint Coordinator's doc exists.
 
-Peaches authors `docs/temp-sprintN-plan.md` (where `N` is the sprint number, inferred from the track IDs or the sprint objective context; if ambiguous, use the next sequential number after the highest sprint number found in `docs/context/tracks.md`). The interview and plan doc are the same file — no separate interview file.
+The Sprint Coordinator authors `docs/temp-sprintN-plan.md` (where `N` is the sprint number, inferred from the track IDs or the sprint objective context; if ambiguous, use the next sequential number after the highest sprint number found in `docs/context/tracks.md`). The interview and plan doc are the same file — no separate interview file.
 
-Peaches' plan doc must cover all four required sections:
+The Sprint Coordinator's plan doc must cover all four required sections:
 
 1. **Sprint objective** — What is the primary goal? (1–2 sentences)
 2. **Proposed tracks** — Each track with a brief description and the specialist owner (or "TBD").
 3. **Open questions for Tim** — Any unresolved decisions, tradeoffs, or risks Tim should weigh in on before planning starts.
 4. **Red flags surfaced** — Any architectural, security, or sequencing concerns to flag for the Technical Architect.
 
-The invoking agent waits for Peaches' doc to be written before continuing. Confirm the file exists at `docs/temp-sprintN-plan.md` before proceeding to Step 2a.
+The invoking agent waits for the Sprint Coordinator's doc to be written before continuing. Confirm the file exists at `docs/temp-sprintN-plan.md` before proceeding to Step 2a.
 
 ### Step 2a — Backlog Migration Triage
 
@@ -133,8 +133,8 @@ If `docs/backlog.md` exists, read it and surface any items that are candidates f
 
 Wait for Tim's direction. When Tim identifies items for promotion:
 
-1. Skylar migrates the promoted items into the active tracks section of `docs/context/tracks.md` (Skylar does the actual `tracks.md` write — Sprint Coordinator does not write to `docs/context/**` directly).
-2. **Skylar simultaneously removes the promoted items from `docs/backlog.md`.** This removal is mandatory — not optional, not deferred. A promoted item must not remain in `docs/backlog.md` after it has been added to `tracks.md`. Both writes happen in the same operation.
+1. The Specialist migrates the promoted items into the active tracks section of `docs/context/tracks.md` (the Specialist does the actual `tracks.md` write — Sprint Coordinator does not write to `docs/context/**` directly).
+2. **The Specialist simultaneously removes the promoted items from `docs/backlog.md`.** This removal is mandatory — not optional, not deferred. A promoted item must not remain in `docs/backlog.md` after it has been added to `tracks.md`. Both writes happen in the same operation.
 
 If `docs/backlog.md` does not exist, print: `docs/backlog.md not found — skipping backlog triage.` and continue.
 
@@ -170,14 +170,14 @@ If `docs/` does not exist, create it silently (no user message, no prompt) befor
 
 ### Step 4 — Sprint Summary
 
-Output a 1–2 sentence summary of the path forward: confirm the plan doc has been written at `docs/temp-sprintN-plan.md`, and state what the next step is (e.g. Tim reviews the plan doc before the Technical Architect issues Bridges).
+Output a 1–2 sentence summary of the path forward: confirm the plan doc has been written at `docs/temp-sprintN-plan.md`, and state what the next step is (Tim reviews the plan doc, then the activated domain role agent issues its own Bridge as its first planning output).
 
 ```
 ## Sprint [N] Open
 
-**Objective:** [Sprint objective from Peaches' plan doc]
+**Objective:** [Sprint objective from the Sprint Coordinator's plan doc]
 **Plan doc:** docs/temp-sprint<N>-plan.md
-**Next step:** Tim reviews `docs/temp-sprint<N>-plan.md`; Technical Architect issues Bridges upon approval.
+**Next step:** Tim reviews `docs/temp-sprint<N>-plan.md`; upon approval, the activated domain role agent issues its own Handoff Bridge as its first domain-planning output.
 ```
 
 ---

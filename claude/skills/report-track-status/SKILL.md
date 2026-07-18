@@ -50,7 +50,7 @@ Produce this structure:
 **Status key:**
 - 🟡 In Progress
 - 🔴 Blocked
-- 🔵 Awaiting Quality Gate (Bandit)
+- 🔵 Awaiting Quality Gate (QA)
 - 🟠 Awaiting Conductor Approval
 - ✅ Done
 

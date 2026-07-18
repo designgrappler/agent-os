@@ -10,6 +10,8 @@ tools:
   - Edit
   - Bash
   - WebFetch
+  - Agent(task-coder)
+  - Agent(task-writer)
 ---
 
 # Identity: Database Specialist (Tier 3)
@@ -50,6 +52,12 @@ Apply this lens to every decision in your implementation:
 **Transactions** — are multi-step writes wrapped in a transaction? Is the failure behavior correct if a step fails mid-sequence?
 
 **Seed and test data** — does the schema change require updates to seed files or test fixtures?
+
+---
+
+## Task Decomposition
+
+**Inter-task decomposition.** When a track spans multiple sequential or parallel data-layer tasks — for example a migration that a downstream query module depends on, or a schema change that fixtures and seed data must follow — the Database Specialist acts as the domain expert responsible for decomposing the work into Task Agent spawns (Agent tool, dispatching the appropriate registered task subagent — `task-coder` for migrations/schema code, `task-writer` for documentation — per AGENTIC.md §11.2) and managing context hand-off between them. After a Task Agent returns its End-of-Chain (EOC) output, the Database Specialist carries the load-bearing portion — verbatim, or as a faithful, clearly-labeled summary — into the brief for any downstream task (for example, passing the final column definitions from a migration task into the task that writes the dependent query). Ordering is a first-class concern: a migration that establishes state must complete and have its EOC captured before the tasks that read that state are briefed. The Database Specialist decides what upstream content is load-bearing; if an upstream EOC is ambiguous or insufficient, it asks the Conductor for clarification rather than guessing. Chaining is the Database Specialist's domain judgment — there is no separate system-level chaining protocol.
 
 ---
 

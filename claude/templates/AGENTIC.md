@@ -39,9 +39,9 @@ Projects with no Designer-class agent leave this section as a stub or omit it en
 ## 3. Project Team
 
 - **[CONDUCTOR NAME] (Conductor):** Vision & Approval.
-- **Claude (Sprint Coordinator):** Coordinates specialists, no direct execution. Routes domain-specific planning to the Technical Architect.
-- **[SPRINT COORDINATOR NAME] (Sprint Coordinator):** Coordination hub. Zero-code. Sprint synthesis, routing, sprint interview docs. Routes technical tracks to Technical Architect.
-- **[TECHNICAL ARCHITECT NAME] (Technical Architect):** Technical planning authority. Zero-code. Red Flag Analysis, Implementation Plans, Handoff Bridges for code-touching tracks.
+- **Claude (Sprint Coordinator):** Orchestrator — top-level planning and routing for all domains. Writes no code.
+- **[SPRINT COORDINATOR NAME] (Sprint Coordinator):** Coordination hub. Zero-code. Sprint synthesis, routing, sprint interview docs. Routes domain tracks to the appropriate domain role agent.
+- **[TECHNICAL ARCHITECT NAME] (Technical Architect):** Technical Architect role agent. Zero-code. Red Flag Analysis, Implementation Plans, Handoff Bridges — activated for code-touching tracks when designated Authoring Role.
 - **[SPECIALIST 1 NAME] ([Domain 1] Specialist):** Owns [scope].
 - **[SPECIALIST 2 NAME] ([Domain 2] Specialist):** Owns [scope].
 - **[SPECIALIST 3 NAME] ([Domain 3] Specialist):** Owns [scope].
@@ -49,13 +49,13 @@ Projects with no Designer-class agent leave this section as a stub or omit it en
 
 ### Sprint Coordinator Constraints (binding)
 
-The Sprint Coordinator coordinates specialists and routes domain work. It does not author domain-specific plans.
+The Sprint Coordinator is the Orchestrator — it performs top-level planning and routing for all domains. It coordinates specialists and routes domain work to the appropriate activated domain role agent. It does not author domain-specific plans.
 
-- **FORBIDDEN:** Drafting technical track specs, Red Flag Analysis, Handoff Bridges for technical tracks, or any domain-specific planning artifact — even as "rough scaffolding" or a "starting point." Those belong to the Technical Architect.
-- **FORBIDDEN:** Writing planning content to `docs/context/plan.md`, `docs/context/tracks.md`, or any sprint plan doc for technical tracks. Only the Technical Architect writes technical planning content; the Conductor approves; the Sprint Coordinator coordinates the handoff.
-- **REQUIRED:** After any context-setup step (e.g. `/start-sprint`, `/onboard-existing-project`), the next action is to invoke the Technical Architect for technical tracks. If sprint scope was discussed in chat, summarize it as a one-line briefing to the Technical Architect — do not translate it into track specs.
+- **FORBIDDEN:** Drafting technical track specs, Red Flag Analysis, Handoff Bridges for technical tracks, or any domain-specific planning artifact — even as "rough scaffolding" or a "starting point." Those belong to the activated domain role agent.
+- **FORBIDDEN:** Writing planning content to `docs/context/plan.md`, `docs/context/tracks.md`, or any sprint plan doc for technical tracks. Only the activated domain role agent writes domain-specific planning content; the Conductor approves; the Sprint Coordinator coordinates the handoff.
+- **REQUIRED:** After any context-setup step (e.g. `/start-sprint`, `/onboard-existing-project`), the next action is to invoke the appropriate domain role agent for domain-specific tracks. If sprint scope was discussed in chat, summarize it as a one-line briefing to the domain role agent — do not translate it into track specs.
 - **FORBIDDEN:** Direct execution of any kind on execution files (`AGENTIC.md`, `CLAUDE.md`, `claude/**`, `.claude/agents/**`, `.claude/skills/**`, `docs/tasks.json`, `docs/context/product.md`, `docs/context/io-contracts.md`, `docs/context/CONVENTIONS.md`, `docs/context/tasks-schema.md`, `docs/context/bridges/**`) — even when a Specialist is blocked, even when the fix is "obvious", even when the urgency feels high. Note: `docs/context/tracks.md` and `docs/context/plan.md` are outside this blocked set (coordination-tier state — pointers + sprint objective / status updates, same treatment as `docs/backlog.md`); the Sprint Coordinator may write routine coordination updates to either directly. The Sprint Coordinator coordinates; it does not author technical planning content.
-- **REQUIRED (when a Specialist is blocked):** The only two valid Sprint Coordinator moves are (1) surface the blocker to the Conductor, or (2) call the Technical Architect for an unblock plan. Direct execution is forbidden regardless of urgency.
+- **REQUIRED (when a Specialist is blocked):** The only two valid Sprint Coordinator moves are (1) surface the blocker to the Conductor, or (2) call the activated domain role agent for an unblock plan. Direct execution is forbidden regardless of urgency.
 - **REQUIRED (post-merge smoke-test finding routing):** When a post-merge smoke test surfaces a defect, the Sprint Coordinator surfaces the finding to the Conductor (one-line description + proposed fix) and waits for explicit Conductor confirmation before dispatching any hotfix track. Autonomous hotfix dispatch on "obviously correct" framing is forbidden — the same No-Bridge anti-pattern (§5) applies to hotfixes routed around the Bridge requirement by not being named as tracks. This rule is not conditional on the severity of the finding — every post-merge smoke-test defect is surfaced before dispatch, no exceptions.
 
 Violations of this rule bypass the Phase 3a plan-doc gate (§5) and produce unreviewed plans that look official but aren't. This is a protocol violation and is treated as a circuit-breaker event.
@@ -75,6 +75,9 @@ Violations of this rule bypass the Phase 3a plan-doc gate (§5) and produce unre
   Kickoff cards remain valid as a fallback when inline spawning is unavailable. Multi-track parallel execution uses `background: true` on the Role Agent's definition.
 
 **Tasks-in-flight Edit/Write guard:** The `PreToolUse` hook at `.claude/hooks/block-mode-violation.sh` reads `docs/tasks.json` on every Edit/Write call and exits code 2 if any task is `CLAIMED` or `IN_PROGRESS`. This blocks file modifications during active sprint work regardless of which agent initiated them. See the hook script for the implementation.
+
+### Execution Chain
+[CONDUCTOR NAME] (Owner) → Orchestrator (Sprint Coordinator) → Role Agent (self-planning) → Task Agents → QA
 
 ---
 
@@ -147,7 +150,8 @@ Each Specialist agent definition includes `isolation: worktree` in its frontmatt
 
   Two-condition definition:
   1. **Same root cause** = same named failure mode (e.g. uncommitted files at sign-off, scope drift beyond Bridge Execution Files, missing behavioral smoke, frontmatter/prose divergence) appearing in two different tracks. Intra-track self-correction (QA BLOCKED → Specialist fixes → QA APPROVED) does NOT count — the loop is QA's job and is expected.
-  2. **Surface, don't dispatch.** The Sprint Coordinator surfaces the two occurrences to [CONDUCTOR NAME] in one message; [CONDUCTOR NAME] decides: continue, or call the Technical Architect for a Red Flag Analysis before the next track dispatches.
+  2. **Surface, don't dispatch.** The Sprint Coordinator surfaces the two occurrences to [CONDUCTOR NAME] in one message; [CONDUCTOR NAME] decides: continue, or call the activated domain role agent for a Red Flag Analysis before the next track dispatches.
+- **Mid-sprint gap rule (binding).** When a smoke test, QA verdict, runtime failure, or any mid-track observation reveals a systemic gap in the protocol, tooling, or install scope — the current track stays OPEN until the gap is resolved. Continuing to downstream tracks while a known gap exists is forbidden. The resolution path: (1) identify the specific gap and the file(s) it affects, (2) open new tracks in the current sprint to close the gap (not backlog), (3) fix the gap tracks first, (4) then resume the original downstream track. A gap that is "small enough to backlog" is a gap that will cause the next sprint's failure. — Origin: T39.E smoke failure (S39, 2026-07-17).
 - **Git Hygiene:** No commits unless directed. Use `git add` for staging.
 
 **Commit-before-dispatch (binding).** Before dispatching a Specialist on any track, the Conductor must commit all staged changes on `main`. Uncommitted working-tree changes on `main` do **not** reach Specialist worktrees: `worktree.baseRef: "head"` branches the worktree from the current HEAD **commit**, not from the working tree. Dispatching with uncommitted state silently strands the Specialist on a stale baseline. Verify with `git status` (clean working tree) immediately before invoking the Specialist.
@@ -177,14 +181,14 @@ Confirm the SHA shown matches the expected merge commit before dispatching the n
 ### Handoff Logic
 - **Phase 1 (Verify):** Confirm interfaces match before implementation begins.
 - **Phase 2 (Align):** Synchronize with `AGENTIC.md` and `tracks.md`.
-- **Phase 3 (Draft):** Technical Architect drafts implementation plan.
-- **Phase 3a (Plan Doc):** Before any Bridge is issued, a plan doc must exist at `docs/sprint-plan-<sprint-id>.md` and must be approved by [CONDUCTOR NAME]. The plan doc must cover: (1) sprint scope, (2) tracks, (3) Red Flag Analysis, and (4) open questions for [CONDUCTOR NAME]. Any role may author it; the Technical Architect is the default author. This step is mandatory for all sprints — including single-track sprints. An agent that issues a Bridge without a [CONDUCTOR NAME]-approved plan doc has violated protocol and is subject to removal from the team.
+- **Phase 3 (Draft):** The activated domain role agent drafts the implementation plan.
+- **Phase 3a (Plan Doc):** Before any Bridge is issued, a plan doc must exist at `docs/sprint-plan-<sprint-id>.md` and must be approved by [CONDUCTOR NAME]. The plan doc must cover: (1) sprint scope, (2) tracks, (3) Red Flag Analysis, and (4) open questions for [CONDUCTOR NAME]. The plan doc is a Sprint Coordinator native artifact — authored by the Sprint Coordinator as its first sprint-open output, not by the Technical Architect. This step is mandatory for all sprints — including single-track sprints. An agent that issues a Bridge without a [CONDUCTOR NAME]-approved plan doc has violated protocol and is subject to removal from the team.
 
   **Antigravity exception:** If antigravity automatically produces a plan doc covering all four required sections (scope, tracks, Red Flags, open questions for [CONDUCTOR NAME]), that document satisfies this requirement without a separate Agent-OS plan doc. If antigravity's output does not cover all four sections, produce a plan doc at `docs/sprint-plan-<sprint-id>.md` regardless.
 
   **Lifecycle:** After sprint close, plan docs are archived to `docs/archive/plan-docs/<sprint-id>.md`. They are not deleted.
 
-- **Phase 4 (Bridge):** Technical Architect compresses Dynamic DNA into a Handoff Bridge for the Specialist. Before issuing the Bridge, the Architect must explicitly evaluate:
+- **Phase 4 (Bridge):** The activated domain role agent produces its own Handoff Bridge as its first domain-planning output, compressing Dynamic DNA into a scoped task brief for the Specialist. The Bridge is the role agent's own deliverable — it is no longer a prerequisite authored by a separate Technical Architect role; execution still requires a Bridge first (No-Bridge rule, below). Before issuing the Bridge, the Authoring Role must explicitly evaluate:
   - Does this track involve destructive or irreversible migrations? → populate `Migration Safety` and obtain Conductor acceptance if irreversible.
   - Does this track touch auth, payments, or schema? → populate `Security Review` and obtain Conductor acceptance.
   - Both fields must be explicitly set (not left as template placeholders) before the Bridge is issued.
@@ -193,11 +197,11 @@ Confirm the SHA shown matches the expected merge commit before dispatching the n
 
 **Anti-patterns that do NOT exempt a request from the Bridge requirement (Issue #2 precedent):** "sounds small", "quick fix", "it's just one line", "to match X", "just update", "matching reference", "small tactical fix". Issue #2 records the specific failure: [CONDUCTOR NAME] asked the Orchestrator to "update code to match X" and the Orchestrator executed directly, bypassing the Bridge. These phrasings — and any close variant that frames a request as too small to need a Bridge — must trigger the same Bridge requirement. The list is anchored to Issue #2's documented phrasing and covers the **pattern** (small-tactical-fix framing), not an exhaustive enumeration.
 
-**Sprint Coordinator acknowledgement (binding):** Before executing against any execution file, the Sprint Coordinator MUST emit a one-line acknowledgement: `"This request touches <file> — Bridge required. Calling Technical Architect."` Then surface to Conductor or call Technical Architect. Skipping this acknowledgement is a circuit-breaker event.
+**Sprint Coordinator acknowledgement (binding):** Before executing against any execution file, the Sprint Coordinator MUST emit a one-line acknowledgement: `"This request touches <file> — Bridge required. Calling domain role agent."` Then surface to Conductor or call the domain role agent. Skipping this acknowledgement is a circuit-breaker event.
 
 **Continuous improvement loop:** Fix locally → confirm it works → if it works, queue a targeted backlog item naming the specific canonical file to update → process that item as a normal sprint track. An improvement is not shipped until canonical reflects it. See §5.1 for the full enforcement rule.
 
-**Sprint Coordinator no-execution cross-reference:** §3 Sprint Coordinator Constraints defines a binding role-scoped rule that forbids the Sprint Coordinator from any direct execution on execution files, even when a Specialist is blocked. The only two valid Sprint Coordinator moves in that case are (1) surface to Conductor, or (2) call Technical Architect for unblock plan. The rule is enforced at the protocol layer here (§3 / §5) and at the tool layer via the `PreToolUse` hook documented in `docs/bridges/S18.1-em-execution-hook.md`. See AGENTIC.md §3 Sprint Coordinator Constraints for the canonical rule text — this cross-reference does not duplicate it. T20.4 reinforces the protocol layer ON TOP of the hook, not in place of it.
+**Sprint Coordinator no-execution cross-reference:** §3 Sprint Coordinator Constraints defines a binding role-scoped rule that forbids the Sprint Coordinator from any direct execution on execution files, even when a Specialist is blocked. The only two valid Sprint Coordinator moves in that case are (1) surface to Conductor, or (2) call the activated domain role agent for an unblock plan. The rule is enforced at the protocol layer here (§3 / §5) and at the tool layer via the `PreToolUse` hook documented in `docs/bridges/S18.1-em-execution-hook.md`. See AGENTIC.md §3 Sprint Coordinator Constraints for the canonical rule text — this cross-reference does not duplicate it. T20.4 reinforces the protocol layer ON TOP of the hook, not in place of it.
 
 ### 5.1 Canonical Sync Before Sprint Close
 
@@ -248,7 +252,7 @@ Every track must have a completed exit record before the Specialist signs off. T
 **Status semantics:**
 
 - **DONE** — work completed and ready for QA review. QA may still BLOCK; that does not retroactively change the exit-record Status to BLOCKED. Status names the Specialist's self-assessment, not the QA verdict.
-- **BLOCKED** — Specialist could not complete the work as scoped. `What happened` names the blocker; `Next steps` names the escalation (typically "Return to Sprint Coordinator" or "Return to Technical Architect for Bridge revision").
+- **BLOCKED** — Specialist could not complete the work as scoped. `What happened` names the blocker; `Next steps` names the escalation (typically "Return to Sprint Coordinator" or "Return to the domain role agent for Bridge revision").
 - **DEFERRED** — work was descoped mid-track by Conductor or Sprint Coordinator. `What happened` names the descope; `Next steps` names where the descoped work goes (new track, backlog, next sprint).
 
 **Hard gate (Specialist):** The Specialist cannot sign off until all three fields are populated with real content — no placeholders. See `claude/agents/skylar.md` Sign-Off Protocol for the full sign-off template.
@@ -279,7 +283,7 @@ refactor(ui): extract component into standalone file
 
 Every Bridge has a named **Authoring Role** — the domain-expert role that owns the Bridge's content. The Sprint Coordinator routes the track and names the Authoring Role; the named domain author produces the Bridge. Valid Authoring Roles: **Technical Architect** (code-touching, config, hooks, skills, agents, DB schema), **Designer** (visual design, UI/UX, design system), **Marketing** (messaging, copy, campaigns), **Sprint Coordinator** (pure-process tracks: retrospectives, protocol updates, exit-state; no Specialist dispatch required). The Sprint Coordinator is the Authoring Role only for pure-process tracks where no Specialist is needed. For all other track categories, the routing table in §3 determines the Authoring Role.
 
-The Bridge Self-Check (all 8 gates) lives in `claude/agents/technical-architect.md` §3a. The Authoring Role runs all 8 gates before publishing any Bridge. For design Bridges, gates apply with Designer-specific interpretation: token references and Phase 1/Phase 2 routing serve as the scope-boundary verification criteria.
+The Bridge Self-Check (all 9 gates) lives in `claude/agents/technical-architect.md` §3a. The Authoring Role runs all 9 gates before publishing any Bridge. For design Bridges, gates apply with Designer-specific interpretation: token references and Phase 1/Phase 2 routing serve as the scope-boundary verification criteria.
 
 When `Authoring Role: Designer`, the Bridge must include a `**Design Brief:**` field referencing the pre-design artifact the Designer authors at the start of Phase 1. For all other Authoring Roles, the field is `"N/A — non-design track"` or may be omitted entirely.
 
@@ -445,9 +449,9 @@ Every `.md` file authored under the long-form-to-file rule belongs to exactly on
 
 ---
 
-## 11. Blueprint → Role Agent → Task Agent Execution Chain
+## 11. Role Agent → Task Agent Execution Chain
 
-This section codifies the runtime model for decomposed execution in Agent OS. Role Agents (the Specialist) may decompose a Handoff Bridge into Task Agent spawns — one spawn per logical task within the Bridge's Execution Files scope. Each spawn uses a named blueprint from `claude/blueprints/` as the task's system prompt strategy.
+This section codifies the runtime model for decomposed execution in Agent OS. Role Agents (the Specialist) may decompose a Handoff Bridge into Task Agent spawns — one spawn per logical task within the Bridge's Execution Files scope. Each spawn dispatches a registered task agent directly by `subagent_type`.
 
 ### 11.1 Chain shape
 
@@ -458,9 +462,9 @@ Sprint Coordinator
     ↓ dispatches Role Agent per Bridge
 Role Agent (Specialist — executor)
     ↓ reads Bridge; for each logical task:
-    ↓ Reads blueprint from claude/blueprints/<name>.md
-    ↓ spawns task-executor subagent (Agent tool, Mechanic A)
-Task Agent (task-executor subagent)
+    ↓ dispatches registered task agent by subagent_type
+    ↓   (task-coder for code, task-writer for docs, task-researcher for investigation)
+Task Agent (registered subagent)
     ↓ executes single task; returns structured output per expected_output contract
 Role Agent (Specialist)
     ↓ collects Task Agent outputs; synthesizes Sign-Off + Task Agent Manifest
@@ -470,22 +474,33 @@ Conductor
     ↓ approves; commit; merge
 ```
 
-### 11.2 Spawn mechanic (Mechanic A — the only supported path)
+### 11.2 Spawn mechanic — registered agent dispatch
 
-Blueprints in `claude/blueprints/` are Markdown templates, not registered subagents. The Claude Code subagent scope list is a closed set: managed settings, `--agents` CLI flag, `.claude/agents/`, `~/.claude/agents/`, and plugin `agents/` directories. `claude/blueprints/` is not a valid scope — attempting to spawn with `subagent_type: task-coder` (or any blueprint name) will fail with an unknown-subagent error.
+Role Agents dispatch Task Agents by `subagent_type` directly. Three registered task agents are available:
 
-**Mechanic A (binding):** the Role Agent **Read**s the blueprint file, extracts the body (everything after the YAML frontmatter's closing `---`), and spawns the Agent tool with `subagent_type: task-executor` passing the blueprint body + task-specific context as the prompt. The `task-executor` subagent is registered in `.claude/agents/task-executor.md` and `~/.claude/agents/task-executor.md`.
+- **`task-coder`** — for code edits, file diffs, and build verification.
+- **`task-writer`** — for authoring or revising structured Markdown documentation.
+- **`task-researcher`** — for evidence-backed investigation against primary sources.
+
+These agents are registered in `claude/agents/task-<type>.md`, `.claude/agents/task-<type>.md`, and `~/.claude/agents/task-<type>.md`. Their system prompts carry the domain expertise and Expected Output Contracts directly — no blueprint body injection is required.
+
+**Dispatch:** spawn the Agent tool with the chosen `subagent_type` (e.g. `subagent_type: task-coder`) and a task-specific context prompt containing: the Execution Files in scope, a one-sentence task description, the verification command, and any per-invocation constraints.
+
+**Legacy note (T39.G):** the Mechanic-A blueprint-read → task-executor workaround is retired. `task-executor` is no longer registered; `claude/blueprints/` is empty. Registered-agent dispatch is the sole supported path.
+
+Source: https://code.claude.com/docs/en/sub-agents — §"Choose the subagent scope" (closed scope list confirmed) and §"Spawn nested subagents" (depth limit confirmed). Researched 2026-07-05 by Technical Architect.
 
 ### 11.3 Task Agent manifest requirement
 
 Every Role Agent Sign-Off that includes one or more Task Agent spawns MUST include a Task Agent Manifest block. The manifest schema (one entry per spawn) is defined in `claude/agents/skylar.md` §"Task Agent manifest schema". Required fields per entry:
-- Blueprint name and path
-- Spawn subagent_type (always `task-executor`)
+- Registered agent name (e.g. task-coder)
+- Spawn subagent_type (task-coder, task-writer, or task-researcher)
 - Task prompt summary (one sentence)
-- Files touched (absolute paths from Task Agent output)
-- expected_output contract text (verbatim from the blueprint)
+- Files touched (Role-Agent-worktree relative paths, as emitted by `git diff --name-only`; the Role Agent normalizes Task Agent output paths to this form before recording)
+- expected_output contract text (verbatim first sentence from the registered agent's `## Expected Output Contract` section)
 - Tool calls summary
 - Task Agent verdict
+- End-of-Chain output (EOC) — the actual artifact the Task Agent produced (structured prose, a diff-plus-build summary, or a design spec plus a Figma-reference string). Additive field introduced in S36, governed by the §9.2 2-sprint compatibility window; an absent EOC field defaults to "no EOC recorded" and is not a BLOCK during the window.
 
 If no Task Agents were spawned (monolithic execution), the Role Agent records: "No Task Agent spawn — reason: X."
 
@@ -495,7 +510,7 @@ QA runs four checks on the Task Agent Manifest before the Sign-off Immutability 
 
 1. **Files-touched union invariant:** `union(manifest[].files_touched)` = `git diff --name-only` for the track. No on-disk file absent from the manifest; no manifest file absent from the diff.
 2. **Scope invariant:** `union(manifest[].files_touched)` ⊆ Bridge's Execution Files. Any file in the manifest but outside Bridge scope = BLOCKED.
-3. **Contract invariant:** each manifest entry's `expected_output contract text` matches the first sentence of the corresponding blueprint's `## Expected Output Contract` section verbatim.
+3. **Contract invariant:** each manifest entry's `expected_output contract text` matches the first sentence of the corresponding registered agent's `## Expected Output Contract` section verbatim. Read the agent file at `claude/agents/task-<type>.md` (where `<type>` is the manifest entry's spawn subagent_type, e.g. `task-coder`).
 4. **Existing Role Agent gates:** all pre-existing QA gates continue to run on the Role Agent synthesis — the manifest gate is additive, not a replacement.
 
 Full gate specification: `claude/agents/qa.md` §7 (Task Agent Manifest Gate) and `.claude/agents/bandit.md` §7b.
@@ -508,6 +523,4 @@ The Claude Code subagent depth limit is **5 levels** below the main conversation
 
 The following extensions to this chain are deferred and are NOT part of the current implementation:
 - Sprint Coordinator "domain-topics at sprint open" integration.
-- Additional blueprints beyond the current three (`task-coder`, `task-writer`, `task-researcher`).
-- Blueprint schema v2.
-- Any `blueprints-manifest.json` changes beyond current verification coverage.
+- Additional registered task agent types beyond the current three (task-coder, task-writer, task-researcher).
