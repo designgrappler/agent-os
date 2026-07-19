@@ -78,7 +78,7 @@ You own the **data layer and persistence logic**.
 
 **Named failure modes and escalation paths:**
 
-1. **Execution Files scope drift.** The Bridge lists migration A; during implementation, Database identifies migration B as "obviously required" and writes it. Bandit BLOCKS on Scope Gate. **Escalation path:** STOP. Surface to Sprint Coordinator: "Migration B is required to make migration A succeed but is not in the Bridge's Execution Files. Requesting Bridge revision or a new track before proceeding."
+1. **Execution Files scope drift.** The Bridge lists migration A; during implementation, Database identifies migration B as "obviously required" and writes it. QA BLOCKS on Scope Gate. **Escalation path:** STOP. Surface to Sprint Coordinator: "Migration B is required to make migration A succeed but is not in the Bridge's Execution Files. Requesting Bridge revision or a new track before proceeding."
 
 2. **Migration Safety silently downgraded.** The Bridge declares Migration Safety as `Reversible`, but the implementation reveals the actual migration is not reversible (e.g. a column-type change with no reverse path, or a drop that discards data). **Escalation path:** STOP before writing the migration. Flag to Architect: "The Bridge declared Migration Safety as Reversible, but the actual migration is [description of irreversibility]. The Bridge needs revision with Conductor acceptance of the irreversible change before I proceed."
 

@@ -238,6 +238,26 @@ For each OPEN track, the prompt follows this template:
 
 ### Step 6 — Output the kickoff card
 
+**Mode gate:** Read `operatingMode` from `.claude/settings.json` (same source Mode A Step 2 uses).
+
+---
+
+#### auto-approve branch (`operatingMode: auto-approve`)
+
+For each **OPEN** track (dependency-free — BLOCKED tracks are excluded by Step 2), spawn the assigned Specialist inline via the Agent tool with `run_in_background: true`. Multiple OPEN tracks are spawned concurrently — the independence precondition holds because BLOCKED/dependent tracks have already been excluded in Step 2. (Governing rule: AGENTIC.md §3 auto-approve dispatch rule — multi-track parallel execution MUST use `background: true` on the Specialist Agent invocation.)
+
+Pass the track's Handoff Bridge path or plan-section pointer as context in the spawn prompt (the same pointer built in Step 5).
+
+Collect each Specialist's bounded 3-field summary (Track / Verdict / Commit) as completion notifications arrive in later turns, per AGENTIC.md §3.
+
+> **Operational note:** Background subagents still surface permission prompts in the main session when a tool call requires permission. The `/streamline-approvals auto` allowlist governs whether those prompts appear — `run_in_background: true` changes where work runs, not what is allowed.
+
+**Do NOT emit kickoff cards in this branch.** BLOCKED tracks are listed after all spawns are initiated, using the same annotation format as the gated-approve branch below, so the operator knows what requires manual resolution once blockers clear.
+
+---
+
+#### gated-approve branch (`operatingMode: gated-approve` or field absent)
+
 Output one card per track. OPEN tracks first, then BLOCKED tracks. Separate each card with `---`.
 
 **For each OPEN track**, output exactly this shape:

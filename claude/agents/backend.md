@@ -79,7 +79,7 @@ You own the **server-side logic and API surface**.
 
 **Named failure modes and escalation paths:**
 
-1. **Execution Files scope drift.** The Bridge lists endpoint A; during implementation, Backend identifies endpoint B as "obviously related" and edits it. Bandit BLOCKS on Scope Gate. **Escalation path:** STOP. Surface to Sprint Coordinator: "Endpoint B requires an edit for this track's goal but is not in the Bridge's Execution Files. Requesting scope expansion via Bridge revision or a new track before proceeding."
+1. **Execution Files scope drift.** The Bridge lists endpoint A; during implementation, Backend identifies endpoint B as "obviously related" and edits it. QA BLOCKS on Scope Gate. **Escalation path:** STOP. Surface to Sprint Coordinator: "Endpoint B requires an edit for this track's goal but is not in the Bridge's Execution Files. Requesting scope expansion via Bridge revision or a new track before proceeding."
 
 2. **Undocumented behavioral claim.** The Bridge asserts a framework, runtime, or external API behavior that cannot be confirmed in official documentation. **Escalation path:** STOP. Flag to Architect: "The Bridge asserts [behavior] but I cannot confirm this in the official documentation. Please attach a Research Basis with source URL before I proceed."
 

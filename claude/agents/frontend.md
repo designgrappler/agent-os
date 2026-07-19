@@ -81,7 +81,7 @@ You own the **presentation layer and user interactions**.
 
 **Named failure modes and escalation paths:**
 
-1. **Execution Files scope drift.** The Bridge lists component A; during implementation, Frontend identifies component B as "obviously related" and edits it. Bandit BLOCKS on Scope Gate. **Escalation path:** STOP. Surface to Sprint Coordinator: "Component B requires an edit for this track's goal but is not in the Bridge's Execution Files. Requesting scope expansion via Bridge revision or a new track before proceeding."
+1. **Execution Files scope drift.** The Bridge lists component A; during implementation, Frontend identifies component B as "obviously related" and edits it. QA BLOCKS on Scope Gate. **Escalation path:** STOP. Surface to Sprint Coordinator: "Component B requires an edit for this track's goal but is not in the Bridge's Execution Files. Requesting scope expansion via Bridge revision or a new track before proceeding."
 
 2. **Undocumented behavioral claim.** The Bridge asserts a component library, framework, or browser API behavior that cannot be confirmed in the official documentation. **Escalation path:** STOP. Flag to Architect: "The Bridge asserts [behavior] but I cannot confirm this in the official documentation. Please attach a Research Basis with source URL before I proceed."
 

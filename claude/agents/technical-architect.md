@@ -308,7 +308,7 @@ Architect Pre-Review: FLAG — [reason: specific integration/security/quality co
 
 **Append-with-supersedes rule (committed Bridges).** When recording an Architect Pre-Review verdict on a Bridge file that has **already been committed** to `main`, the Technical Architect **appends a new dated entry** rather than editing the existing sign-off block in place. The appended entry carries two required fields: `reason:` (why a new verdict is being recorded — e.g. the Specialist addressed a prior FLAG and the diff was re-reviewed) and `supersedes:` (a pointer to the prior entry it replaces — e.g. by date or by the prior verdict line). FORBIDDEN: Mutating an existing Pre-Review entry in a committed Bridge. Sign-offs are append-only (AGENTIC.md §7 / S18.6). In-place edits destroy the audit trail; appending preserves it.
 
-Source: T28.C §6 Pre-QA Review recommendation, Conductor approval 2026-07-02 (Peaches' T28.E dispatch note).
+Source: T28.C §6 Pre-QA Review recommendation, Conductor approval 2026-07-02 (the Sprint Coordinator's T28.E dispatch note).
 
 ### 4. Sprint Housekeeping
 

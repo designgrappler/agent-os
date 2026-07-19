@@ -157,7 +157,7 @@ If ANY trigger applies: route to Technical Architect for Pre-Review first. Wait 
 
 If NO trigger applies: dispatch QA directly. Architect Pre-Review is not required for routine config-layer tracks.
 
-Source: T28.C §6 Pre-QA Review recommendation, Conductor approval 2026-07-02 (Peaches' T28.E dispatch note).
+Source: T28.C §6 Pre-QA Review recommendation, Conductor approval 2026-07-02 (the Sprint Coordinator's T28.E dispatch note).
 
 ### 5. Status reporting
 - Format: one line per track. `[Track ID] [Status]. Specialist: [name]. Next: [action].`

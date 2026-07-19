@@ -368,7 +368,7 @@ If ANY trigger applies: **Architect Pre-Review: CLEAR must be recorded** in the 
 
 If NO trigger applies: proceed directly to the standard gate sequence. Architect Pre-Review is not required for routine config-layer tracks with `Migration Safety = Reversible` and `Security Review = N/A` that do not touch integration chain components.
 
-Source: T28.C §6 Pre-QA Review recommendation, Conductor approval 2026-07-02 (Peaches' T28.E dispatch note).
+Source: T28.C §6 Pre-QA Review recommendation, Conductor approval 2026-07-02 (the Sprint Coordinator's T28.E dispatch note).
 
 ### 8. MANUAL-mode Exit-State Protocol (binding)
 

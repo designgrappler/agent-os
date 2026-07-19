@@ -98,6 +98,40 @@ Steps:
    ```
 4. Log the count of files deleted. If zero, log `docs/bridges/ — no bridge files to delete`.
 
+## Collapse closed sprint in context files
+
+Run after the Bridge file sweep and before the Memory hygiene scan. This step collapses the just-closed sprint's full content in `docs/context/plan.md` and `docs/context/tracks.md` down to one-line pointers, so context files do not accumulate every sprint's full content indefinitely.
+
+1. **Find the sprint number.** Read `docs/context/plan.md` and locate the `## Current Sprint: SN —` heading. Extract the sprint number `N` from it (the integer after `S`).
+
+2. **Verify the archive exists.** Confirm `docs/archive/plan-docs/SN.md` exists.
+   - **If it does NOT exist, bail this step immediately** with the warning:
+     ```
+     Sprint SN archive not found at docs/archive/plan-docs/SN.md — cannot collapse context files. Run /clean-context only after the sprint has been archived.
+     ```
+     Do not touch either file. Do not stage anything. Continue to the next step of the skill (Memory hygiene scan) — bailing this step does not abort the whole run.
+
+3. **If the archive exists, collapse both files:**
+
+   a. **`docs/context/plan.md`:** Replace the entire `## Current Sprint: SN` block — from the `## Current Sprint: SN —` heading line through the blank line immediately before the next line that begins with `## ` or `---`, including all goal checkboxes and any trailing content under it — with this single line:
+      ```
+      ## Completed Sprint: SN ✓ — see docs/archive/plan-docs/SN.md
+      ```
+
+   b. **`docs/context/tracks.md`:** Replace the entire `## Sprint N Tracks` block — from the `## Sprint N Tracks` heading line through the blank line immediately before the next line that begins with `## ` or `---`, including all track entries and any trailing content under it — with this single line:
+      ```
+      ## Sprint N Tracks ✓ — see docs/archive/plan-docs/SN.md
+      ```
+
+   Replace only the single named block in each file. Stop at the first boundary (`## ` heading or `---` divider). Never delete past it — the Completed-Sprint pointer lines and prior-sprint sections below must be preserved intact.
+
+4. **Stage both files:**
+   ```
+   git add docs/context/plan.md docs/context/tracks.md
+   ```
+
+5. **Log:** `Collapsed Sprint SN in plan.md and tracks.md`
+
 ## Memory hygiene scan
 
 Run after the merged-branch sweep and before the Context Health update.
@@ -195,3 +229,5 @@ Run `git push origin main`. This triggers the distribute workflow on the private
 - `tracks.md` Context Health entry updated with the current date.
 - `git push origin main` was run successfully (or surfaced to Conductor on failure with no force-push attempt).
 - `docs/bridges/` was swept: all bridge/sign-off files deleted except `README.md`, and deletions staged with `git add -A docs/bridges/` — or `docs/bridges/ not found — skipping` / `no bridge files to delete` was logged when applicable.
+- `docs/context/plan.md` current sprint section collapsed to one-line pointer (or bail message printed when archive absent).
+- `docs/context/tracks.md` current sprint tracks section collapsed to one-line pointer (or bail message printed when archive absent).

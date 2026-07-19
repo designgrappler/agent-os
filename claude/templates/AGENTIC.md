@@ -139,6 +139,8 @@ Each Specialist agent definition includes `isolation: worktree` in its frontmatt
 - Never work directly on the main branch when 2+ tracks are active in parallel
 - Worktree removed only after QA issues PASS verdict
 - **Post-setup smoke:** After first enabling `worktree.baseRef: "head"`, invoke a Specialist on a no-op task and confirm the worktree contains uncommitted context files — verifies the setting is honoured (a misconfigured value falls back silently to `origin/HEAD`)
+- `.worktreeinclude` — a project-root file in `.gitignore` syntax. Files that match a pattern AND are gitignored (e.g. `.env`, `.env.local`, `config/secrets.json`) are auto-copied into every worktree Claude Code creates with git (`--worktree`, subagent, and desktop parallel sessions). Without it, gitignored secrets are absent from Specialist worktrees and credentialed tasks fail silently. Limitation: not processed when a `WorktreeCreate` hook is used — copy files inside the hook script instead.
+- `cleanupPeriodDays` (in `.claude/settings.json`; default `30`, minimum `1`) — sets the age cutoff for a periodic sweep that removes orphaned subagent/background-session worktrees. The sweep skips any worktree with changed/untracked files or unpushed commits, and never removes `--worktree` worktrees. Prevents unbounded disk growth from killed subagent sessions.
 
 ---
 
