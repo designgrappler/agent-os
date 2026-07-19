@@ -494,6 +494,28 @@ For each specialist parsed from the team table, generate an agent definition:
 
 ---
 
+### 4h-global-agent-guard. Global-namespace guard
+
+Before installing any agent to `~/.claude/agents/` (the global Claude Code scope), apply this guard. This prevents project-specific agents from polluting the global namespace.
+
+**Guard procedure:**
+
+1. Read `skills-manifest.json` from the canonical Agent OS source clone. Extract the `agents[]` array.
+
+2. For each agent that would be written globally to `~/.claude/agents/<name>.md`: check whether `<name>` is present in `agents[]`.
+
+   - **Present (canonical agent):** proceed with the global write to `~/.claude/agents/<name>.md`.
+   - **Absent (non-canonical, project-specific):** install to `.claude/agents/<name>.md` (project-local) ONLY, and log exactly:
+     ```
+     "<name>" is not a canonical agent — installed project-local only. To install globally, add it to skills-manifest.json first.
+     ```
+
+3. **Absent-path handling (AGENTIC.md §9.7.1):** If `skills-manifest.json` is absent or its `agents[]` key is unreadable, treat as "cannot verify canonical" → default to project-local install with the same log message above. Fail safe: never pollute the global namespace when canonical status cannot be confirmed.
+
+**Note:** Steps 4f, 4g, and 4h above generate project-specific agent files (Sprint Coordinator, Technical Architect, QA, Specialists) to `.claude/agents/` (project-local) by design — they are not candidates for global install. This guard applies to any additional canonical agent files (e.g. `task-coder`, `task-writer`, `task-researcher`) that the install process installs from `claude/agents/` into the global scope.
+
+---
+
 ### 4i. `.claude/settings.json`
 
 If `.claude/settings.json` already exists, merge — do not remove existing entries. If it does not exist, create:
@@ -528,6 +550,165 @@ If `.claude/settings.json` already exists, merge — do not remove existing entr
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-manual-agent-spawn.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-uncommitted-dispatch.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Edit(AGENTIC.md)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Write(AGENTIC.md)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Edit(CLAUDE.md)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Write(CLAUDE.md)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Edit(claude/**)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Write(claude/**)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Edit(.claude/agents/**)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Write(.claude/agents/**)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Edit(.claude/skills/**)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Write(.claude/skills/**)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Edit(docs/tasks.json)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Write(docs/tasks.json)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Edit(docs/context/product.md)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Write(docs/context/product.md)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Edit(docs/context/io-contracts.md)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Write(docs/context/io-contracts.md)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Edit(docs/context/CONVENTIONS.md)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Write(docs/context/CONVENTIONS.md)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Edit(docs/context/tasks-schema.md)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Write(docs/context/tasks-schema.md)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Edit(docs/context/bridges/**)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "if": "Write(docs/context/bridges/**)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-mode-violation.sh",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "permissions": {
@@ -557,6 +738,33 @@ If `.claude/settings.json` already exists, merge — do not remove existing entr
 ```
 
 ---
+
+---
+
+### 4i-hooks. Hook install (fresh-install enforcement — RF1)
+
+> **Required at install time — not only at refresh time.** Copy the four enforcement hooks from the canonical source into the target project's `.claude/hooks/` directory. This closes the fresh-install enforcement gap: without these files, the `PreToolUse` entries in `.claude/settings.json` (step 4i above) reference paths that do not exist, and the enforcement rules are silently inoperative on new installs.
+
+1. Create the `.claude/hooks/` directory in the target project if absent — silently, with `mkdir -p .claude/hooks/`. Do not emit any message about directory creation; surface an error only if creation itself fails.
+
+2. Copy all four canonical enforcement hooks from `claude/hooks/` (in the canonical Agent OS source clone) to the project's `.claude/hooks/`, preserving the executable bit:
+
+   ```bash
+   cp claude/hooks/block-orchestrator-execution.sh .claude/hooks/block-orchestrator-execution.sh
+   cp claude/hooks/block-mode-violation.sh .claude/hooks/block-mode-violation.sh
+   cp claude/hooks/block-uncommitted-dispatch.sh .claude/hooks/block-uncommitted-dispatch.sh
+   cp claude/hooks/block-manual-agent-spawn.sh .claude/hooks/block-manual-agent-spawn.sh
+   chmod +x .claude/hooks/*.sh
+   ```
+
+3. Confirm the four hook paths match the `${CLAUDE_PROJECT_DIR}/.claude/hooks/` references wired in step 4i's `.claude/settings.json` `PreToolUse` block:
+   - `.claude/hooks/block-orchestrator-execution.sh`
+   - `.claude/hooks/block-mode-violation.sh`
+   - `.claude/hooks/block-uncommitted-dispatch.sh`
+   - `.claude/hooks/block-manual-agent-spawn.sh`
+
+**Absent-path handling (AGENTIC.md §9.7.1):** If the canonical source clone does not contain `claude/hooks/` (e.g. the clone predates this sprint), emit a single warning and continue:
+> `claude/hooks/ not found in canonical source — hook install skipped. Run /refresh-agent-os to install enforcement hooks after updating your canonical source.`
 
 ---
 

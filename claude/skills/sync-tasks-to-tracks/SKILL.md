@@ -42,6 +42,7 @@ Group tasks by sprint (descending sprint number — current sprint first). For e
 ### Track <id> — <title>
 - **Status:** <status>
 - **Specialist:** <specialist>
+- **Owner:** <owner>
 - **Branch:** `track/<id-lowercase>-<slug>`
 - **Plan reference:** `<bridge_file>`
 ```
@@ -53,6 +54,11 @@ Status rendering:
 - `DONE` → `DONE — QA APPROVED`
 - `BLOCKED` → `BLOCKED`
 - `FAILED` → `FAILED`
+
+Owner rendering:
+- `owner` is a non-null string (GitHub handle or agent name) → render that value verbatim.
+- `owner` is `null` → render `Owner: unassigned`.
+- `owner` key is **absent** (legacy `tasks.json` entry, pre-`$schema-version: 2`) → treat as `null` and render `Owner: unassigned`. **No error, no crash, no validation failure** — absent `owner` is valid indefinitely (compatibility window per AGENTIC.md §9.2; tasks-schema.md lines 34–35).
 
 If `tasks` is empty, emit a single line: `*(No active tasks — tasks.json is empty.)*`
 

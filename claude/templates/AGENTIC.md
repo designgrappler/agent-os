@@ -81,6 +81,22 @@ Violations of this rule bypass the Phase 3a plan-doc gate (§5) and produce unre
 
 ---
 
+## Team Config
+
+The `mode:` flag declares whether this repo is operated by one person or a team. It gates optional multi-user workflows while keeping solo use frictionless by default.
+
+```yaml
+mode: single-user   # default — options: single-user | multi-user
+```
+
+**`single-user` (default):** Solo operation. Optional PR pre-checks and the QA-on-PR workflow are dormant. No multi-user step runs.
+
+**`multi-user`:** Team operation. Optional PR pre-checks and the QA-on-PR workflow are active.
+
+**Zero-friction solo-use guarantee:** A single person working alone in a `multi-user`-configured repo experiences no added friction. The `mode:` flag is per-repo; it does not force any multi-user step on a solo operator.
+
+---
+
 ## 7. Definition of Done
 
 A track is **Done** only when ALL of the following are true:
@@ -235,6 +251,21 @@ The theme model is the release-boundary batching implementation of §5.1's canon
 
 **`/start-sprint` Mode A variant.** Deferred — validate the model with one real canonical-sync sprint first, then codify the skill variant against observed behavior.
 
+### 5.3 Coupled-File Contracts
+
+Some Agent OS skills are structurally coupled: one skill writes what the other maintains. A Bridge that changes one member of a coupled pair MUST audit the other for a corresponding change, and note the audit result in the Bridge.
+
+**Registered coupled pair:**
+
+| Skill | Role |
+|---|---|
+| `install-agent-scaffold` | WRITES the initial state — scaffolds skills, agents, hooks, templates, and blueprints on fresh installs |
+| `refresh-agent-os` | MAINTAINS that state — diffs, confirms, and applies updates to the same directories on existing installs |
+
+**The binding rule:** Any Bridge that changes `install-agent-scaffold` OR `refresh-agent-os` must include an audit note confirming whether a corresponding change is required in the other skill — and either implement it in-pass or queue a canonical-sync track for the next sprint. Leaving the other skill un-audited is a Bridge Self-Check failure (Technical Architect gate, §8).
+
+This contract is directly load-bearing for future install-agent-scaffold changes and refresh-agent-os changes.
+
 ### Sprint-close `/clean-context` step (binding)
 
 After QA issues a final APPROVED verdict on the last track of a sprint, the Conductor must run `/clean-context` before the sprint is marked complete. This consolidates context archival, memory pruning, and worktree cleanup at sprint close so the next sprint opens against a clean baseline. The step runs after §5.1's canonical-sync gate is satisfied; together they define the two binding sprint-close prerequisites.
@@ -327,7 +358,26 @@ A **canonical change** is any modification to a file that is distributed to user
 - Any edit to a `claude/agents/<name>.md` file (including frontmatter additions, section rewrites, or removals).
 - Any change to `skills-manifest.json` (schema extension, new agent or skill entry, rename record, version bump).
 
-Changes to `AGENTIC.md`, `docs/`, and internal config files (`.claude/settings.json`) are **not** canonical changes — they affect the repo but are not distributed to user installs via the refresh tool.
+Changes to `AGENTIC.md` and `docs/` are **not** canonical changes — they affect the repo but are not distributed to user installs via the refresh tool. `.claude/settings.json` is a partial exception: see §9.1.1 below for the two-tier classification that governs which settings fields are canonical and which are project-specific.
+
+#### 9.1.1 `.claude/settings.json` — Two-Tier Classification
+
+`.claude/settings.json` contains two tiers of fields with different canonical treatment:
+
+**Tier 1 — Canonical settings fields** (belong in `claude/templates/settings.json`; MUST survive `/refresh-agent-os`):
+- `hooks` — hook wiring for `PreToolUse`, `SessionStart`, and `Stop` events
+- `worktree.baseRef` — required for worktree isolation to branch from HEAD commit
+- `operatingMode` — controls approval frequency (gated-approve vs auto-approve)
+- `cleanupPeriodDays` — orphaned worktree sweep cadence
+
+**Tier 2 — Project-specific settings fields** (installation-local; intentionally NOT refreshed):
+- `permissions.allow` and `permissions.deny` — per-project allowlist/denylist
+- `permissions.defaultMode` — per-project permission posture
+- Environment variables and any repo-path or agent-name overrides
+
+**The rule:** A change to a Tier-1 field is a canonical change — queue a canonical-sync item per §5.1. A change to a Tier-2 field is installation-local and does not propagate via `/refresh-agent-os`.
+
+**Note:** `claude/templates/settings.json` is the canonical owner for Tier-1 fields. If this template file does not yet exist, creating it is a canonical-sync item for the next canonical-sync sprint.
 
 ### 9.2 Compatibility Window (Binding Minimum: 2 Sprints)
 

@@ -35,6 +35,18 @@ Before executing any steps, read `docs/context/plan.md` and `docs/context/tracks
 
 Opens a new sprint. Surfaces unresolved work, calls the Sprint Coordinator to author the plan doc, and updates context files. The counterpart to `clean-context`.
 
+### Step 0 — Systemic Triage
+
+**Fire before any other step.** This is a read-only prompt surfaced to the Conductor — it is not a verification gate. The Conductor decides; the Sprint Coordinator does not unilaterally promote items.
+
+Ask the Conductor:
+
+> *"Does any open backlog item represent an architectural spec that agents are currently following incorrectly — a wrong rule, not just missing work? If yes, that item heads this sprint before any other track."*
+
+**Criterion:** an item qualifies when agents are actively following the wrong rule right now — not merely when work is missing or incomplete. The distinction matters: a wrong-rule item causes ongoing incorrect behavior and must head the sprint; a merely-incomplete item follows normal backlog-promotion triage in Step 2a.
+
+**Conduct:** surface the question, wait for the Conductor's answer, and record any identified items so they are added to the sprint as the first tracks (ahead of other planned work). Make no edits and block nothing here — the Conductor's answer governs.
+
 ### Step 1 — Prior Sprint Check
 
 Read `docs/context/tracks.md` and `docs/context/plan.md`.
@@ -154,7 +166,7 @@ If `docs/backlog.md` does not exist, print: `docs/backlog.md not found — skipp
 **`docs/context/tracks.md`** — add new track entry for each proposed track:
 ```markdown
 ## Track [N]: [Task Name]
-- **Owner:** [Specialist]
+- **Owner:** [agent name for SC-orchestrated tracks; `null` for unclaimed contributor tracks]
 - **Status:** Ready for Handoff Bridge
 - **Sprint:** [Sprint Objective]
 - **Opened:** [DATE]
@@ -163,6 +175,8 @@ If `docs/backlog.md` does not exist, print: `docs/backlog.md not found — skipp
   - **What happened:** 
   - **Next steps:** 
 ```
+
+**Owner field note:** The `Owner:` value above corresponds to the `owner` attribution field in `docs/tasks.json` / `docs/context/tasks-schema.md` (introduced at `$schema-version: 2`). For Sprint-Coordinator-orchestrated tracks, populate the agent name (e.g. `skylar`). For unclaimed contributor tracks, populate `null`. An absent or `null` owner is valid indefinitely per AGENTIC.md §9.2 and tasks-schema.md lines 34–35 — no hard requirement is imposed.
 
 **Confirm `AGENTIC.md`** is current — read and flag any stale fields. Do not modify without explicit direction.
 
@@ -297,8 +311,3 @@ Both fenced blocks are present for BLOCKED tracks so the user can copy-paste onc
 
 If there are no BLOCKED tracks, omit all BLOCKED cards entirely.
 If all tracks are blocked, output all BLOCKED cards and add a closing note: `No tracks are ready to start. Resolve blockers first.`
-
-After all cards, output:
-```
-Open one tab per OPEN track via Cmd+Shift+Esc, paste the prompt, name the tab.
-```

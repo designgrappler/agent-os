@@ -259,6 +259,8 @@ When a Specialist Sign-Off includes a Task Agent Manifest section (indicating on
 If any file appears on disk but is not in the manifest: **BLOCKED.** Reason: "Task Agent touched an undeclared file — scope drift not captured in manifest."
 If any manifest entry declares a file absent from the diff: **BLOCKED.** Reason: "Manifest declares a file not modified on disk — manifest may be fabricated."
 
+**Sign-off artifact carve-out.** The Specialist sign-off file — the path declared in the Bridge as `Sign-off file (produced artifact)` (shape `docs/bridges/<SPRINT>-<TRACK>-signoff.md`) — is authored directly by the Role Agent (Specialist), not by any Task Agent. Its presence in `git diff --name-only` is expected and does NOT constitute a Check (a) failure: it is exempt from the `files_touched` union invariant. Concretely, exclude the declared sign-off file path from the `git diff --name-only` set before computing the union equality. The sign-off file remains subject to all other gates (Sign-off Immutability Gate, Authorship Reconciliation Gate).
+
 #### Check (b) — Scope invariant
 
 The union of all manifest `files_touched` entries must be a subset of the Bridge's Execution Files list (all three buckets: source, tests, tooling/config). Any manifest file not listed in Bridge Execution Files is scope drift — **BLOCKED.**

@@ -52,6 +52,15 @@ When the user runs `/refresh-agent-os`, execute the following phases in order.
 5-blueprints. List all `<name>.md` files in `~/.claude/blueprints/` (i.e. `~/.claude/blueprints/<name>.md` exists). Strip the extension to get bare blueprint names. This is the **installed blueprint set**.
 6-blueprints. Read the `blueprints` array from the resolved `blueprints-manifest.json`. This is the **canonical blueprint set**. If `blueprints-manifest.json` was not resolved in Phase 1, the canonical blueprint set is empty.
 
+**Hooks:**
+H1. Read the `hooks[]` array from the resolved `skills-manifest.json`. This is the **canonical hook set** (a list of literal `.sh` filenames, e.g. `block-orchestrator-execution.sh`). For each entry `E`, read the canonical hook file contents from `<canonical-source>/claude/hooks/<E>`.
+   - **Absent-path (§9.7.1):** if the resolved canonical source has no `claude/hooks/` directory OR `skills-manifest.json` has no `hooks[]` key (older manifest predating T41.G), treat the canonical hook set as empty and **skip the Hooks phase entirely without error or user message.** This mirrors the blueprints-manifest-absent pattern in Phase 1.
+H2. Check whether `.claude/hooks/` exists in the working directory. This is the **installed (project) hook set**.
+   - If **absent**: silently create the directory (`mkdir -p .claude/hooks/`). The installed hook set is empty. Do not display any message about the directory's prior absence. Proceed.
+   - If **present**: list all `.sh` files in `.claude/hooks/`. The installed hook set is these filenames.
+
+Note: Hooks are **project-scoped** (`.claude/hooks/`). Do NOT inventory or modify `~/.claude/hooks/` — that directory is empty by design (TA DECISION 3).
+
 **Release info:**
 7. Read `release-version` from the manifest. This is the **canonical release version**.
 8. Attempt to read the corresponding release note from `docs/releases/<release-version>.md` in the canonical source. Hold it for Phase 4.
@@ -99,6 +108,14 @@ Apply the same rename-check logic as for skills and agents: **cross-array invari
 
 **Compatibility window check (blueprints):** if the canonical blueprint has a frontmatter field absent from the user's installed blueprint (e.g. a future `verification_command:` field), surface this as a **outdated** entry with the note "new frontmatter field available — missing field defaults to `<value>` per compatibility window." Do not treat a missing-but-defaultable field as a breaking diff. (For S19, no such optional fields exist — this clause is forward-compatible scaffolding only.)
 
+**For hooks** — produce three lists by comparing the canonical hook set against the installed hook set. Skip the entire hooks diff if the canonical hook set is empty (per Phase 2 absent-path rule).
+
+**a. New** — filenames present in the canonical `hooks[]` array but absent from `.claude/hooks/`. Proposed action: `Install → .claude/hooks/<E>` (confirm-required, safety-control banner shown).
+
+**b. Outdated** — filenames present in both canonical and `.claude/hooks/`, but whose file contents differ (`diff` of `claude/hooks/<E>` vs `.claude/hooks/<E>` is non-empty). Proposed action: `Update → overwrite .claude/hooks/<E>` (per-hook explicit confirmation required; full diff shown; safety-control banner shown).
+
+**c. Removed-from-canonical** — filenames present in `.claude/hooks/` but absent from the canonical `hooks[]` array. **Default proposed action: `Keep local hook (no canonical match)`.** These are never auto-removed — a project may have legitimate project-specific hooks. Removal is offered ONLY as an explicit per-hook opt-in (with safety-control banner shown). Do NOT propose removal unless the user has explicitly requested it for that specific hook.
+
 **CLAUDE.md reference scan (fires on rename or removal only):**
 
 If and only if the diff contains at least one rename or removal (for skills or agents) — **not** on install-only or update-only runs — perform the following:
@@ -126,25 +143,33 @@ Release notes:
   [content of docs/releases/v0.9.0.md, or "Release notes not available." if the file could not be read]
 ```
 
-Then display the diff table. One row per skill, agent, blueprint, or CLAUDE.md reference affected. Prefix agent rows with `[agent]`, skill rows with `[skill]`, blueprint rows with `[blueprint]`, and CLAUDE.md reference rows with `[claude.md]` for clarity. If there are no differences across skills, agents, blueprints, and CLAUDE.md references, state: "Your installation is up to date — no changes needed." and stop.
+Then display the diff table. One row per skill, agent, blueprint, hook, or CLAUDE.md reference affected. Prefix agent rows with `[agent]`, skill rows with `[skill]`, blueprint rows with `[blueprint]`, hook rows with `[hook]`, and CLAUDE.md reference rows with `[claude.md]` for clarity. If there are no differences across skills, agents, blueprints, hooks, and CLAUDE.md references, state: "Your installation is up to date — no changes needed." and stop.
 
 ```
-| Name                              | Type      | Status      | Proposed action                                              |
-|-----------------------------------|-----------|-------------|--------------------------------------------------------------|
-| refresh-agent-os                  | skill     | New         | Install → ~/.claude/skills/refresh-agent-os/                 |
-| start-sprint                      | skill     | Removed     | Confirmed rename → open-sprint (manifest)                    |
-| old-skill                         | skill     | Removed     | Possible rename → new-skill (suggestion)                     |
-| onboard-existing-project          | skill     | Outdated     | Update → overwrite with canonical SKILL.md                   |
-| audit-security                    | skill     | Current     | Skip (no changes)                                            |
-| researcher                        | agent     | New         | Install → ~/.claude/agents/researcher.md                     |
-| ops                               | agent     | Outdated     | Update → overwrite with canonical ops.md                     |
-| sprint-coordinator                | agent     | New         | Install → ~/.claude/agents/sprint-coordinator.md             |
-| technical-architect               | agent     | New         | Install → ~/.claude/agents/technical-architect.md            |
-| task-coder                        | blueprint | New         | Install → ~/.claude/blueprints/task-coder.md                 |
-| CLAUDE.md line 14                 | claude.md | Rename ref  | Update /open-sprint → /start-sprint                          |
+| Name                              | Type      | Status                   | Proposed action                                                           |
+|-----------------------------------|-----------|--------------------------|---------------------------------------------------------------------------|
+| refresh-agent-os                  | skill     | New                      | Install → ~/.claude/skills/refresh-agent-os/                              |
+| start-sprint                      | skill     | Removed                  | Confirmed rename → open-sprint (manifest)                                 |
+| old-skill                         | skill     | Removed                  | Possible rename → new-skill (suggestion)                                  |
+| onboard-existing-project          | skill     | Outdated                 | Update → overwrite with canonical SKILL.md                                |
+| audit-security                    | skill     | Current                  | Skip (no changes)                                                         |
+| researcher                        | agent     | New                      | Install → ~/.claude/agents/researcher.md                                  |
+| ops                               | agent     | Outdated                 | Update → overwrite with canonical ops.md                                  |
+| sprint-coordinator                | agent     | New                      | Install → ~/.claude/agents/sprint-coordinator.md                          |
+| technical-architect               | agent     | New                      | Install → ~/.claude/agents/technical-architect.md                         |
+| task-coder                        | blueprint | New                      | Install → ~/.claude/blueprints/task-coder.md                              |
+| block-orchestrator-execution.sh   | hook      | Outdated                 | Update → overwrite .claude/hooks/block-orchestrator-execution.sh          |
+| block-project-specific.sh         | hook      | Removed-from-canonical   | Keep local hook (no canonical match) [opt-in removal only]                |
+| CLAUDE.md line 14                 | claude.md | Rename ref               | Update /open-sprint → /start-sprint                                       |
 ```
 
-Ask: "Approve all actions, a subset (list the names), or decline?"
+**Safety-control gate for hook rows:** Before presenting any `[hook]` row for Outdated or New status, display the following banner verbatim for that hook:
+
+> `This is a safety-control hook. Review the diff carefully before approving.`
+
+**Hook rows are NOT covered by a blanket "approve all" answer.** Each `[hook]` row (Outdated, New, and any Removed-from-canonical row where removal was explicitly requested) requires its own separate yes/no confirmation. "Approve all" applies only to non-hook rows. The user must confirm each hook individually.
+
+Ask: "Approve all non-hook actions, a subset (list the names), or decline? For hook rows, each requires a separate confirmation."
 
 Wait for the user's response before proceeding to Phase 5. Do not apply any changes without this confirmation.
 
@@ -181,6 +206,13 @@ For each action the user approved, execute it one at a time:
 **CLAUDE.md references** (applied after all skill and agent changes):
 - For each `[claude.md]` row the user approved in Phase 4, apply the proposed edit to `CLAUDE.md` — update the old reference to the proposed replacement. Print: `updated CLAUDE.md line <N>: <old-ref> → <new-ref>`
 - No additional user-approval gate is required. Phase 4 approval covers these changes.
+
+**Hooks:**
+- **Install (confirmed):** copy the canonical hook from `<canonical-source>/claude/hooks/<E>` to `.claude/hooks/<E>`. Print: `installed .claude/hooks/<E>`
+- **Update (confirmed per-hook):** overwrite `.claude/hooks/<E>` with the canonical version. Print: `updated .claude/hooks/<E>`. The safety-control banner must have been shown in Phase 4 before this confirmation was accepted.
+- **Remove (confirmed per-hook opt-in):** delete `.claude/hooks/<E>`. Print: `removed .claude/hooks/<E>`. Only executed if the user explicitly confirmed removal for this specific hook in Phase 4.
+- **Keep (default for Removed-from-canonical):** take no action. Print: `skipped .claude/hooks/<E> (kept local)`
+- **Do NOT edit `.claude/settings.json`.** If a NEW hook was installed, print a one-line advisory: `note: verify .claude/settings.json PreToolUse wiring references .claude/hooks/<E>` — this is advisory only; no settings.json write is performed.
 
 Never apply an action the user did not explicitly approve.
 
@@ -254,13 +286,56 @@ If a project-local `.claude/` directory did not exist (and was created in Step 2
 
 ---
 
+## Phase 5.6: Templates Phase — Section-Aware Diffing
+
+**Condition:** Always runs after Phase 5.5 (as the last post-apply phase). If the canonical template source is unresolvable (older clone without `claude/templates/`), skip Phase 5.6 silently.
+
+This phase covers exactly two canonical template files (TA DECISION 4 — fixed pair, NOT manifest-indexed):
+- Canonical `claude/templates/AGENTIC.md` → Live `./AGENTIC.md`
+- Canonical `claude/templates/CLAUDE.md` → Live `./CLAUDE.md`
+
+Do NOT add a `templates[]` array to `skills-manifest.json` — the pair is fixed and known.
+
+### Step 1 — Section inventory and diff
+
+For each file in the fixed pair:
+
+1. **Absent-path (§9.7.1):** if the canonical template file is unresolvable, skip that file's diff without error or user message. If the live file (e.g. `./AGENTIC.md`) is absent in the working directory, skip that file — refresh maintains existing files; it does not scaffold (that is `install-agent-scaffold`'s job).
+2. Split both the canonical template and the live file into sections by top-level `## ` (H2) markdown headings. A **section** is a heading line plus its body up to the next `## ` (or EOF).
+3. Classify each canonical section by matching its heading text against the live file:
+   - **New section** — heading present in canonical, absent from live → propose adding it (per-section confirmation required).
+   - **Changed section** — heading present in both, but body content differs → show the section diff, propose applying the canonical section body (per-section confirmation required).
+   - **Unchanged** — heading and body identical in both → skip silently.
+4. **Live-only sections** (present in live, absent from canonical) — **never touched.** These represent user customizations. Preserving them verbatim is binding — no removal, no modification, no merge.
+
+### Step 2 — Present + confirm (templates)
+
+For each New or Changed section, prefix the row with `[template]` in the report table and identify the file and section heading:
+
+```
+| AGENTIC.md §"Team Config"         | template  | Changed section  | Apply canonical §"Team Config" body (per-section confirm) |
+| CLAUDE.md §"Hooks"                | template  | New section      | Add canonical §"Hooks" section (per-section confirm)      |
+```
+
+Show the section diff for each Changed row. Per-section explicit confirmation is required before any write — no blanket overwrite, no whole-file overwrite, ever.
+
+### Step 3 — Apply (templates)
+
+For each confirmed section:
+- **Changed:** splice the canonical section body into the live file in place of the current body, preserving the heading line and all unconfirmed sections verbatim. Print: `updated AGENTIC.md §"<heading>"` or `updated CLAUDE.md §"<heading>"`.
+- **New:** insert the canonical section (heading + body) at the end of the live file (or immediately before the next logical heading if context warrants). Print: `added AGENTIC.md §"<heading>"` or `added CLAUDE.md §"<heading>"`.
+
+Unconfirmed sections and all live-only sections remain verbatim — they are never modified.
+
+---
+
 ## Phase 6: Summary
 
 After all approved actions are complete, print a one-line summary:
 
 ```
 Refresh complete: N installed, N renamed, N removed, N updated, N skipped.
-Skills: <counts>. Agents: <counts>. Blueprints: <counts>. CLAUDE.md: <N> reference(s) updated.
+Skills: <counts>. Agents: <counts>. Blueprints: <counts>. Hooks: <counts>. Templates: <counts> section(s) applied. CLAUDE.md: <N> reference(s) updated.
 ```
 
 ---
@@ -300,12 +375,13 @@ Skills: <counts>. Agents: <counts>. Blueprints: <counts>. CLAUDE.md: <N> referen
   4. `.claude/skills/<name>/SKILL.md` — project-local skill sync (Phase 5.5 only, for artifacts that exist in global)
   5. `.claude/agents/<name>.md` — project-local agent sync (Phase 5.5 only, for artifacts that exist in global)
   6. `.claude/blueprints/<name>.md` — project-local blueprint sync (Phase 5.5 only, for artifacts that exist in global, if directory is used)
-  7. `AGENTIC.md` — adding the `Canonical skills manifest URL:` line on first run only, after explicit user confirmation
-  8. `CLAUDE.md` — reference updates (Phase 5) when explicitly approved by the user in Phase 4
+  7. `.claude/hooks/<name>.sh` — project-local hook install or update (Phase 5 Hooks apply, confirm-required per-hook, never auto-applied)
+  8. `AGENTIC.md` — two purposes: (a) adding the `Canonical skills manifest URL:` line on first run only, after explicit user confirmation; (b) applying confirmed canonical section bodies via section-aware diff (Phase 5.6, per-section confirm)
+  9. `CLAUDE.md` — two purposes: (a) reference updates (Phase 5) when explicitly approved by the user in Phase 4; (b) applying confirmed canonical section bodies via section-aware diff (Phase 5.6, per-section confirm)
 
   The Phase 5.5 project-local sync writes (items 4–6) are unconditional once Phase 5 applies at least one change — they do not require additional user confirmation. They are bounded to artifacts that exist in global (`~/.claude/`) and are never used to introduce new content that was not already applied globally.
 
-  **Never write to any other path**, including but not limited to: `AGENTIC.md` (except the one-time first-run URL write), other project config files, `.claude/hooks/`, or any path outside the explicitly enumerated list above.
+  **Never write to any other path**, including but not limited to: `.claude/settings.json`, `~/.claude/hooks/` (global hooks — empty by design), or any path outside the explicitly enumerated list above.
 - **Phase 5.5 absent-path handling (§9.7.1 binding):** if `.claude/skills/`, `.claude/agents/`, or `.claude/blueprints/` is absent when Phase 5.5 runs, create the directory silently (`mkdir -p`) and treat the local install as empty. Never crash on an absent project-local directory. Never prompt the user. Surface an error only if directory creation itself fails.
 - **Never delete a file or directory the user has not explicitly approved for removal.** A skill or agent in the Removed list is not deleted until the user says so.
 - **If neither the canonical URL nor the local clone resolves**, stop and ask the user to supply a path or URL. Do not proceed without a confirmed source.
@@ -323,7 +399,7 @@ Skills: <counts>. Agents: <counts>. Blueprints: <counts>. CLAUDE.md: <N> referen
 
 ### What refresh-agent-os covers
 
-This skill manages exactly three global directories and their project-local mirrors:
+This skill manages three global directories, their project-local mirrors, project-level enforcement hooks, and section-level template updates:
 
 **Global install directories (Phases 2–5):**
 1. `~/.claude/skills/` — canonical skill files (`<name>/SKILL.md`)
@@ -335,27 +411,26 @@ This skill manages exactly three global directories and their project-local mirr
 5. `.claude/agents/` — project-local agent files (`<name>.md`)
 6. `.claude/blueprints/` — project-local blueprint files (`<name>.md`, if the directory is used)
 
-All diff, install, update, rename, and remove logic in Phases 2–5 operates exclusively on the three global directories. Phase 5.5 is the only phase that writes to project-local directories, and only to sync them from global (global is canonical).
+**Project-level enforcement hooks (Phase 5 Hooks apply — confirm-required):**
+7. `.claude/hooks/<name>.sh` — safety-control hook files (project-scoped `PreToolUse` hooks). Each hook write (Install, Update, or opted-in Remove) requires per-hook explicit confirmation and a safety-control banner display. Never auto-applied; never auto-removed.
+
+**Template section updates (Phase 5.6 — section-aware diff, per-section confirm):**
+8. `./AGENTIC.md` — canonical sections from `claude/templates/AGENTIC.md` are diffed against the live file; changed and new sections offered per-section for confirmation; user customizations and live-only sections are never touched.
+9. `./CLAUDE.md` — canonical sections from `claude/templates/CLAUDE.md` are diffed against the live file; same per-section-confirm, no-blind-overwrite policy.
+
+All diff, install, update, rename, and remove logic in Phases 2–5 (skills/agents/blueprints) operates exclusively on the three global directories. Phase 5.5 is the only phase that writes to project-local skill/agent/blueprint directories. Phase 5 Hooks apply writes to `.claude/hooks/` only. Phase 5.6 writes section-level changes to `./AGENTIC.md` and `./CLAUDE.md` only.
 
 ### What refresh-agent-os does NOT cover — and why
 
 **`~/.claude/hooks/` (global hooks)**
-Currently empty by design. The Agent OS canonical install (`install-agent-scaffold`) does not install any global hooks — all hooks are installed at the project level (`.claude/hooks/`). Therefore `~/.claude/hooks/` has no canonical content to refresh against. If future canonical global hooks are introduced, this boundary must be revisited and a new Phase added.
+Empty by design. The Agent OS canonical install (`install-agent-scaffold`) does not install any global hooks — all hooks are installed at the project level (`.claude/hooks/`). Therefore `~/.claude/hooks/` has no canonical content to refresh against. The Hooks phase (Phase 5 Hooks apply) operates only on project-scoped `.claude/hooks/`. This boundary is by design (TA DECISION 3) and is unchanged.
 
-**`.claude/hooks/` (project-level hooks)**
-**No refresh path. Update via sprint track only.** These are load-bearing safety controls:
-- `block-orchestrator-execution.sh` — guards execution files from Sprint Coordinator writes
-- `block-manual-agent-spawn.sh` — controls Agent spawn approval flow in manual mode
-- `block-mode-violation.sh` — prevents config edits during tasks-in-flight
-
-Auto-refresh without Conductor review would risk silently modifying a safety control. A stale hook is a protocol gap, not a style gap. The correct update path is a sprint track with a Handoff Bridge authored by the Technical Architect, reviewed by the Conductor, and executed by a Specialist. This boundary is **unchanged** by the Phase 5.5 project-local sync addition — Phase 5.5 explicitly excludes `.claude/hooks/` from its write scope.
-
-**`AGENTIC.md`, `CLAUDE.md` (project configuration files)**
-Update via sprint track only. These files contain project-specific configuration, operating mode settings, sprint history references, and team-specific protocol language. A global refresh tool overwriting them would silently destroy project customizations. Canonical templates (`claude/templates/AGENTIC.md`, `claude/templates/CLAUDE.md`) are the reference for new installs; live project files diverge intentionally over time.
+**`.claude/settings.json` (project settings)**
+Never written by this skill at any phase. Hook PreToolUse wiring lives in `.claude/settings.json` and is owned by `install-agent-scaffold` (install-time). When a new hook is installed by this skill, a one-line advisory is printed reminding the user to verify the wiring — but no write to `.claude/settings.json` is performed. Wiring updates belong in a sprint track.
 
 ### Conductor note — project-level hook updates
 
-If `.claude/hooks/` are out of date with canonical (e.g. a hook's exit behavior has changed), open a sprint track to update them. The canonical source for each hook change is the Handoff Bridge from the sprint that last modified the hook (e.g. `docs/bridges/S<N>-bridges.md`). Do not attempt to update hooks by running `/refresh-agent-os` — hooks are not in scope and the command will not surface them.
+`.claude/hooks/` is now refreshable via this skill's Hooks phase. The refresh path is confirm-required, diff-shown, and safety-control-banner-gated — no hook is ever auto-applied or auto-removed. When reviewing a hook diff, treat it with the same care as a sprint track: these are load-bearing safety controls (`block-orchestrator-execution.sh`, `block-manual-agent-spawn.sh`, `block-mode-violation.sh`, etc.). If a hook diff looks wrong or unexpected, decline the per-hook confirmation and open a sprint track for Conductor review instead. The canonical source for each hook change remains the Handoff Bridge from the sprint that last modified the hook (e.g. `docs/bridges/S<N>-bridges.md`).
 
 ---
 
@@ -380,7 +455,18 @@ If `.claude/hooks/` are out of date with canonical (e.g. a hook's exit behavior 
 - [ ] No file was modified without explicit confirmation
 - [ ] Rename source identified (manifest-confirmed vs. user-confirmed suggestion) is visible in the report
 - [ ] CLAUDE.md updates applied after skill/agent changes in Phase 5 (if any were approved)
-- [ ] Phase 6 summary printed at end with per-type counts including CLAUDE.md reference count
+- [ ] Phase 6 summary printed at end with per-type counts including Hooks count, Templates section count, and CLAUDE.md reference count
 - [ ] Phase 7 ran (if diff changes occurred); CLAUDE.md checked against every renames[].from value; user-approved patches applied
 - [ ] Phase 5.5 ran (if at least one action was applied in Phase 5); project-local `.claude/skills/`, `.claude/agents/`, `.claude/blueprints/` checked for absent dirs (silently created) and diverged files (overwritten from global); per-artifact status lines printed (`synced` / `already-in-sync` / `warning — sync failed: <reason>`)
 - [ ] Phase 5.5 did NOT modify `.claude/hooks/` or any file outside the explicitly enumerated write targets
+- [ ] **Hooks phase:** if `hooks[]` key absent or `claude/hooks/` absent in canonical source → Hooks phase was skipped without error; if `.claude/hooks/` absent → `mkdir -p` silently and installed set treated as empty
+- [ ] **Hooks phase:** every Outdated and New hook row displayed the safety-control banner verbatim before the user confirmed
+- [ ] **Hooks phase:** per-hook explicit confirmation was required for each Outdated/New/opted-in-Remove hook row; no hook was covered by a blanket "approve all"
+- [ ] **Hooks phase:** no hook with Removed-from-canonical status was auto-removed; default was Keep unless the user explicitly opted in to removal
+- [ ] **Hooks phase:** no `.claude/settings.json` write was performed; any new-hook advisory was printed as advisory-only text
+- [ ] **Hooks phase:** manifest entries consumed as literal `.sh` filenames; no extension stripping or manipulation applied to `hooks[]` entries
+- [ ] **Templates phase:** if canonical `claude/templates/` absent (older clone) → Phase 5.6 skipped without error; if live `./AGENTIC.md` or `./CLAUDE.md` absent → that file skipped without error
+- [ ] **Templates phase:** section splitting by top-level `## ` headings applied to both canonical template and live file
+- [ ] **Templates phase:** per-section explicit confirmation required before any section was applied; no whole-file or blind overwrite performed
+- [ ] **Templates phase:** live-only sections (user customizations) were never touched
+- [ ] **Templates phase:** Fixed pair only (AGENTIC.md + CLAUDE.md); no `templates[]` array added to `skills-manifest.json`
