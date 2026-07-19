@@ -272,9 +272,9 @@ Rationale: protocols that assert enforcement without documentation give false co
 
 For any Bridge that authors or modifies agent files or skill files:
 - [ ] All three install scopes are enumerated in Execution Files: canonical (`claude/agents/` or `claude/skills/`), project-level (`.claude/agents/` or `.claude/skills/`), AND global (`~/.claude/agents/` or `~/.claude/skills/`).
-- [ ] If the global scope is absent from Execution Files, a one-line justification is required explaining why (e.g. "global install handled by /refresh-agent-os post-sprint").
+- [ ] If the global scope is absent from Execution Files, a one-line justification is required explaining why (e.g. "global install handled by /update-agent-os post-sprint").
 
-Rationale: The Claude Code runtime compiles its available subagent list from global `~/.claude/` scope at session start. Authoring agent files without installing to global scope produces files unreachable by the runtime until a manual copy or `/refresh-agent-os` run occurs. This gap caused the T39.E behavioral smoke failure (S39). A Bridge that omits the global path is incomplete against real-world runtime behavior even if it passes all other gates.
+Rationale: The Claude Code runtime compiles its available subagent list from global `~/.claude/` scope at session start. Authoring agent files without installing to global scope produces files unreachable by the runtime until a manual copy or `/update-agent-os` run occurs. This gap caused the T39.E behavioral smoke failure (S39). A Bridge that omits the global path is incomplete against real-world runtime behavior even if it passes all other gates.
 
 **Cross-reference — AGENTIC.md §5 (Migration Safety and Security Review):**
 AGENTIC.md §5 requires that before issuing any Bridge, the Technical Architect explicitly evaluates whether the track involves (a) destructive or irreversible migrations, and (b) auth, payments, or schema changes — and obtains Conductor acceptance if either applies. The Completeness gate above enforces that both fields are populated; AGENTIC.md §5 governs what their content must be and when Conductor sign-off is required. These two rules layer on top of each other; neither replaces the other.

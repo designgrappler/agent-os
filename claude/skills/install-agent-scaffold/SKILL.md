@@ -764,7 +764,7 @@ If `.claude/settings.json` already exists, merge — do not remove existing entr
    - `.claude/hooks/block-manual-agent-spawn.sh`
 
 **Absent-path handling (AGENTIC.md §9.7.1):** If the canonical source clone does not contain `claude/hooks/` (e.g. the clone predates this sprint), emit a single warning and continue:
-> `claude/hooks/ not found in canonical source — hook install skipped. Run /refresh-agent-os to install enforcement hooks after updating your canonical source.`
+> `claude/hooks/ not found in canonical source — hook install skipped. Run /update-agent-os to install enforcement hooks after updating your canonical source.`
 
 ---
 

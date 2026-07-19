@@ -40,7 +40,7 @@ claude/
 │   │   └── SKILL.md              ← Status report (auto-triggers on catch-up prompts)
 │   ├── minify-context/
 │   │   └── SKILL.md              ← Compresses verbose active context files
-│   └── [other skills: check-agent-os, refresh-agent-os, onboard-existing-project, ...]
+│   └── [other skills: check-agent-os, update-agent-os, onboard-existing-project, ...]
 └── templates/
     ├── AGENTIC.md                ← Fill-in-the-blanks Static DNA starter
     └── CLAUDE.md                 ← Fill-in-the-blanks orchestrator config (includes auto-trigger rules)

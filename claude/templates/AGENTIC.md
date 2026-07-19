@@ -260,11 +260,11 @@ Some Agent OS skills are structurally coupled: one skill writes what the other m
 | Skill | Role |
 |---|---|
 | `install-agent-scaffold` | WRITES the initial state — scaffolds skills, agents, hooks, templates, and blueprints on fresh installs |
-| `refresh-agent-os` | MAINTAINS that state — diffs, confirms, and applies updates to the same directories on existing installs |
+| `update-agent-os` | MAINTAINS that state — diffs, confirms, and applies updates to the same directories on existing installs |
 
-**The binding rule:** Any Bridge that changes `install-agent-scaffold` OR `refresh-agent-os` must include an audit note confirming whether a corresponding change is required in the other skill — and either implement it in-pass or queue a canonical-sync track for the next sprint. Leaving the other skill un-audited is a Bridge Self-Check failure (Technical Architect gate, §8).
+**The binding rule:** Any Bridge that changes `install-agent-scaffold` OR `update-agent-os` must include an audit note confirming whether a corresponding change is required in the other skill — and either implement it in-pass or queue a canonical-sync track for the next sprint. Leaving the other skill un-audited is a Bridge Self-Check failure (Technical Architect gate, §8).
 
-This contract is directly load-bearing for future install-agent-scaffold changes and refresh-agent-os changes.
+This contract is directly load-bearing for future install-agent-scaffold changes and update-agent-os changes.
 
 ### Sprint-close `/clean-context` step (binding)
 
@@ -364,7 +364,7 @@ Changes to `AGENTIC.md` and `docs/` are **not** canonical changes — they affec
 
 `.claude/settings.json` contains two tiers of fields with different canonical treatment:
 
-**Tier 1 — Canonical settings fields** (belong in `claude/templates/settings.json`; MUST survive `/refresh-agent-os`):
+**Tier 1 — Canonical settings fields** (belong in `claude/templates/settings.json`; MUST survive `/update-agent-os`):
 - `hooks` — hook wiring for `PreToolUse`, `SessionStart`, and `Stop` events
 - `worktree.baseRef` — required for worktree isolation to branch from HEAD commit
 - `operatingMode` — controls approval frequency (gated-approve vs auto-approve)
@@ -375,7 +375,7 @@ Changes to `AGENTIC.md` and `docs/` are **not** canonical changes — they affec
 - `permissions.defaultMode` — per-project permission posture
 - Environment variables and any repo-path or agent-name overrides
 
-**The rule:** A change to a Tier-1 field is a canonical change — queue a canonical-sync item per §5.1. A change to a Tier-2 field is installation-local and does not propagate via `/refresh-agent-os`.
+**The rule:** A change to a Tier-1 field is a canonical change — queue a canonical-sync item per §5.1. A change to a Tier-2 field is installation-local and does not propagate via `/update-agent-os`.
 
 **Note:** `claude/templates/settings.json` is the canonical owner for Tier-1 fields. If this template file does not yet exist, creating it is a canonical-sync item for the next canonical-sync sprint.
 
@@ -386,7 +386,7 @@ When a canonical change introduces a new field, renames an existing field, or re
 1. **The minimum compatibility window is 2 sprints. This is binding, not advisory.** Specific changes may declare a longer window but never a shorter one.
 2. During the compatibility window, both the old format and the new format must parse cleanly. Agent OS must not require the new field to be present.
 3. Missing fields must default to a documented value. For example: `provider:` absent → defaults to `claude` (per T9.2's confirmed shape).
-4. After the window closes, the old format is deprecated. Users who have not run `/refresh-agent-os` will see a warning nudge — not a hard break.
+4. After the window closes, the old format is deprecated. Users who have not run `/update-agent-os` will see a warning nudge — not a hard break.
 5. The sprint that introduces the change starts the window clock. The window closes after 2 full sprints have completed with both formats valid.
 
 **T9.2 compatibility window:** The `provider:` field introduced in T9.2 is covered by this window starting from Sprint 9. Both `provider:` present and `provider:` absent parse cleanly through at least Sprint 10 and Sprint 11.
@@ -395,7 +395,7 @@ When a canonical change introduces a new field, renames an existing field, or re
 
 The canonical upgrade path for user installs mirrors the existing skill-refresh flow:
 
-1. **Manifest read** — `/refresh-agent-os` reads `skills-manifest.json` from the canonical source (URL primary, local clone fallback).
+1. **Manifest read** — `/update-agent-os` reads `skills-manifest.json` from the canonical source (URL primary, local clone fallback).
 2. **Diff** — the skill inventories canonical skills and agents against the user's `~/.claude/skills/` and `~/.claude/agents/` installs, producing new / renamed / removed / drifted lists for both.
 3. **Confirm** — the skill presents a report table and asks the user to approve actions. Nothing is applied without explicit per-file confirmation.
 4. **Apply** — approved actions are applied one at a time. Release version and release notes are surfaced before any writes occur.
@@ -424,7 +424,7 @@ Release notes live at `docs/releases/v<semver>.md`. Each release note covers:
 3. **Summary** — one-paragraph plain-English description of what changed.
 4. **Changed files** — list of canonical files modified.
 5. **Compatibility window** — if any new frontmatter fields were added, state the window duration and the default values for missing fields.
-6. **User action required** — either "Run `/refresh-agent-os` to apply" or "No action required" if the release is source-repo only.
+6. **User action required** — either "Run `/update-agent-os` to apply" or "No action required" if the release is source-repo only.
 
 The first release note is `docs/releases/v0.9.0.md`, covering Sprint 9's canonical-update protocol introduction.
 
@@ -457,15 +457,15 @@ The same invariant extends to the `agents` array if a future rename record targe
 
 Task blueprints are the third canonical content type Agent OS distributes to user installs, alongside skills (`claude/skills/<name>/SKILL.md`) and agents (`claude/agents/<name>.md`). A blueprint is a single self-contained Markdown file with YAML frontmatter and three required body sections, conforming to the schema at `claude/blueprints-schema.md`. The schema is the binding contract; this section governs distribution and versioning.
 
-**Distribution path:** canonical blueprints live at `claude/blueprints/<name>.md` in the source repo and are distributed to user installs at `~/.claude/blueprints/<name>.md` (user scope, parallel to `~/.claude/skills/` and `~/.claude/agents/`). The `install-agent-scaffold` skill scaffolds the user-scope directory on fresh installs; the `refresh-agent-os` skill governs ongoing diff/install/rename/remove against canonical.
+**Distribution path:** canonical blueprints live at `claude/blueprints/<name>.md` in the source repo and are distributed to user installs at `~/.claude/blueprints/<name>.md` (user scope, parallel to `~/.claude/skills/` and `~/.claude/agents/`). The `install-agent-scaffold` skill scaffolds the user-scope directory on fresh installs; the `update-agent-os` skill governs ongoing diff/install/rename/remove against canonical.
 
 **Manifest:** `blueprints-manifest.json` at the repo root is the canonical source of truth for blueprint names and rename history, mirroring the structural role of `skills-manifest.json` for skills and agents. The manifest carries three keys: `blueprints` (array of canonical blueprint names), `renames` (array of `{from, to}` records), and `schema-version` (integer). It does NOT carry a `release-version` field — release-version lives in `skills-manifest.json` per §9.6 and is the single source of truth for the canonical distribution as a whole.
 
 **Per-blueprint schema versioning:** every blueprint frontmatter carries a `schema_version:` integer field that names which version of the blueprint schema the file conforms to. Schema-version evolution is governed by §9.2's binding 2-sprint compatibility window — the same window that governs agent frontmatter evolution. The `schema_version:` field is the per-blueprint migration handle, parallel to `provider:` for agents.
 
 **§9.7 invariants extended to blueprints:**
-- **§9.7.1 Absent-path precondition** applies to `~/.claude/blueprints/` the same way it applies to `~/.claude/skills/` and `~/.claude/agents/`. Any Bridge step introducing a read or write of `~/.claude/blueprints/<name>.md` must include a verification criterion that the absent-directory and absent-file cases are handled gracefully (silent `mkdir -p` for the directory; treat absent file as "not installed"). The `refresh-agent-os` skill MUST NOT crash on the absent-`~/.claude/blueprints/` precondition.
-- **§9.7.2 Cross-array mutual exclusion** extends to `blueprints-manifest.json` symmetrically: any Bridge touching `blueprints-manifest.json` must include a verification criterion asserting `blueprints ∩ renames[].from = ∅`. No blueprint name may appear in both the `blueprints` array and as a `from` value in the `renames` array — these semantics are contradictory (same reasoning as for skills and agents). When the `refresh-agent-os` skill's diff phase encounters a §9.7.2 violation in `blueprints-manifest.json`, it surfaces a one-line diagnostic (`Manifest invariant warning: <name> appears in both blueprints[] and renames[].from. Treating as canonical (no action).`) and treats canonical `blueprints` membership as authoritative — the same defensive runtime guard already implemented for skills and agents.
+- **§9.7.1 Absent-path precondition** applies to `~/.claude/blueprints/` the same way it applies to `~/.claude/skills/` and `~/.claude/agents/`. Any Bridge step introducing a read or write of `~/.claude/blueprints/<name>.md` must include a verification criterion that the absent-directory and absent-file cases are handled gracefully (silent `mkdir -p` for the directory; treat absent file as "not installed"). The `update-agent-os` skill MUST NOT crash on the absent-`~/.claude/blueprints/` precondition.
+- **§9.7.2 Cross-array mutual exclusion** extends to `blueprints-manifest.json` symmetrically: any Bridge touching `blueprints-manifest.json` must include a verification criterion asserting `blueprints ∩ renames[].from = ∅`. No blueprint name may appear in both the `blueprints` array and as a `from` value in the `renames` array — these semantics are contradictory (same reasoning as for skills and agents). When the `update-agent-os` skill's diff phase encounters a §9.7.2 violation in `blueprints-manifest.json`, it surfaces a one-line diagnostic (`Manifest invariant warning: <name> appears in both blueprints[] and renames[].from. Treating as canonical (no action).`) and treats canonical `blueprints` membership as authoritative — the same defensive runtime guard already implemented for skills and agents.
 
 **Schema reference:** the binding schema specification for blueprint files is at `claude/blueprints-schema.md`. The schema governs the four-column frontmatter contract (`name`, body+`description`, `tools`, `expected_output`), the three required body sections (System Prompt Strategy, Expected Output Contract, Allowed Tool Bindings — Reasoning), the uniform `task-` prefix naming convention, the frontmatter `expected_output:` ↔ body `## Expected Output Contract` first-sentence sync rule, and the §11 Deferred decisions list. §9.8 governs distribution of blueprints conforming to that schema; it does not redefine the schema. Schema evolution proceeds per §9.2 (compatibility window) and is reflected in the per-blueprint `schema_version:` field.
 

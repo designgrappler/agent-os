@@ -12,7 +12,7 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 
 ## Phase 1: Skill Install Check
 
-1. Resolve the canonical skill names using the same source-of-truth chain as `/refresh-agent-os`:
+1. Resolve the canonical skill names using the same source-of-truth chain as `/update-agent-os`:
    - Read `AGENTIC.md` and look for a line matching: `Canonical skills manifest URL: <url>`
    - If the line is present, attempt to fetch the manifest JSON from that URL and read its `skills` array.
    - **Fallback:** if the URL fetch fails (network unavailable, 404, or any HTTP error), fall back to the local canonical clone at `~/Developer/agent-os-private/skills-manifest.json`. Notify the user that the fallback was used.
@@ -21,7 +21,7 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 3. Compare the canonical `skills` array against subdirectory names in `~/.claude/skills/` that contain a `SKILL.md` file (i.e. `~/.claude/skills/<name>/SKILL.md` exists).
 4. **Pass:** every canonical skill name has a corresponding `~/.claude/skills/<name>/SKILL.md` (accounting for renames).
 5. **Fail rows:** list each canonical skill name that is absent or present only under a stale name. For each fail row, include the remediation hint:
-   > Remediation: Run `/refresh-agent-os` to install missing or stale-named skills.
+   > Remediation: Run `/update-agent-os` to install missing or stale-named skills.
 
 ---
 
@@ -35,7 +35,7 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 2. For each referenced skill name found, verify that `~/.claude/skills/<name>/SKILL.md` exists.
 3. **Pass:** every referenced skill name resolves to a file at `~/.claude/skills/<name>/SKILL.md`.
 4. **Fail rows:** list each broken reference with its line number and the surrounding context (the full line or row where it appears). For each fail row, include the remediation hint:
-   > Remediation: Edit `CLAUDE.md` to remove or rename the reference, or run `/refresh-agent-os` if the skill should be installed.
+   > Remediation: Edit `CLAUDE.md` to remove or rename the reference, or run `/update-agent-os` if the skill should be installed.
 
 ---
 
@@ -70,7 +70,7 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 1. For each file matching `.claude/agents/*.md` in the current project, parse the frontmatter `tools:` list.
 2. **Pass:** every agent file includes `WebFetch` in its `tools:` list.
 3. **Fail rows:** list each agent file where `WebFetch` is absent from `tools:`. For each fail row, include the remediation hint:
-   > Remediation: Run `/refresh-agent-os` to sync with canonical.
+   > Remediation: Run `/update-agent-os` to sync with canonical.
 
 ### 4c: Specialist `isolation: worktree` Check
 
@@ -78,7 +78,7 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 2. For each identified Specialist, parse the frontmatter and confirm `isolation: worktree` appears.
 3. **Pass:** every Specialist agent has `isolation: worktree` in its frontmatter.
 4. **Fail rows:** list each Specialist agent where `isolation: worktree` is absent from frontmatter. For each fail row, include the remediation hint:
-   > Remediation: Run `/refresh-agent-os` to sync with canonical.
+   > Remediation: Run `/update-agent-os` to sync with canonical.
 
 ---
 
@@ -90,7 +90,7 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 
 If `~/.claude/blueprints/` does not exist, emit a single PASS line:
 
-> `Phase 7: Blueprint Frontmatter Validity Check — PASS (no blueprints installed — run /refresh-agent-os to install)`
+> `Phase 7: Blueprint Frontmatter Validity Check — PASS (no blueprints installed — run /update-agent-os to install)`
 
 Exit Phase 7 cleanly. No fail row, no error, no auto-create.
 
@@ -105,7 +105,7 @@ For each `~/.claude/blueprints/<filename>.md`:
 **a. Frontmatter parse.** Read the file and parse the YAML frontmatter (delimited by `---` lines). If the frontmatter is missing or malformed (no opening `---`, no closing `---`, or invalid YAML that cannot be parsed), emit a fail row:
 
 > `<filename>: invalid or missing frontmatter (could not parse YAML)`
-> Remediation: Re-author the file per `claude/blueprints-schema.md` §8 file format template, or run `/refresh-agent-os` to restore the canonical version.
+> Remediation: Re-author the file per `claude/blueprints-schema.md` §8 file format template, or run `/update-agent-os` to restore the canonical version.
 
 Continue to the next file. Do NOT crash the phase.
 
@@ -194,7 +194,7 @@ All canonical skills are installed.
 
 ### Phase 2: Auto-Trigger / Skill-Reference Check — FAILED
 - Line 14: `/start-sprint` → ~/.claude/skills/start-sprint/SKILL.md not found
-  Remediation: Edit `CLAUDE.md` to remove or rename the reference, or run `/refresh-agent-os` if the skill should be installed.
+  Remediation: Edit `CLAUDE.md` to remove or rename the reference, or run `/update-agent-os` if the skill should be installed.
 
 ### Phase 3: Required docs/context/ Check — PASSED
 All three required context files exist and are non-empty.
@@ -251,7 +251,7 @@ Phase 10 fires after Phase 9 regardless of Phase 8's notice content — the time
 - [ ] On PASS, `.agent-os-checked` was written with today's ISO date (single line)
 - [ ] On FAIL, `.agent-os-checked` was NOT created or modified
 - [ ] Every fail row in the report includes a remediation hint
-- [ ] Phase 4b: every `.claude/agents/*.md` was checked for `WebFetch` in the `tools:` list; any absent entries are FAIL rows with remediation "Run `/refresh-agent-os` to sync with canonical."
+- [ ] Phase 4b: every `.claude/agents/*.md` was checked for `WebFetch` in the `tools:` list; any absent entries are FAIL rows with remediation "Run `/update-agent-os` to sync with canonical."
 - [ ] Phase 4c: each agent identified as a Specialist (has `## Sign-Off Protocol` with `**Track:**` and `**Completed:**` fields) was checked for `isolation: worktree` in frontmatter; any absent entries are FAIL rows with the same remediation hint
 - [ ] Phase 7: `~/.claude/blueprints/` absent-directory case handled as PASS with notice (no fail row, no auto-create)
 - [ ] Phase 7: each `~/.claude/blueprints/*.md` checked for all six required fields, name/filename match, task- prefix, and expected_output: first-sentence sync rule; malformed frontmatter emits a fail row and continues (does not crash)

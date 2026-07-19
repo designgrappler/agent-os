@@ -1,12 +1,12 @@
 ---
-name: refresh-agent-os
+name: update-agent-os
 description: Synchronizes your local `~/.claude/skills/`, `~/.claude/agents/`, and `~/.claude/blueprints/` installation against the canonical Agent OS skill, agent, and blueprint library.
 ---
-# Refresh Agent OS
+# Update Agent OS
 Synchronizes your local `~/.claude/skills/`, `~/.claude/agents/`, and `~/.claude/blueprints/` installations against the canonical Agent OS library. Reads the canonical manifest from a remote URL stored in `AGENTIC.md` (with a local clone fallback), diffs your installed skills, agents, and blueprints against the canonical set, surfaces the current release version and release notes, and presents a per-row action table for you to approve before anything is changed. Nothing is written, renamed, or removed without your explicit confirmation.
 
 ## Trigger
-When the user runs `/refresh-agent-os`, execute the following phases in order.
+When the user runs `/update-agent-os`, execute the following phases in order.
 
 ---
 
@@ -148,7 +148,7 @@ Then display the diff table. One row per skill, agent, blueprint, hook, or CLAUD
 ```
 | Name                              | Type      | Status                   | Proposed action                                                           |
 |-----------------------------------|-----------|--------------------------|---------------------------------------------------------------------------|
-| refresh-agent-os                  | skill     | New                      | Install → ~/.claude/skills/refresh-agent-os/                              |
+| update-agent-os                   | skill     | New                      | Install → ~/.claude/skills/update-agent-os/                               |
 | start-sprint                      | skill     | Removed                  | Confirmed rename → open-sprint (manifest)                                 |
 | old-skill                         | skill     | Removed                  | Possible rename → new-skill (suggestion)                                  |
 | onboard-existing-project          | skill     | Outdated                 | Update → overwrite with canonical SKILL.md                                |
@@ -266,7 +266,7 @@ After processing all three artifact types, print a status block:
 
 ```
 Post-deploy project-local sync:
-  skills/refresh-agent-os    synced
+  skills/update-agent-os    synced
   skills/start-sprint        already-in-sync
   agents/skylar              synced
   agents/bandit              already-in-sync
@@ -397,7 +397,7 @@ Skills: <counts>. Agents: <counts>. Blueprints: <counts>. Hooks: <counts>. Templ
 
 ## Audit Scope and Known Boundaries
 
-### What refresh-agent-os covers
+### What update-agent-os covers
 
 This skill manages three global directories, their project-local mirrors, project-level enforcement hooks, and section-level template updates:
 
@@ -420,7 +420,7 @@ This skill manages three global directories, their project-local mirrors, projec
 
 All diff, install, update, rename, and remove logic in Phases 2–5 (skills/agents/blueprints) operates exclusively on the three global directories. Phase 5.5 is the only phase that writes to project-local skill/agent/blueprint directories. Phase 5 Hooks apply writes to `.claude/hooks/` only. Phase 5.6 writes section-level changes to `./AGENTIC.md` and `./CLAUDE.md` only.
 
-### What refresh-agent-os does NOT cover — and why
+### What update-agent-os does NOT cover — and why
 
 **`~/.claude/hooks/` (global hooks)**
 Empty by design. The Agent OS canonical install (`install-agent-scaffold`) does not install any global hooks — all hooks are installed at the project level (`.claude/hooks/`). Therefore `~/.claude/hooks/` has no canonical content to refresh against. The Hooks phase (Phase 5 Hooks apply) operates only on project-scoped `.claude/hooks/`. This boundary is by design (TA DECISION 3) and is unchanged.

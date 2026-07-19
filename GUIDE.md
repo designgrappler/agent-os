@@ -337,7 +337,7 @@ All skills below require Agent OS to be initialized via `install-agent-scaffold`
 | Skill | Claude Code | Gemini CLI | Purpose |
 | :--- | :---: | :---: | :--- |
 | `check-agent-os` | ✓ | — | Health check — verifies skills, CLAUDE.md refs, docs, model names, WebFetch in agent tools, and Specialist `isolation: worktree`; emits PASS/FAIL |
-| `refresh-agent-os` | ✓ | — | Diffs installed skills against canonical manifest; installs, renames, or removes on confirmation |
+| `update-agent-os` | ✓ | — | Diffs installed skills against canonical manifest; installs, renames, or removes on confirmation |
 
 ---
 

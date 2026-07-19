@@ -114,7 +114,7 @@ Keep your Agent OS installation healthy and up to date.
 | Goal                     | Claude Code                   | Gemini CLI                   |
 | :----------------------- | :---------------------------- | :--------------------------- |
 | Health check             | `/check-agent-os`             | —                            |
-| Refresh installed skills | `/refresh-agent-os`           | —                            |
+| Update installed skills  | `/update-agent-os`            | —                            |
 
 > **Claude Code** handles handoff generation, context cleanup, and specialist onboarding natively. **Gemini CLI** uses explicit skills for each operation.
 

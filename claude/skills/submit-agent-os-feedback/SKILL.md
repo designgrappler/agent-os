@@ -36,7 +36,7 @@ Filing feedback against Agent OS <release-version>
 Ask three sequential questions. Do not proceed to the next question until the current one is answered.
 
 1. **"What happened? (one-paragraph description)"** → captured as `WHAT_HAPPENED`
-2. **"Which skill or agent does this concern? (e.g. `refresh-agent-os`, `architect`, or `general`)"** → captured as `SUBJECT`
+2. **"Which skill or agent does this concern? (e.g. `update-agent-os`, `architect`, or `general`)"** → captured as `SUBJECT`
 3. **"Optional context — recent commands, error messages, or transcript snippets (paste or skip)"** → captured as `CONTEXT` (may be empty; "skip" or empty reply = `CONTEXT` is `(none provided)`)
 
 ---

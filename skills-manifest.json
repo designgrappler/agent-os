@@ -1,5 +1,5 @@
 {
-  "release-version": "v0.19.0",
+  "release-version": "v0.20.0",
   "frontmatter-version": 2,
   "skills": [
     "audit-security",
@@ -8,14 +8,14 @@
     "install-agent-scaffold",
     "minify-context",
     "onboard-existing-project",
-    "refresh-agent-os",
     "report-track-status",
     "start-sprint",
     "streamline-approvals",
     "submit-agent-os-feedback",
     "sync-tasks-to-tracks",
     "sync-vercel-env",
-    "triage-feedback"
+    "triage-feedback",
+    "update-agent-os"
   ],
   "agents": [
     "backend",
@@ -74,6 +74,10 @@
     {
       "from": "switch-workflow-mode",
       "to": "streamline-approvals"
+    },
+    {
+      "from": "refresh-agent-os",
+      "to": "update-agent-os"
     }
   ]
 }
