@@ -1,313 +1,72 @@
 ---
 name: start-sprint
-description: Unified sprint-start skill with two modes — Mode A (sprint-setup) opens a new sprint, calls the Sprint Coordinator to author the plan doc, and updates context files; Mode B (parallel-kickoff) reads tracks.md and outputs a parallel tab kickoff card for all OPEN tracks.
----
-# Start Sprint
-Unified sprint-start skill with two modes. **Mode A (sprint-setup)** opens a new sprint with a clean setup — surfaces unresolved prior work, calls the Sprint Coordinator to author the sprint plan doc, and updates context files. **Mode B (parallel-kickoff)** reads `docs/context/tracks.md`, finds all OPEN tracks (no dependency blockers), and outputs a parallel tab kickoff card — one entry per open track with a tab name and a ready-to-paste opening prompt. BLOCKED tracks are listed separately with their blocker noted.
-
-## Auto-Trigger
-Invoke when the user says:
-- "start planning", "new sprint", "let's plan", "begin planning"
-- "what are we working on next", "ready to start"
-- Any message that signals intent to begin a new planning cycle
-- "start sprint", "kick off sprint", "launch sprint", "start the sprint"
-- "open tabs", "parallel kickoff", "start parallel tracks"
-
+description: Opens a new sprint — sets sprint goal, defines tracks, initializes plan.md and tracks.md.
+whenToUse: When the user wants to start a new sprint or begin a structured work session with multiple tracks.
 ---
 
-## Mode Routing
+## Instructions
 
-Before executing any steps, read `docs/context/plan.md` and `docs/context/tracks.md` to determine which mode to run.
+### Step 1 — Gather sprint context
 
-**Decision rule (binary, deterministic):**
+Check whether a temp plan doc already exists at `docs/temp-sprint*.md` (glob pattern). If one is found, read it and extract the sprint goal and track list from it — skip to Step 2.
 
-- **Mode A — Sprint Setup:** if `plan.md` has no Current Sprint section, OR the Current Sprint is marked complete, OR `tracks.md` has zero non-archived tracks for the current/next sprint number.
-- **Mode B — Parallel Kickoff:** if `plan.md` has an active Current Sprint section AND `tracks.md` has at least one track for that sprint with a non-archived status.
-- **Ambiguous case:** if the state is unclear (e.g. `plan.md` names one sprint, `tracks.md` references a different one), surface a one-line summary of what was found and ask the user which mode to run. Do not infer.
+If no temp plan doc exists, ask the user:
 
-**Announce the selected mode before executing:**
+1. What is the sprint goal? (one sentence)
+2. What tracks will this sprint include? (list each track with a short description and owner if known)
 
-> Running **[Mode A: Sprint Setup / Mode B: Parallel Kickoff]** because [reason — e.g. "plan.md has no active Current Sprint section" / "tracks.md has 3 open tracks for Sprint 15"].
+Wait for the user's response before continuing.
 
----
+### Step 2 — Determine sprint ID
 
-## Mode A — Sprint Setup
+Read `docs/context/plan.md` if it exists. Find the highest sprint number currently referenced (look for `## Current Sprint: S<N>` or `## Completed Sprint: S<N>`). The new sprint ID is that number plus one. If no prior sprint is found, start at S1.
 
-Opens a new sprint. Surfaces unresolved work, calls the Sprint Coordinator to author the plan doc, and updates context files. The counterpart to `clean-context`.
+### Step 3 — Write `docs/context/plan.md`
 
-### Step 0 — Systemic Triage
+Create or overwrite the Current Sprint section at the top of `docs/context/plan.md`:
 
-**Fire before any other step.** This is a read-only prompt surfaced to the Conductor — it is not a verification gate. The Conductor decides; the Sprint Coordinator does not unilaterally promote items.
-
-Ask the Conductor:
-
-> *"Does any open backlog item represent an architectural spec that agents are currently following incorrectly — a wrong rule, not just missing work? If yes, that item heads this sprint before any other track."*
-
-**Criterion:** an item qualifies when agents are actively following the wrong rule right now — not merely when work is missing or incomplete. The distinction matters: a wrong-rule item causes ongoing incorrect behavior and must head the sprint; a merely-incomplete item follows normal backlog-promotion triage in Step 2a.
-
-**Conduct:** surface the question, wait for the Conductor's answer, and record any identified items so they are added to the sprint as the first tracks (ahead of other planned work). Make no edits and block nothing here — the Conductor's answer governs.
-
-### Step 1 — Prior Sprint Check
-
-Read `docs/context/tracks.md` and `docs/context/plan.md`.
-
-If `docs/context/tracks.md` does not exist, treat it as empty and proceed — do not error.
-
-If any tracks are marked **in progress** or **blocked**, surface them:
-
-> *"There are [N] unresolved tracks: [list]. Carry them forward, close them, or archive them before opening the new sprint?"*
-
-Wait for confirmation before continuing.
-
-### Step 1b — Trim Prior Sprint
-
-After Tim confirms all unresolved tracks in Step 1 are resolved, check whether the prior sprint still has full content in `docs/context/plan.md` and `docs/context/tracks.md`.
-
-**Prior sprint identification:** The prior sprint is the sprint whose number is one less than the sprint being opened (e.g., if opening S33, the prior sprint is S32).
-
-**Check order — run these three cases in sequence (stop at the first that applies):**
-
-- **Case 1 — Prior sprint section is absent from plan.md entirely:** If no section for the prior sprint exists in `plan.md` (e.g., no `## Completed Sprint: S<N>` or `## Current Sprint: S<N>` heading for that sprint number), emit the following one-line warning to the operator and insert the closed pointer before continuing:
-
-  > *Warning: Prior sprint S<N> has no section in plan.md — adding closed pointer.*
-
-  Insert the closed pointer `## Completed Sprint: S<N> ✓ — see docs/archive/plan-docs/S<N>.md` into `plan.md` at the correct position:
-  - If `plan.md` already contains one or more `## Completed Sprint:` pointer lines, insert the new pointer in numerical order alongside them (highest sprint number first).
-  - If no `## Completed Sprint:` pointer lines exist, insert the new pointer under a `## Sprint History` heading (create the heading if absent) at the end of the file.
-  - Do NOT touch the current-sprint section or any other content.
-
-- **Case 2 — Prior sprint section is present with full content:** If the prior sprint section exists and contains more than a one-line pointer entry, collapse it in both `plan.md` and `tracks.md` to a one-line pointer:
-  ```
-  ## Completed Sprint: S<N> ✓ — see docs/archive/plan-docs/S<N>.md
-  ```
-  Replace the entire prior sprint section (all headings, goals, task lines, and trailing content under it) with this single line. Apply the same collapse to the corresponding sprint section in `docs/context/tracks.md`.
-
-- **Case 3 — Prior sprint section is already a one-line pointer:** Skip silently — no edit, no message.
-
-This step runs only after Step 1 confirmation. It must not fire before Tim has confirmed all prior tracks are resolved. It must not touch any content belonging to the new (current) sprint being opened.
-
-### Step 1a — Canonical Sync Sweep
-
-Run a git log sweep to surface merged changes that may need canonical sync. This step is read-only — the Sprint Coordinator does not make canonicality judgments here; it ensures nothing is invisible to Tim.
-
-**Find the last sprint-close anchor:**
-```
-git log --oneline --grep="sprint close" | head -1
-```
-Extract the SHA from the first matching line. If no match is found, fall back to the last 30 commits and note the fallback: *"No sprint-close anchor found — showing last 30 commits for manual triage."*
-
-**Run the sweep:**
-```
-git log <anchor-sha>..HEAD --oneline
-```
-
-**Surface the results** as a triage block:
-```
-Canonical sync triage — commits since S<N> sprint close:
-  <sha> <message>
-  <sha> <message>
-  ...
-Review: do any of these touch skills, agents, AGENTIC.md, CLAUDE.md, or settings.json?
-If yes, queue a canonical-sync track before dispatching Specialists.
-```
-
-The Sprint Coordinator does not make the canonicality judgment — it ensures Tim sees the list before sprint planning begins.
-
-### Step 2 — Call Sprint Coordinator
-
-**Imperative action: invoke the Sprint Coordinator role agent (`peaches`) to author the sprint plan doc. The invoking agent MUST NOT author the plan doc or interview questions directly — that is the Sprint Coordinator's exclusive artifact (AGENTIC.md §3). If the invoking agent finds itself writing plan content, STOP — that is the §3 planning-drift failure mode.**
-
-> **FORBIDDEN:** Authoring `docs/temp-sprintN-plan.md` or any sprint interview questions inline. Route to the Sprint Coordinator immediately.
-
-**Mode-aware invocation:**
-
-- **AUTONOMOUS mode:** Invoke the Sprint Coordinator via Agent-tool call (inline spawn, no permission prompt required). Pass the sprint number and any context needed to author the plan doc.
-- **MANUAL mode:** Output a Sprint Coordinator kickoff card (two fenced blocks: tab name + prompt) for the Conductor to dispatch manually. Do not proceed past this step until the Sprint Coordinator's doc exists.
-
-The Sprint Coordinator authors `docs/temp-sprintN-plan.md` (where `N` is the sprint number, inferred from the track IDs or the sprint objective context; if ambiguous, use the next sequential number after the highest sprint number found in `docs/context/tracks.md`). The interview and plan doc are the same file — no separate interview file.
-
-The Sprint Coordinator's plan doc must cover all four required sections:
-
-1. **Sprint objective** — What is the primary goal? (1–2 sentences)
-2. **Proposed tracks** — Each track with a brief description and the specialist owner (or "TBD").
-3. **Open questions for Tim** — Any unresolved decisions, tradeoffs, or risks Tim should weigh in on before planning starts.
-4. **Red flags surfaced** — Any architectural, security, or sequencing concerns to flag for the Technical Architect.
-
-The invoking agent waits for the Sprint Coordinator's doc to be written before continuing. Confirm the file exists at `docs/temp-sprintN-plan.md` before proceeding to Step 2a.
-
-### Step 2a — Backlog Migration Triage
-
-**This step is mandatory and unconditional.** Run it whether or not Tim has previously mentioned the backlog. Do not skip even if the backlog appears empty on first read.
-
-If `docs/backlog.md` exists, read it and surface any items that are candidates for promotion into the new sprint as a triage list for Tim. The Sprint Coordinator does not promote items unilaterally — it surfaces candidates; Tim directs.
-
-> *"docs/backlog.md contains [N] items. Review and identify any to promote into Sprint [N] tracks."*
-
-Wait for Tim's direction. When Tim identifies items for promotion:
-
-1. The Specialist migrates the promoted items into the active tracks section of `docs/context/tracks.md` (the Specialist does the actual `tracks.md` write — Sprint Coordinator does not write to `docs/context/**` directly).
-2. **The Specialist simultaneously removes the promoted items from `docs/backlog.md`.** This removal is mandatory — not optional, not deferred. A promoted item must not remain in `docs/backlog.md` after it has been added to `tracks.md`. Both writes happen in the same operation.
-
-If `docs/backlog.md` does not exist, print: `docs/backlog.md not found — skipping backlog triage.` and continue.
-
-### Step 3 — Update Context Files
-
-**`docs/context/plan.md`:**
 ```markdown
-## Current Sprint: [Sprint Objective]
+## Current Sprint: S<N> — <sprint goal>
 
 ### Sprint Goals:
-- [ ] [First task] — [Owner] — Track [N]
+- [ ] <Track ID> — <description> — <owner or TBD>
 
 ---
-*Last updated: [DATE]*
+*Last updated: <today's date>*
 ```
 
-**`docs/context/tracks.md`** — add new track entry for each proposed track:
+If the file already contains completed sprint entries (lines matching `## Completed Sprint: S<N> ✓`), preserve them below the new current sprint section.
+
+If `docs/` does not exist, create it silently before writing.
+
+### Step 4 — Write `docs/context/tracks.md`
+
+Add one entry per track to `docs/context/tracks.md`. Each entry follows this shape:
+
 ```markdown
-## Track [N]: [Task Name]
-- **Owner:** [agent name for SC-orchestrated tracks; `null` for unclaimed contributor tracks]
-- **Status:** Ready for Handoff Bridge
-- **Sprint:** [Sprint Objective]
-- **Opened:** [DATE]
+## Track <ID>: <Task Name>
+- **Owner:** <agent name, or null if unclaimed>
+- **Status:** OPEN
+- **Sprint:** S<N>
+- **Opened:** <today's date>
 - **Exit Record**
-  - **Status:** 
-  - **What happened:** 
-  - **Next steps:** 
+  - **Status:**
+  - **What happened:**
+  - **Next steps:**
 ```
 
-**Owner field note:** The `Owner:` value above corresponds to the `owner` attribution field in `docs/tasks.json` / `docs/context/tasks-schema.md` (introduced at `$schema-version: 2`). For Sprint-Coordinator-orchestrated tracks, populate the agent name (e.g. `skylar`). For unclaimed contributor tracks, populate `null`. An absent or `null` owner is valid indefinitely per AGENTIC.md §9.2 and tasks-schema.md lines 34–35 — no hard requirement is imposed.
+If the file already has entries from a prior sprint, append the new entries below them.
 
-**Confirm `AGENTIC.md`** is current — read and flag any stale fields. Do not modify without explicit direction.
+### Step 5 — Confirm
 
-If `docs/` does not exist, create it silently (no user message, no prompt) before writing any files under it.
-
-### Step 4 — Sprint Summary
-
-Output a 1–2 sentence summary of the path forward: confirm the plan doc has been written at `docs/temp-sprintN-plan.md`, and state what the next step is (Tim reviews the plan doc, then the activated domain role agent issues its own Bridge as its first planning output).
+Output a short confirmation:
 
 ```
-## Sprint [N] Open
+Sprint S<N> open.
 
-**Objective:** [Sprint objective from the Sprint Coordinator's plan doc]
-**Plan doc:** docs/temp-sprint<N>-plan.md
-**Next step:** Tim reviews `docs/temp-sprint<N>-plan.md`; upon approval, the activated domain role agent issues its own Handoff Bridge as its first domain-planning output.
+Goal: <sprint goal>
+Tracks: <count> track(s) added to docs/context/tracks.md
+Plan: docs/context/plan.md updated
+
+Next step: review the tracks, then dispatch work.
 ```
-
----
-
-## Mode B — Parallel Kickoff
-
-Reads `docs/context/tracks.md` and outputs a parallel tab kickoff card for all OPEN tracks. **Read-only — no files are modified.**
-
-### Rules
-
-- **Read-only.** No files are modified.
-- **Parse tracks.md exactly as written.** Do not infer status — read the `Status` field.
-- A track is **OPEN** if its status is `Ready`, `Ready for Handoff Bridge`, `In Progress`, or equivalent active state with no blocker line.
-- A track is **BLOCKED** if its status contains `Blocked` or if a `Blocked until` / `Depends on` field is present and unresolved.
-- Tab letter suffix (`a`, `b`, `c`…) is assigned by track order in tracks.md.
-- Sprint number is inferred from the track IDs (e.g., `T22a` → sprint 22). If tracks have mixed sprint numbers, use the majority; flag the outlier.
-
-### Step 1 — Read context
-
-Read `docs/context/tracks.md`.
-
-If the file has no tracks, is empty, or does not exist, output:
-
-> No tracks found in `docs/context/tracks.md`. Run `/start-sprint` (Mode A) to define tracks first.
-
-### Step 2 — Classify tracks
-
-Separate tracks into:
-- **OPEN** — ready to start now, no unresolved blockers
-- **BLOCKED** — has a blocker or dependency that is not yet resolved
-
-### Step 3 — Resolve plan file
-
-The plan file follows the pattern `docs/context/t##-plan.md` where `##` is the sprint number (e.g., sprint 22 → `docs/context/t22-plan.md`). Use this path in every prompt.
-
-
-
-### Step 4 — Build tab names
-
-Tab naming convention: `@agent T##x theme`
-
-- `@agent` — the specialist assigned to the track (from the Owner field); use the agent's name in lowercase (e.g., `@lucy`, `@max`, `@peaches`)
-- `T##x` — sprint number + letter suffix in order (e.g., `T22a`, `T22b`)
-- `theme` — 1–3 word slug from the track name (lowercase, hyphenated if multi-word)
-
-### Step 5 — Build opening prompts
-
-For each OPEN track, the prompt follows this template:
-
-```
-"You are [Agent]. First: git worktree add .claude/worktrees/track-[##x-theme] -b track/[##x-theme]. Work exclusively inside that worktree. Read [docs/context/t##-plan.md] [T##x] section and execute."
-```
-
-- `[Agent]` — the agent's display name (capitalized, e.g., `Lucy`)
-- Branch name: `track/[##x-theme]` — sprint number + letter + hyphenated theme slug (e.g., `track/22a-schema`)
-- The `git worktree add` command MUST be the first instruction in every prompt — before any plan-section read, file read, or edit instruction. This enforces worktree isolation when parallel tabs are open.
-- If the track has a specific Handoff Bridge or additional context file noted, append: `Handoff Bridge is in [file].`
-
-### Step 6 — Output the kickoff card
-
-**Mode gate:** Read `operatingMode` from `.claude/settings.json` (same source Mode A Step 2 uses).
-
----
-
-#### auto-approve branch (`operatingMode: auto-approve`)
-
-For each **OPEN** track (dependency-free — BLOCKED tracks are excluded by Step 2), spawn the assigned Specialist inline via the Agent tool with `run_in_background: true`. Multiple OPEN tracks are spawned concurrently — the independence precondition holds because BLOCKED/dependent tracks have already been excluded in Step 2. (Governing rule: AGENTIC.md §3 auto-approve dispatch rule — multi-track parallel execution MUST use `background: true` on the Specialist Agent invocation.)
-
-Pass the track's Handoff Bridge path or plan-section pointer as context in the spawn prompt (the same pointer built in Step 5).
-
-Collect each Specialist's bounded 3-field summary (Track / Verdict / Commit) as completion notifications arrive in later turns, per AGENTIC.md §3.
-
-> **Operational note:** Background subagents still surface permission prompts in the main session when a tool call requires permission. The `/streamline-approvals auto` allowlist governs whether those prompts appear — `run_in_background: true` changes where work runs, not what is allowed.
-
-**Do NOT emit kickoff cards in this branch.** BLOCKED tracks are listed after all spawns are initiated, using the same annotation format as the gated-approve branch below, so the operator knows what requires manual resolution once blockers clear.
-
----
-
-#### gated-approve branch (`operatingMode: gated-approve` or field absent)
-
-Output one card per track. OPEN tracks first, then BLOCKED tracks. Separate each card with `---`.
-
-**For each OPEN track**, output exactly this shape:
-
-**T##x — slug**
-
-Tab name:
-```
-@agent T##x slug
-```
-
-Prompt:
-```
-[ready-to-paste opening prompt from Step 5]
-```
-
----
-
-**For each BLOCKED track**, output the same two-fenced-blocks shape with a `← blocked until [condition]` annotation on the line immediately after the bolded track header:
-
-**T##x — slug**
-← blocked until [condition]
-
-Tab name:
-```
-@agent T##x slug
-```
-
-Prompt:
-```
-[ready-to-paste opening prompt from Step 5]
-```
-
----
-
-Both fenced blocks are present for BLOCKED tracks so the user can copy-paste once the blocker clears.
-
-If there are no BLOCKED tracks, omit all BLOCKED cards entirely.
-If all tracks are blocked, output all BLOCKED cards and add a closing note: `No tracks are ready to start. Resolve blockers first.`

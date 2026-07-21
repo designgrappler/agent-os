@@ -58,7 +58,7 @@ git branch --merged main
    where `<SHA>` is the output of `git -C <path> rev-parse --short HEAD` captured before removal. Continue to the next worktree.
 
 3. **If the branch is NOT in `git branch --merged main` output (branch is not merged):**
-   Bail with a warning naming the affected worktree — existing bail logic, unchanged:
+   Bail with a warning naming the affected worktree:
    > `Worktree <path> is dirty and its branch (<branch-name>) is not merged into main. Resolve or commit the work before running /clean-context.`
    Stop the cleanup phase.
 
@@ -136,7 +136,7 @@ Run after the Bridge file sweep and before the Memory hygiene scan. This step co
 
 Run after the merged-branch sweep and before the Context Health update.
 
-Locate the memory directory at `~/.claude/projects/<sanitized-cwd>/memory/` where `<sanitized-cwd>` is the value of `CLAUDE_PROJECT_DIR` (or current working directory) with the leading `/` stripped and all remaining `/` replaced with `-`. Example: `/Users/I826932/Developer/agent-os-private` → `-Users-I826932-Developer-agent-os-private`.
+Locate the memory directory at `~/.claude/projects/<sanitized-cwd>/memory/` where `<sanitized-cwd>` is the value of `CLAUDE_PROJECT_DIR` (or current working directory) with the leading `/` stripped and all remaining `/` replaced with `-`.
 
 If the memory directory does not exist, print `Memory hygiene scan: no memory directory found at <path> — skipping` and continue without error.
 
@@ -151,29 +151,29 @@ For each file in the memory directory (excluding `MEMORY.md` itself), classify b
 
 ### Per-category staleness policy
 
-**`reference_*` — never auto-flag for prune.** Only flag as `RETIRE candidate` if the concrete artifact referenced in the body (script path, repo path, file path) no longer exists at that path.
+**`reference_*` — never auto-flag for prune.** Only flag as `RETIRE candidate` if the concrete artifact referenced in the body no longer exists at that path.
 
-**`feedback_*` — never auto-flag for prune.** Only flag as `RETIRE candidate` if the behavioral rule has been codified verbatim into `AGENTIC.md`, any `claude/agents/*.md`, or any `claude/skills/**/SKILL.md` (i.e. the rule is now enforced as a system constraint and the memory file is redundant).
+**`feedback_*` — never auto-flag for prune.** Only flag as `RETIRE candidate` if the behavioral rule has been codified verbatim into any `claude/agents/*.md` or any `claude/skills/**/SKILL.md` (i.e. the rule is now enforced as a system constraint and the memory file is redundant).
 
 **`project_*` — flag as `RETIRE candidate` only if BOTH of the following signals are present (two-signal rule):**
-1. The `Created:` field (per AGENTIC.md Memory Authoring Convention) is older than 90 days, OR the file's mtime is older than 90 days.
+1. The `Created:` field is older than 90 days, OR the file's mtime is older than 90 days.
 2. The referenced sprint is archived (appears in `docs/context/plan.md` Completed Sprint sections OR in `docs/archive/plan-docs/`), OR the file contains no sprint reference AND is not referenced in `MEMORY.md`'s index.
 
-A single signal alone (e.g. mtime > 90 days by itself) is **not sufficient** to flag a `project_*` file. Both signals must be independently satisfied.
+A single signal alone is **not sufficient** to flag a `project_*` file. Both signals must be independently satisfied.
 
-If the `Created:` field is missing, surface the file as `stale-undatable` in the `Stale signals matched` column — the two-signal rule still applies; missing `Created:` alone does not trigger a flag.
+If the `Created:` field is missing, surface the file as `stale-undatable` — the two-signal rule still applies.
 
 **Unclassified — never auto-flag.** Surface as `manual review required` with no action proposed.
 
 ### Report format
 
-Print findings as a markdown table with these columns:
+Print findings as a markdown table:
 
 | File | Category | Stale signals matched | Action proposed |
 |---|---|---|---|
-| `path/to/file.md` — first-line summary | reference / feedback / project / unclassified | explicit list e.g. "mtime 187d; S6 archived; not in MEMORY.md index" | RETAIN / RETIRE candidate / MERGE candidate (duplicate of X) / manual review required |
+| `path/to/file.md` — first-line summary | reference / feedback / project / unclassified | explicit list | RETAIN / RETIRE candidate / MERGE candidate (duplicate of X) / manual review required |
 
-If no findings are produced (all files pass their category policy), print `Memory hygiene scan: no findings — all memory files current.`
+If no findings: print `Memory hygiene scan: no findings — all memory files current.`
 
 ### Hard constraints
 
@@ -191,7 +191,7 @@ The file remains on disk as part of the learning record.
 After the report is displayed, ask: "Approve any retirements? (list file numbers, or 'none')"
 
 For each approved file:
-1. Write `STATUS: retired — <reason from Conductor>` and `Retired: YYYY-MM-DD` as the first content lines (after frontmatter, before body).
+1. Write `STATUS: retired — <reason from Conductor>` and `Retired: YYYY-MM-DD` as the first content lines.
 2. Print confirmation: `Retired: <filename>`.
 3. Do NOT delete the file.
 
@@ -199,9 +199,9 @@ For declined files: log as `Retained — Conductor decision`.
 
 ## Backlog file check
 
-Confirm `docs/backlog.md` exists. This file is the standalone backlog owned by Sprint Coordinator + Conductor and lives outside the hook-blocked `docs/context/**` path — do not archive or delete it.
+Confirm `docs/backlog.md` exists. This file is the standalone backlog owned by the orchestrator and Conductor — do not archive or delete it.
 
-If `docs/backlog.md` is absent, print a warning: `docs/backlog.md not found — Sprint Coordinator backlog file is missing. Expected at docs/backlog.md (created by S23 T23.B).`
+If `docs/backlog.md` is absent, print a warning: `docs/backlog.md not found — backlog file is missing. Expected at docs/backlog.md.`
 
 If present, log: `docs/backlog.md present — no action taken (presence-check only).`
 
@@ -219,8 +219,8 @@ Run `git push origin main`. This triggers the distribute workflow on the private
 
 - Safety gate fires: skill refuses to proceed when `git status` shows uncommitted work on the current branch.
 - Dirty worktrees whose branch IS merged into `main` are force-removed with the mandatory log line in the format `force-removed merged worktree: <path> (branch: <branch-name>, last commit: <SHA>)`.
-- Dirty worktrees whose branch is NOT merged into `main` trigger the existing bail with a warning naming the affected worktree — cleanup stops.
-- Dirty worktrees with ambiguous branch state (detached HEAD, empty branch output, or git error) are treated as "not merged" and trigger the existing bail — cleanup stops.
+- Dirty worktrees whose branch is NOT merged into `main` trigger the bail with a warning naming the affected worktree — cleanup stops.
+- Dirty worktrees with ambiguous branch state (detached HEAD, empty branch output, or git error) are treated as "not merged" and trigger the bail — cleanup stops.
 - `scratchpad_*.md` files were moved or deleted; `.agent/archives/` updated where applicable.
 - `docs/temp-*.md` files for closed sprints were archived to `docs/archive/` or deleted; `docs/archive/**` and `docs/context/temp-architectural-assessment.md` were never touched.
 - Merged worktrees under `.claude/worktrees/` (and `.worktrees/` if present) were removed; unmerged ones were logged and skipped.

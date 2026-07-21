@@ -1,9 +1,9 @@
 ---
 name: install-agent-scaffold
-description: Bootstraps a new project with the full Agent OS structure.
+description: Bootstraps a new project with the Agent OS structure.
 ---
 # Install Agent Scaffold
-Bootstraps a new project with the full Agent OS structure. Drops a setup file for the user to fill in — no files are generated until it's complete.
+Bootstraps a new project with the Agent OS structure. Drops a setup file for the user to fill in — no files are generated until it's complete.
 
 > **Existing project?** Stop. Use `/onboard-existing-project` instead. This skill assumes a blank slate.
 
@@ -14,7 +14,7 @@ When the user runs `/install-agent-scaffold`.
 
 ## Step 1: Pre-flight
 
-1. If `AGENTIC.md` exists → stop. Tell the user this project is already initialized. Suggest `/onboard-existing-project` to update an existing setup.
+1. If `CLAUDE.md` exists and contains Agent OS content → stop. Tell the user this project is already initialized. Suggest `/onboard-existing-project` to update an existing setup.
 2. If `AgentOS-Setup.md` does **not** exist → go to Step 2.
 3. If `AgentOS-Setup.md` exists → go to Step 3.
 
@@ -28,10 +28,9 @@ Write the following content to `AgentOS-Setup.md` at the project root, then stop
 >
 > Fill in your project details:
 > - **Project** — your project name and description
-> - **Set Up Your Team** — replace the name placeholders with your agent names; add or remove specialist rows as needed
-> - **Define Your Tech Stack** — defaults are pre-selected; replace any value you want to change
+> - **Tech Stack** — defaults are pre-selected; replace any value you want to change
 >
-> When you're done, run `/install-agent-scaffold` again in this chat. Step 2 will generate: `AGENTIC.md`, `CLAUDE.md`, agent definitions, `docs/context/` files, and settings.
+> When you're done, run `/install-agent-scaffold` again in this chat. Step 2 will generate: `CLAUDE.md`, agent definitions, `docs/context/` files, and `skills-manifest.json`.
 
 ```markdown
 # Agent OS Setup
@@ -45,25 +44,6 @@ This file will be deleted automatically when setup is complete.
 
 **Project name:** 
 **Short description:** 
-
----
-
-## Set Up Your Team
-
-Edit the table below to define which roles you need for your project. Specify an agent name, their role, and key responsibilities. Ask your primary agent if you have questions.
-
-Agents can be invoked by typing their name via `@[architect-name]`, `@[qa-name]`, etc. Agent profiles are located in `.claude/agents/` and can be edited at any time.
-
-| Agent Name | Role | Scope and Responsibilities |
-|---|---|---|
-| **[YOUR NAME]** | Conductor | Vision & Approval |
-| **[YOUR AI]** | Orchestrator | Coordinates specialists, no direct execution | <!-- e.g., Claude, Gemini -->
-| **[SPRINT COORDINATOR NAME]** | Sprint Coordinator | Sprint synthesis, routing, sprint interview docs — zero code |
-| **[TECHNICAL ARCHITECT NAME]** | Technical Architect | Red Flag Analysis, Implementation Plans, Handoff Bridges for technical tracks — zero code |
-| **[SPECIALIST 1 NAME]** | Frontend Specialist | UI components, pages, and styling |
-| **[SPECIALIST 2 NAME]** | Backend Specialist | API routes, server logic, and integrations |
-| **[SPECIALIST 3 NAME]** | Database Specialist | Schema, migrations, and queries |
-| **[QA NAME]** | QA | Read-only quality gate — no code writes |
 
 ---
 
@@ -104,14 +84,6 @@ Read `AgentOS-Setup.md`. Extract values as follows.
 
 **Project fields** — read `**Project name:**` and `**Short description:**`, take the value after the colon.
 
-**Team table** — parse each row (skip the header row and the Orchestrator row):
-- Row with Role = "Conductor" → `OWNER` = Agent Name value (strip `**`)
-- Row with Role = "Orchestrator" → `ORCHESTRATOR` = Agent Name value (strip `**`)
-- Row with Role = "Sprint Coordinator" → `SPRINT_COORDINATOR` = Agent Name value (strip `**`)
-- Row with Role = "Technical Architect" → `TECHNICAL_ARCHITECT` = Agent Name value (strip `**`)
-- Row with Role = "QA" → `QA` = Agent Name value (strip `**`)
-- All remaining rows → `SPECIALISTS` list, each with name, domain (from Role column, strip " Specialist"), and scope (from Scope column, strip backticks)
-
 **Tech stack fields** — for each `**Field:** value <!-- comment -->` line, take the text between `:` and `<!--` (trim whitespace). If blank, the field is not configured.
 
 **Docs migration** — for each row in the migration table where the "Current file" cell is not a placeholder (not blank, not bracketed), record `{from: "path", to: "docs/context/X.md"}`.
@@ -119,17 +91,11 @@ Read `AgentOS-Setup.md`. Extract values as follows.
 **Extracted values:**
 - `NAME` = Project name
 - `DESCRIPTION` = Short description
-- `OWNER` = Conductor agent name
-- `ORCHESTRATOR` = Orchestrator agent name
-- `SPRINT_COORDINATOR` = Sprint Coordinator agent name
-- `TECHNICAL_ARCHITECT` = Technical Architect agent name
-- `QA` = QA agent name
-- `SPECIALISTS` = list of specialist rows (may be empty)
 - `RUNTIME`, `FRAMEWORK`, `DATABASE`, `FRONTEND`, `STYLING`, `BUILD_CMD`, `TYPECHECK_CMD`, `LINTER`
 - `MIGRATIONS` = list of confirmed doc migration pairs
 
 **Validation** — stop and list what's missing if any of these are blank:
-- `NAME`, `DESCRIPTION`, `OWNER`, `SPRINT_COORDINATOR`, `TECHNICAL_ARCHITECT`, `QA`, `BUILD_CMD`
+- `NAME`, `DESCRIPTION`, `BUILD_CMD`
 
 If all required values are present → proceed to Step 4.
 
@@ -141,252 +107,107 @@ Create all files below. For each file that already exists, show the diff and ask
 
 ---
 
-### Model alias and tier guidance (read before generating any agent)
+### Model alias guidance (read before generating any agent)
 
-Every generated agent file uses **two frontmatter fields** to identify its model:
-
-```yaml
-provider: claude       # cloud provider: claude | gemini | (future)
-model: sonnet          # tier alias within that provider
-```
-
-Use the short alias (`opus`, `sonnet`, `haiku`) for `model:` in every generated agent file. The short alias tracks the best-available model in that tier. To pin a specific checkpoint instead, use the long form (e.g. `claude-opus-4-7`) — pinning trades freshness for reproducibility.
-
-**Compatibility note:** `provider:` absent defaults to `claude` during the compatibility window (see AGENTIC.md §9.2). All new agents must include the `provider:` line above `model:`.
-
-The table below is **guidance, not a hard rule.** [OWNER] retains the right to override per project.
-
-| Role | Tier | Provider | Model alias | Why this tier |
-|---|---|---|---|---|
-| Sprint Coordinator | Coordination / synthesis | `claude` | `sonnet` | Sprint synthesis, routing, sprint interview docs |
-| Technical Architect | Strategic / planning | `claude` | `opus` | Heavy reasoning, plan synthesis, Red Flag Analysis |
-| Strategist | Strategic / planning | `claude` | `opus` | Pre-planning, market and product framing |
-| Specialist | Implementation / coding | `claude` | `sonnet` | Code execution at speed |
-| Backend / Frontend / Fullstack / Database | Implementation / coding | `claude` | `sonnet` | Standard implementation work |
-| Designer | Implementation / craft | `claude` | `sonnet` | Visual / UX deliverables |
-| PM | Implementation / writing | `claude` | `sonnet` | Requirements drafting, ticket grooming |
-| Marketing | Implementation / writing | `claude` | `sonnet` | Copy and positioning |
-| Critic / QA | Lightweight review | `claude` | `sonnet` | Fast read-only verdict (Sonnet preferred for nuance; Haiku acceptable for purely-mechanical checks) |
-| Lightweight / fast tasks | Routine | `claude` | `haiku` | Quick reformat, summarization, simple lookups |
-
----
-
-### 4a. `AGENTIC.md`
-
-```markdown
-# AGENTIC DNA — [NAME]
-
-[DESCRIPTION]
-
-This document is the root source of truth for this project. All agents read it before any work begins. Edit via your primary agent — do not edit directly.
-
----
-
-## 2. Tech Stack
-
-### Backend
-- **Runtime:** [RUNTIME]
-- **Framework:** [FRAMEWORK]
-- **Database:** [DATABASE]
-
-### Frontend
-- **Framework:** [FRONTEND]
-- **Styling:** [STYLING]
-
-### Quality & Automation
-- **Type Checking:** [TYPECHECK_CMD or "none configured"]
-- **Build:** [BUILD_CMD]
-- **Linting:** [LINTER or "none configured"]
-
-### Design Toolchain (optional — omit if no Designer-class agent on this project)
+Every generated agent file uses these frontmatter fields:
 
 ```yaml
-design_tool: <none|pencil|figma|other>   # Which design tool the Designer agent uses
-runtime: <desktop|vscode-extension|other> # Which Pencil/Figma runtime is installed
-mcp_server_path: <absolute path or N/A>  # Path to the standalone MCP server binary (N/A if design_tool: none)
+model: sonnet          # tier alias: opus | sonnet | haiku
 ```
 
-Projects with no Designer-class agent leave this section as a stub or omit it entirely. When populated, this section governs how the project configures the Designer agent's `mcpServers:` frontmatter. See `claude/agents/designer.md` for the two supported shapes (desktop, vscode-extension) and the known VSCode-extension limitation.
+Use the short alias — it tracks the best-available model in that tier.
+
+| Role | Tier |
+|---|---|
+| Technical Architect | `opus` — heavy reasoning, plan synthesis |
+| Orchestrator / Specialist / QA | `sonnet` — standard execution |
+| Lightweight / fast tasks | `haiku` — quick lookups, reformatting |
 
 ---
 
-## 3. Project Team
-
-- **[OWNER] (Conductor):** Vision & Approval.
-- **[ORCHESTRATOR] (Orchestrator):** Coordinates specialists, no direct execution.
-- **[SPRINT_COORDINATOR] (Sprint Coordinator):** Coordination hub. Zero-code. Sprint synthesis, routing.
-- **[TECHNICAL_ARCHITECT] (Technical Architect):** Technical Architect role agent. Zero-code. Activated for code-touching tracks when designated Authoring Role — produces Red Flag Analysis, Implementation Plans, and Handoff Bridges.
-[For each specialist: - **[NAME] ([DOMAIN] Specialist):** Owns [SCOPE].]
-- **[QA] (QA):** Build verification and quality gate. Read-only.
-
----
-
-## 7. Definition of Done
-
-A track is **Done** only when ALL of the following are true:
-
-- [ ] `[BUILD_CMD]` exits with zero errors
-- [ ] All changes are within the declared track scope (no scope drift)
-- [ ] No `console.log`, `debugger`, or hardcoded secrets in the diff
-- [ ] `docs/context/plan.md` and `tracks.md` updated to reflect the completed track
-- [ ] [QA] has issued an **APPROVED** verdict
-- [ ] [OWNER] has given final approval for tracks touching auth, schema, or payments
-
----
----
-
-# How Your Agents Operate
-
-> **For reference only.** The sections below describe how your agents behave.
-
----
-
-## 1. DNA Taxonomy
-- **Static DNA:** Foundational tech, team roles, and protocol constraints (this file).
-- **Dynamic DNA:** High-churn task state, roadmap, and requirements (`docs/context/`).
-
----
-
-## 4. Worktree Protocol
-
-Each Specialist agent definition includes `isolation: worktree` in its frontmatter. Combined with `worktree.baseRef: "head"` in `.claude/settings.json`, every Specialist invocation automatically gets an isolated copy of the repo branched from the current session HEAD.
-
-- `isolation: worktree` provides CWD isolation — the Specialist's working directory is the worktree. Claude's built-in file tools (`Read`, `Edit`, `Write`) are governed by the permission system, not the worktree CWD, so they can write outside the worktree if permissions allow
-- `worktree.baseRef: "head"` is required — without it, worktrees branch from `origin/HEAD` and cannot see uncommitted context files
-- Branch naming: managed automatically by the Agent tool runtime
-- Never work directly on the main branch when 2+ tracks are active in parallel
-- Worktree removed only after QA issues PASS verdict
-- **Post-setup smoke:** After first enabling `worktree.baseRef: "head"`, invoke a Specialist on a no-op task and confirm the worktree contains uncommitted context files — verifies the setting is honoured (a misconfigured value falls back silently to `origin/HEAD`)
-
----
-
-## 5. Conductor Protocols
-
-### Stability Rules
-- **Circuit Breaker:** 3 consecutive failures with the same root cause → STOP and escalate to the Conductor. Any single destructive or security-related failure triggers an immediate stop regardless of count.
-- **Git Hygiene:** No commits unless directed. Use `git add` for staging only.
-- **Sentinel Proof:** Never trust an agent's verbal summary. Verify with `git diff` or direct file reads.
-
-### Handoff Logic
-- **Phase 1 (Verify):** Downstream specialist verifies upstream interface before any implementation begins.
-- **Phase 2 (Align):** Synchronize with `AGENTIC.md` and `tracks.md`.
-- **Phase 3 (Draft):** The activated domain role agent drafts the implementation plan.
-- **Phase 4 (Bridge):** The activated domain role agent produces its own Handoff Bridge as its first domain-planning output.
-
----
-
-## 6. Commit Convention
-
-All commits must follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-\`\`\`
-feat(auth): add OAuth redirect handler
-fix(api): correct pagination offset
-chore(deps): upgrade dependencies
-\`\`\`
-
-**Types:** `feat` · `fix` · `chore` · `refactor` · `docs` · `style` · `perf` · `test`
-
----
-
-## 8. Handoff Bridge Template
-
-\`\`\`markdown
-### HANDOFF BRIDGE
-**Topic:** [Feature/Bug Name]
-**Track:** [ID from tracks.md]
-**Static DNA Check:** [Confirm alignment with AGENTIC.md tech/roles]
-**Dynamic DNA State:**
-- **Product Context:** [1-sentence summary of requirement]
-- **Current Plan:** [step in plan.md]
-- **Execution Files (source):** [list of primary source/canonical files]
-- **Execution Files (tests):** [] — [one-line justification if empty]
-- **Execution Files (tooling/config):** [list of build/config/scaffold files; "[]" if none]
-**Migration Safety:** [N/A / Reversible / Irreversible — Conductor acceptance: YES (date) if irreversible]
-**Security Review:** [N/A / Auth / Payments / Schema — Conductor acceptance: YES (date) if any]
-**Worktree Setup:** Automatic — `isolation: worktree` in Specialist frontmatter + `worktree.baseRef: "head"` in `.claude/settings.json`. Verify both are present before Specialist begins. (`isolation: worktree` is a CWD setting — built-in file tools are governed by the permission system, not the worktree CWD; Bridge Execution Files scope is the protocol-layer compensating control.)
-**Verification:** [specific command or URL]
-**Next Step:** [specific task for the Specialist]
-\`\`\`
-
----
-
-*Last Refined: [TODAY'S DATE]*
-```
-
----
-
-### 4b. `CLAUDE.md`
+### 4a. `CLAUDE.md`
 
 ```markdown
 # [NAME] — Claude Code Configuration
 
-## Operating Mode
+## Team
 
-Current: MANUAL (autonomous loop inactive — Tim triggers each handoff)
+| Role | Function |
+|---|---|
+| **Tim** | Owner — vision and approval |
+| **Orchestrator** | Routes tasks, triage decisions |
+| **Specialist** | Domain expert for complex tasks |
+| **Task Agent** | Executes scoped work |
+| **QA** | Read-only quality gate |
 
-To change approval frequency: run `/streamline-approvals auto` or `/streamline-approvals gated`. See `AGENTIC.md` §3 for the mode-aware dispatch model.
-
----
-
-## Initialization Loop (Every Session)
-
-Before any work, read:
-1. `AGENTIC.md` — Static DNA (tech stack, team, protocols, hard constraints)
-2. `docs/context/plan.md` — Current sprint objective
-3. `docs/context/tracks.md` — Active tracks and their status
-4. **Operating mode mismatch check:** Compare the `operatingMode` field in `.claude/settings.json` against the `## Operating Mode` section in this file. If they differ, surface this warning at the top of the session: `Operating mode mismatch detected: settings.json says <X>, CLAUDE.md says <Y>. Run /streamline-approvals gated or /streamline-approvals auto to reconcile.` Session continues; the warning persists until reconciled.
+Agents are defined in `.claude/agents/`.
 
 ---
 
-## Execution Protocol
+## Orchestrator Behavior
 
-**No execution without a Handoff Bridge.**
+Orchestrator behavior is defined in `claude/skills/orchestrator/SKILL.md` — loaded at session start.
 
-All work must flow through:
-\`\`\`
-Conductor (approval) → Sprint Coordinator (routing) → Role Agent (self-planning) → Task Agents → QA
-\`\`\`
+---
+
+## Sprint Workflow
+
+Sprint workflow: invoke `/start-sprint` to enter sprint mode.
+
+---
+
+## Tech Stack
+
+- **Runtime:** [RUNTIME]
+- **Framework:** [FRAMEWORK]
+- **Database:** [DATABASE or "none configured"]
+- **Frontend:** [FRONTEND or "none configured"]
+- **Styling:** [STYLING or "none configured"]
+- **Build Command:** `[BUILD_CMD]`
+- **Type Check:** [TYPECHECK_CMD or "none configured"]
+- **Linter:** [LINTER or "none configured"]
 
 ---
 
 ## Worktree Protocol
 
-Worktree isolation is enforced via each Specialist's agent frontmatter (`isolation: worktree`) and `.claude/settings.json` (`worktree.baseRef: "head"`). No manual git commands needed — the Agent tool runtime manages lifecycle. CWD isolation only: relative paths are isolated, absolute paths are not.
+Worktree isolation is automatic via agent frontmatter (`isolation: worktree`) and `.claude/settings.json` (`worktree.baseRef: "head"`). No manual git commands needed.
 
 ---
 
-## Hooks (Auto-Enforced)
+## Hooks
 
-| Hook | Trigger | Action |
-|---|---|---|
-| **Stop** | Session ends | Prints DNA hygiene reminder |
-| **PreToolUse(Bash)** | `git push` | Blocks if build command fails (see AGENTIC.md §2) |
-
----
-
-## Stability Rules
-
-- **Circuit Breaker:** 3 consecutive failures with the same root cause → STOP. Call the Technical Architect for Red Flag Analysis. Any destructive or irreversible failure triggers an immediate stop.
-- **Git Hygiene:** No commits unless the Conductor directs.
-- **Sentinel Proof:** Never trust a verbal summary. Verify with `git diff` or file reads.
-
----
-
-## Auto-Invocations
-
-Invoke the following skills automatically when the user's message matches these patterns — do not wait to be asked explicitly:
-
-| User says... | Invoke |
-|---|---|
-| "start planning", "new sprint", "let's plan", "begin planning", "what are we working on next" | `/sprint-open` |
-| "catch me up", "what's the status", "where are we", "status check", "quick update" | `/track-status` |
-| "report an issue", "file feedback", "this skill is broken", "report an Agent OS issue", "this Agent OS skill is broken" | `/submit-agent-os-feedback` |
+Stop hook: prints hygiene reminder at session end.
 ```
 
 ---
 
-### 4c. `docs/context/plan.md`
+### 4b. `claude/skills/orchestrator/SKILL.md`
+
+Copy from the canonical source at `claude/skills/orchestrator/SKILL.md`. This is a verbatim copy — do not modify its content.
+
+---
+
+### 4c. `.claude/agents/` — Role agent files
+
+Copy the following agent files from the canonical `claude/agents/` directory into the project's `.claude/agents/`:
+
+- `technical-architect.md`
+- `qa.md`
+- `task-coder.md`
+- `task-researcher.md`
+- `task-writer.md`
+
+These are unmodified copies of the canonical files.
+
+**Global-namespace guard:** before copying any agent to a global `~/.claude/agents/` scope, verify the agent name is present in `skills-manifest.json` `agents[]`. If absent, install project-local only and log:
+```
+"<name>" is not a canonical agent — installed project-local only.
+```
+
+---
+
+### 4d. `docs/context/plan.md`
 
 If a migration source was confirmed for `plan.md`, copy that file and prepend:
 ```
@@ -399,8 +220,8 @@ Otherwise create:
 
 ## Current Sprint: Initial Setup
 
-- [ ] Review AGENTIC.md and confirm the team configuration looks right.
-- [ ] Open your first sprint with @[ARCHITECT].
+- [ ] Review CLAUDE.md and confirm the team configuration looks right.
+- [ ] Open your first sprint with `/start-sprint`.
 
 ---
 
@@ -409,7 +230,7 @@ Otherwise create:
 
 ---
 
-### 4d. `docs/context/tracks.md`
+### 4e. `docs/context/tracks.md`
 
 ```markdown
 # Active Tracks
@@ -423,289 +244,35 @@ No active tracks. Add tracks as work begins.
 
 ---
 
-### 4e. `docs/context/product.md`
+### 4f. `skills-manifest.json`
 
-If a migration source was confirmed for `product.md`, copy that file and prepend the migration header. Otherwise create:
+Create `skills-manifest.json` at the project root pointing to the canonical registry:
 
-```markdown
-# Product Context
-
-## Vision
-[NAME]: [DESCRIPTION]
-
-## Current Focus
-[To be filled in.]
-
----
-
-*Last updated: [TODAY'S DATE]*
+```json
+{
+  "canonical-registry": "https://raw.githubusercontent.com/gastownhall/agent-os/main/skills-manifest.json",
+  "installed-version": "v0.20.0"
+}
 ```
 
 ---
 
-### 4f. `.claude/agents/[SPRINT_COORDINATOR].md` and `.claude/agents/[TECHNICAL_ARCHITECT].md`
-
-Generate two agent definitions:
-
-**Sprint Coordinator:**
-- `name:` → SPRINT_COORDINATOR (lowercase, hyphen-separated if multi-word)
-- `description:` → "Sprint Coordinator for [NAME]. Coordination hub — sprint synthesis, routing, sprint interview docs."
-- `provider: claude`
-- `model: sonnet`
-- `tools: Read, Bash`
-- Body: Initialization (read AGENTIC.md, plan.md, tracks.md, CLAUDE.md), Core Identity (zero-code coordinator), Routing Protocol (technical → Technical Architect, design → Designer, marketing → Marketing), Specialist dispatch per operating mode, Hard Constraints (no execution files, no domain plans), Sign-Off Protocol, Circuit Breaker.
-- Replace "Conductor" references with OWNER throughout.
-
-**Technical Architect:**
-- `name:` → TECHNICAL_ARCHITECT (lowercase, hyphen-separated if multi-word)
-- `description:` → "Technical Architect for [NAME]. Zero-code planner — owns Red Flag Analysis, Implementation Plans, and Handoff Bridges for technical tracks."
-- `provider: claude`
-- `model: opus`
-- `tools: Read, Write, Edit, Bash, WebFetch`
-- Body: Initialization (read AGENTIC.md, plan.md, tracks.md, product.md, INSTALL_CHECKLIST.md — surface any unchecked required items before planning), Core Identity (zero-code planner), Capabilities (Research Phase (§0, mandatory before any plan touching runtime behavior: search https://code.claude.com/docs, cite source URLs, no behavioral claims without documentation, hard stop on "I think"; hard stop if WebFetch unavailable), Red Flag Analysis, Implementation Plan, Handoff Bridge using template from AGENTIC.md §8, Sprint Housekeeping), Hard Constraints (no source file edits; writes to `docs/context/` and `docs/archive/` only; never issue a Bridge with unfilled safety fields; worktree isolation enforced via Specialist frontmatter — verify `isolation: worktree` and `worktree.baseRef: "head"` exist before issuing any Bridge), Sign-Off Protocol, Circuit Breaker.
-- Replace "Conductor" references with OWNER throughout.
-
----
-
-### 4g. `.claude/agents/[QA].md`
-
-Generate a QA agent definition:
-
-- `name:` → QA (lowercase, hyphen-separated if multi-word)
-- `description:` → "QA for [NAME]. Zero-write quality gate — issues PASS or BLOCKED verdict."
-- `provider: claude`
-- `model: sonnet`
-- `tools: Read, Bash, WebFetch`
-- Body: Initialization, Core Identity (zero-write), Spec Gate (must receive Handoff Bridge before auditing), Quality Gate checks (scope, build passes `[BUILD_CMD]`, no secrets, format), Behavioral Verification Gate (between Quality Gate and Context Gate — requires Specialist to have attached observed output; BLOCKED if absent or vague; check plan doc for Research Basis section on behavioral claim tracks), Context Gate (track hygiene), Hard Constraints (never write or edit; verdict is APPROVED or BLOCKED only), Circuit Breaker.
-
----
-
-### 4h. `.claude/agents/[SPECIALIST NAME].md` (one per specialist row)
-
-For each specialist parsed from the team table, generate an agent definition:
-
-- `name:` → specialist name (lowercase, hyphen-separated if multi-word)
-- `description:` → "[NAME] [DOMAIN] Specialist for [NAME]. Owns [SCOPE]."
-- `provider: claude`
-- `model: sonnet`
-- `isolation: worktree`
-- `tools: Read, Write, Edit, Bash, WebFetch`
-- Body: Initialization (read DNA files), Core Identity (domain and scope), Capabilities, Hard Constraints (Bridge is the only scope boundary; STOP if Bridge safety fields are unpopulated for auth/schema/payment changes; if implementation relies on undocumented behavior — a tool parameter, runtime guarantee, or API assumption not confirmed in official docs — STOP and flag to the Technical Architect before proceeding), Sign-Off Protocol (Sign-Off must include **Behavioral Verification** field with actual observed output from the Bridge's Verification command — pasted output, not a summary).
-
----
-
-### 4h-global-agent-guard. Global-namespace guard
-
-Before installing any agent to `~/.claude/agents/` (the global Claude Code scope), apply this guard. This prevents project-specific agents from polluting the global namespace.
-
-**Guard procedure:**
-
-1. Read `skills-manifest.json` from the canonical Agent OS source clone. Extract the `agents[]` array.
-
-2. For each agent that would be written globally to `~/.claude/agents/<name>.md`: check whether `<name>` is present in `agents[]`.
-
-   - **Present (canonical agent):** proceed with the global write to `~/.claude/agents/<name>.md`.
-   - **Absent (non-canonical, project-specific):** install to `.claude/agents/<name>.md` (project-local) ONLY, and log exactly:
-     ```
-     "<name>" is not a canonical agent — installed project-local only. To install globally, add it to skills-manifest.json first.
-     ```
-
-3. **Absent-path handling (AGENTIC.md §9.7.1):** If `skills-manifest.json` is absent or its `agents[]` key is unreadable, treat as "cannot verify canonical" → default to project-local install with the same log message above. Fail safe: never pollute the global namespace when canonical status cannot be confirmed.
-
-**Note:** Steps 4f, 4g, and 4h above generate project-specific agent files (Sprint Coordinator, Technical Architect, QA, Specialists) to `.claude/agents/` (project-local) by design — they are not candidates for global install. This guard applies to any additional canonical agent files (e.g. `task-coder`, `task-writer`, `task-researcher`) that the install process installs from `claude/agents/` into the global scope.
-
----
-
-### 4i. `.claude/settings.json`
+### 4g. `.claude/settings.json`
 
 If `.claude/settings.json` already exists, merge — do not remove existing entries. If it does not exist, create:
 
 ```json
 {
-  "operatingMode": "gated-approve",
   "worktree": {
     "baseRef": "head"
   },
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "f=\"$CLAUDE_PROJECT_DIR/.agent-os-checked\"; if [ ! -f \"$f\" ]; then echo 'Agent OS health check is overdue — run /check-agent-os.'; exit 0; fi; mtime=$(stat -f %m \"$f\" 2>/dev/null || stat -c %Y \"$f\" 2>/dev/null); now=$(date +%s); if [ -z \"$mtime\" ]; then exit 0; fi; age_days=$(( (now - mtime) / 86400 )); if [ \"$age_days\" -gt 30 ]; then echo 'Agent OS health check is overdue — run /check-agent-os.'; fi; exit 0"
-          },
-          {
-            "type": "command",
-            "command": "sanitized=$(echo \"$CLAUDE_PROJECT_DIR\" | sed 's|/|-|g'); mem_dir=\"$HOME/.claude/projects/$sanitized/memory\"; if [ ! -d \"$mem_dir\" ]; then exit 0; fi; newest_mtime=$(find \"$mem_dir\" -maxdepth 1 -type f -exec stat -f %m {} \\; 2>/dev/null | sort -n | tail -1); if [ -z \"$newest_mtime\" ]; then newest_mtime=$(find \"$mem_dir\" -maxdepth 1 -type f -exec stat -c %Y {} \\; 2>/dev/null | sort -n | tail -1); fi; if [ -z \"$newest_mtime\" ]; then exit 0; fi; now=$(date +%s); age_days=$(( (now - newest_mtime) / 86400 )); if [ \"$age_days\" -gt 14 ]; then echo \"Memory hygiene reminder — newest memory entry is $age_days days old. Consider /clean-context or /minify-context.\"; fi; exit 0"
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [
           {
             "type": "command",
             "command": "echo 'Session ended. Reminder: archive completed tracks, verify plan.md is current, confirm no uncommitted changes.'"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Agent",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-manual-agent-spawn.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-uncommitted-dispatch.sh",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "if": "Edit(AGENTIC.md)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Write(AGENTIC.md)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Edit(CLAUDE.md)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Write(CLAUDE.md)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Edit(claude/**)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Write(claude/**)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Edit(.claude/agents/**)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Write(.claude/agents/**)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Edit(.claude/skills/**)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Write(.claude/skills/**)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Edit(docs/tasks.json)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Write(docs/tasks.json)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Edit(docs/context/product.md)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Write(docs/context/product.md)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Edit(docs/context/io-contracts.md)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Write(docs/context/io-contracts.md)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Edit(docs/context/CONVENTIONS.md)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Write(docs/context/CONVENTIONS.md)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Edit(docs/context/tasks-schema.md)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Write(docs/context/tasks-schema.md)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Edit(docs/context/bridges/**)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "if": "Write(docs/context/bridges/**)",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-orchestrator-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-mode-violation.sh",
-            "timeout": 10
           }
         ]
       }
@@ -720,18 +287,6 @@ If `.claude/settings.json` already exists, merge — do not remove existing entr
       "Bash(git branch *)",
       "Bash(find *)",
       "Bash(grep *)"
-    ],
-    "deny": [
-      "Bash(rm -rf *)",
-      "Bash(git push --force *)",
-      "Bash(git push -f *)",
-      "Bash(curl *)",
-      "Bash(wget *)",
-      "Bash(npx *)",
-      "Bash(bunx *)",
-      "Bash(uvx *)",
-      "Bash(eval *)",
-      "Bash(ssh *)"
     ]
   }
 }
@@ -739,82 +294,7 @@ If `.claude/settings.json` already exists, merge — do not remove existing entr
 
 ---
 
----
-
-### 4i-hooks. Hook install (fresh-install enforcement — RF1)
-
-> **Required at install time — not only at refresh time.** Copy the four enforcement hooks from the canonical source into the target project's `.claude/hooks/` directory. This closes the fresh-install enforcement gap: without these files, the `PreToolUse` entries in `.claude/settings.json` (step 4i above) reference paths that do not exist, and the enforcement rules are silently inoperative on new installs.
-
-1. Create the `.claude/hooks/` directory in the target project if absent — silently, with `mkdir -p .claude/hooks/`. Do not emit any message about directory creation; surface an error only if creation itself fails.
-
-2. Copy all four canonical enforcement hooks from `claude/hooks/` (in the canonical Agent OS source clone) to the project's `.claude/hooks/`, preserving the executable bit:
-
-   ```bash
-   cp claude/hooks/block-orchestrator-execution.sh .claude/hooks/block-orchestrator-execution.sh
-   cp claude/hooks/block-mode-violation.sh .claude/hooks/block-mode-violation.sh
-   cp claude/hooks/block-uncommitted-dispatch.sh .claude/hooks/block-uncommitted-dispatch.sh
-   cp claude/hooks/block-manual-agent-spawn.sh .claude/hooks/block-manual-agent-spawn.sh
-   chmod +x .claude/hooks/*.sh
-   ```
-
-3. Confirm the four hook paths match the `${CLAUDE_PROJECT_DIR}/.claude/hooks/` references wired in step 4i's `.claude/settings.json` `PreToolUse` block:
-   - `.claude/hooks/block-orchestrator-execution.sh`
-   - `.claude/hooks/block-mode-violation.sh`
-   - `.claude/hooks/block-uncommitted-dispatch.sh`
-   - `.claude/hooks/block-manual-agent-spawn.sh`
-
-**Absent-path handling (AGENTIC.md §9.7.1):** If the canonical source clone does not contain `claude/hooks/` (e.g. the clone predates this sprint), emit a single warning and continue:
-> `claude/hooks/ not found in canonical source — hook install skipped. Run /update-agent-os to install enforcement hooks after updating your canonical source.`
-
----
-
-### 4i-blueprints. Blueprint scaffolding (Claude Code only)
-
-> **If you are running as Claude Code, perform the blueprint-scaffolding step below. If you are running as Gemini CLI, skip this step entirely — blueprints are a Claude Code-only canonical content type this sprint.**
-
-**Claude Code branch only:**
-
-1. Read `blueprints-manifest.json` from the canonical source repo (the same local clone used in Step 4 for skills). If `blueprints-manifest.json` is absent (e.g. the canonical clone predates T19.2), emit a single line:
-   > `no blueprints-manifest.json found in canonical source — skipping blueprint scaffolding`
-   Then continue to Step 4i-mode. No error, no abort.
-
-2. If `~/.claude/blueprints/` does not exist, create it silently:
-   ```bash
-   mkdir -p ~/.claude/blueprints/
-   ```
-   Do not emit any message about the directory creation itself.
-
-3. For each name in the manifest's `blueprints` array, copy `claude/blueprints/<name>.md` from the canonical source to `~/.claude/blueprints/<name>.md`. If a same-named file already exists at the destination, show the diff and ask the user: merge, replace, or skip — identical to the existing Step 4 file-collision pattern.
-
-4. After all entries are processed, emit a single summary line:
-   > `Installed N blueprint(s) to ~/.claude/blueprints/`
-   Where N is the count of successfully installed blueprints. Skipped or failed files are reported per-file above the summary line.
-
----
-
-### 4i-mode. Operating mode introduction
-
-After `.claude/settings.json` is written, introduce operating mode to the user and verify the freshly generated `CLAUDE.md` contains the `## Operating Mode` section.
-
-**Agent OS defaults to gated-approve mode on every fresh install.** In gated-approve mode, the Conductor (you) triggers each handoff — the Orchestrator coordinates on request, not autonomously. auto-approve mode is a deliberate posture change made via `/streamline-approvals auto`.
-
-No mode-selection prompt is shown at install time. The default is always manual. Switching modes is always a deliberate, named action.
-
-Verify that the freshly generated `CLAUDE.md` contains a `## Operating Mode` section. If it does not (e.g. because the template predates T17.3), insert the following block immediately after `## Team Architecture` (or at the top of the file if that section is absent):
-
-```markdown
-## Operating Mode
-
-Current: MANUAL (autonomous loop inactive — Tim triggers each handoff)
-
-To change approval frequency: run `/streamline-approvals auto` or `/streamline-approvals gated`. See `AGENTIC.md` §3 for the mode-aware dispatch model.
-```
-
-Tell the user:
-> **Operating mode:** Agent OS is installed in **gated-approve** mode (default). Tim triggers each handoff. To switch to auto-approve mode, run `/streamline-approvals auto`. To return to gated-approve mode, run `/streamline-approvals gated`.
-
-
-### 4j. `.gitignore` additions
+### 4h. `.gitignore` additions
 
 Append to `.gitignore` if not already present:
 ```
@@ -824,168 +304,7 @@ Append to `.gitignore` if not already present:
 
 ---
 
-### 4k. `INSTALL_CHECKLIST.md`
-
-```markdown
-# Install Checklist
-
-## Required
-Complete these before opening the first sprint.
-
-- [x] Agent OS scaffold generated — [TODAY'S DATE]
-- [ ] Confirm `[BUILD_CMD]` exits with zero errors
-- [ ] Review AGENTIC.md — verify team configuration is correct
-
-## Optional
-Complete at any time. Your Technical Architect will surface unchecked items at the start of each session.
-
-- [ ] Product focus — fill in Current Focus in `docs/context/product.md`
-- [ ] Team conventions — update AGENTIC.md §5 with any project-specific workflow rules
-```
-
----
-
-### 4k-designer. Designer-aware setup (Claude Code only)
-
-> **If you are running as Claude Code, perform the designer-aware setup step below. If you are running as Gemini CLI, skip this step entirely.**
-
-**Claude Code branch only:**
-
-**Designer-class detection:** inspect the `SPECIALISTS` list parsed in Step 3. A specialist is Designer-class if:
-- Their `name` (lowercase, hyphen-separated) matches `designer`; OR
-- Their canonical agent file's `description:` or `name:` frontmatter declares a designer role (e.g. a project-renamed designer agent).
-
-If **no Designer-class agent is found** in the roster, write the AGENTIC.md §2 Design Toolchain section as a stub and skip to the final bullet below:
-
-```yaml
-design_tool: none
-runtime: N/A
-mcp_server_path: N/A
-```
-
-Then append to `INSTALL_CHECKLIST.md`:
-```
-- [ ] MCP: N/A (no design tool configured)
-```
-
-Skip the rest of this sub-phase.
-
----
-
-If **a Designer-class agent is found**, proceed:
-
-**Step 1 — Prompt for design tool and runtime:**
-
-Ask the user:
-> "Designer-class agent detected in your roster. Two questions:
-> 1. Design tool? [pencil / figma / none / other]
-> 2. Runtime? [desktop / vscode-extension / other]
->
-> (If `pencil` on `desktop`: you need `/Applications/Pencil.app/` installed. If `pencil` on `vscode-extension`: you need the Pencil extension installed in VS Code.)"
-
-Wait for the user's answers.
-
-**Step 2 — Handle `none` selection:**
-
-If the user selects `none` as the design tool:
-
-1. Write the AGENTIC.md §2 Design Toolchain section as a stub:
-   ```yaml
-   design_tool: none
-   runtime: N/A
-   mcp_server_path: N/A
-   ```
-2. Append to `INSTALL_CHECKLIST.md`:
-   ```
-   - [ ] MCP: N/A (no design tool configured)
-   ```
-3. Skip the MCP config block entirely. Proceed to Step 4l.
-
-**Step 3 — Handle `pencil` + `desktop` selection:**
-
-1. Populate the AGENTIC.md §2 Design Toolchain section:
-   ```yaml
-   design_tool: pencil
-   runtime: desktop
-   mcp_server_path: /Applications/Pencil.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64
-   ```
-
-2. Surface the following `mcpServers:` config block to the user for **explicit review and confirmation before any write**:
-
-   > "Add the following block to `~/.claude/settings.json` under `mcpServers` to enable Pencil MCP access for the Designer subagent. Review and confirm before applying — do NOT auto-write:"
-   >
-   > ```json
-   > "mcpServers": {
-   >   "pencil-desktop": {
-   >     "type": "stdio",
-   >     "command": "/Applications/Pencil.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64",
-   >     "args": ["--app", "desktop"]
-   >   }
-   > }
-   > ```
-   >
-   > "Paste and merge this into your `~/.claude/settings.json`. Restart Claude Code after editing. Then run the MCP reachability check in `INSTALL_CHECKLIST.md`."
-
-3. Append to `INSTALL_CHECKLIST.md`:
-   ```
-   - [ ] MCP reachability — confirm `mcp__pencil__get_editor_state` succeeds with a Pencil file open (pencil-desktop shape)
-   ```
-
-**Step 4 — Handle `pencil` + `vscode-extension` selection:**
-
-1. Populate the AGENTIC.md §2 Design Toolchain section:
-   ```yaml
-   design_tool: pencil
-   runtime: vscode-extension
-   mcp_server_path: ~/.pencil/mcp/visual_studio_code/out/mcp-server-darwin-arm64
-   ```
-
-2. Surface the following config block to the user for **explicit review and confirmation before any write**:
-
-   > "Add the following block to `~/.claude/settings.json` under `mcpServers`. Note the known limitation: the Pencil VS Code extension's MCP server is session-only and does NOT propagate to Designer subagents automatically — this explicit registration is required. Review and confirm before applying — do NOT auto-write:"
-   >
-   > ```json
-   > "mcpServers": {
-   >   "pencil-vscode": {
-   >     "type": "stdio",
-   >     "command": "~/.pencil/mcp/visual_studio_code/out/mcp-server-darwin-arm64",
-   >     "args": ["--app", "visual_studio_code"]
-   >   }
-   > }
-   > ```
-   >
-   > "Paste and merge this into your `~/.claude/settings.json`. Restart Claude Code after editing. Then run the MCP reachability check in `INSTALL_CHECKLIST.md`."
-
-3. Append to `INSTALL_CHECKLIST.md`:
-   ```
-   - [ ] MCP reachability — confirm `mcp__pencil__get_editor_state` succeeds with a Pencil file open (pencil-vscode shape)
-   ```
-
-**Step 5 — Handle `figma` or `other` selection:**
-
-1. Populate the AGENTIC.md §2 Design Toolchain section with the user's input:
-   ```yaml
-   design_tool: figma   # or the user's stated tool name
-   runtime: [user's stated runtime]
-   mcp_server_path: [user's stated path, or N/A if not yet known]
-   ```
-2. Tell the user:
-   > "Figma / other design tool detected. Consult your design tool's MCP server documentation to configure `mcpServers` in `~/.claude/settings.json`. See `claude/agents/designer.md` for the general MCP registration pattern. Update `INSTALL_CHECKLIST.md` manually with the MCP reachability check once configured."
-3. Append to `INSTALL_CHECKLIST.md`:
-   ```
-   - [ ] MCP reachability — configure `mcpServers` for your design tool and confirm the Designer subagent can reach it
-   ```
-
-**Absent-file handling (AGENTIC.md §9.7.1):** `INSTALL_CHECKLIST.md` was created in Step 4k above. If for any reason it does not exist, create it silently before appending:
-```bash
-touch INSTALL_CHECKLIST.md
-```
-
-**AGENTIC.md Design Toolchain write:** the Design Toolchain section already exists as a stub in the generated `AGENTIC.md` (Step 4a generated it as a placeholder block). Replace the stub's `design_tool`, `runtime`, and `mcp_server_path` placeholder values with the chosen values. Field order is binding: `design_tool` first, `runtime` second, `mcp_server_path` third.
-
----
-
-### 4l. Delete `AgentOS-Setup.md`
+### 4i. Delete `AgentOS-Setup.md`
 
 After all files are created successfully, delete `AgentOS-Setup.md`.
 
@@ -998,23 +317,11 @@ After all files are created successfully, delete `AgentOS-Setup.md`.
 
 **Project:** [NAME]
 **Files created:** [count]
-**Blueprints installed:** N  <!-- Claude Code branch only: include this line with the count of blueprints installed. Omit this line entirely on Gemini CLI installs or when blueprints-manifest.json was absent. -->
-
-**Your team:**
-- @[SPRINT_COORDINATOR] — Sprint Coordinator (routing + sprint synthesis)
-- @[TECHNICAL_ARCHITECT] — Technical Architect (planning + Handoff Bridges)
-- @[QA] — QA (quality gate)
-[For each specialist: - @[NAME] — [DOMAIN] specialist]
 
 **Next steps:**
-Your first move: open a sprint session with `@[SPRINT_COORDINATOR]`.
-
-- See `INSTALL_CHECKLIST.md` for any remaining setup items.
-- AGENTIC.md is your project's source of truth — your Technical Architect keeps it current.
-
-**Verification:** Run `[BUILD_CMD]` to confirm the build environment is clean.
-
-**Operating mode:** gated-approve (default). To switch to auto-approve mode, run `/streamline-approvals auto`. To return to gated-approve mode, run `/streamline-approvals gated`.
-
+1. Review CLAUDE.md — confirm tech stack is correct.
+2. Open your first sprint with `/start-sprint`.
+3. Run `[BUILD_CMD]` to confirm the build environment is clean.
 
 **Activate skills:** Close and reopen your IDE window — installed skills load on session start.
+```

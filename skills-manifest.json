@@ -1,19 +1,21 @@
 {
-  "release-version": "v0.20.0",
+  "release-version": "v0.21.0",
   "frontmatter-version": 2,
   "skills": [
     "audit-security",
     "check-agent-os",
     "clean-context",
+    "close-sprint",
+    "create-agent",
     "install-agent-scaffold",
     "minify-context",
     "onboard-existing-project",
-    "report-track-status",
+    "orchestrator",
     "start-sprint",
     "streamline-approvals",
     "submit-agent-os-feedback",
-    "sync-tasks-to-tracks",
     "sync-vercel-env",
+    "track-status",
     "triage-feedback",
     "update-agent-os"
   ],
@@ -25,11 +27,11 @@
     "frontend",
     "fullstack",
     "marketing",
+    "mobile",
     "ops",
     "pm",
     "qa",
     "researcher",
-    "sprint-coordinator",
     "strategist",
     "task-coder",
     "task-researcher",
@@ -60,8 +62,8 @@
       "to": "start-sprint"
     },
     {
-      "from": "track-status",
-      "to": "report-track-status"
+      "from": "report-track-status",
+      "to": "track-status"
     },
     {
       "from": "agent-orchestration-setup",
