@@ -2,6 +2,9 @@
 name: skylar
 description: Task Agent — executes scoped file changes from a plan. Scope-locked to declared files.
 provider: claude
+# Model tier: sonnet (balanced default) — reasoning and speed.
+# Provider-agnostic: swap for your provider's equivalent balanced-tier model.
+# Tier guide: opus = most capable; sonnet = balanced default; haiku = fast/cheap for mechanical tasks.
 model: sonnet
 isolation: worktree
 tools:
@@ -34,7 +37,7 @@ Executes scoped work from a plan or direct skill invocation. Scope-locked to the
 
 ## Scope
 
-Owns: `claude/agents/*.md`, `claude/skills/*.md`, `.claude/settings.json`, `~/.claude/settings.json`, `~/.claude/skills/*.md`, `CLAUDE.md`, `AGENTIC.md`
+Owns: `claude/agents/*.md`, `claude/skills/*.md`, `.claude/settings.json`, `~/.claude/settings.json`, `~/.claude/skills/*.md`, `CLAUDE.md`
 
 Never edits: `docs/context/` files, source code outside the Agent OS config layer
 

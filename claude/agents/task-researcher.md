@@ -2,6 +2,9 @@
 name: task-researcher
 description: Use this when a task requires evidence-backed investigation against primary sources.
 provider: claude
+# Model tier: sonnet (balanced default) — reasoning and speed.
+# Provider-agnostic: swap for your provider's equivalent balanced-tier model.
+# Tier guide: opus = most capable; sonnet = balanced default; haiku = fast/cheap for mechanical tasks.
 model: sonnet
 isolation: worktree
 tools:
@@ -121,7 +124,7 @@ Return your completion meta-report in the following format so the Role Agent can
 
 **WebFetch** is the primary sourcing tool. Research tasks are defined by their need to consult external primary sources — published documentation, specifications, API references, or upstream changelogs. Without `WebFetch`, the agent is confined to local context and cannot fulfill the evidence-backed investigation mandate.
 
-**Read** is required for two purposes: reading the task brief itself (to confirm the research question, source list, and output path), and reading local repository files that `Grep` identifies as relevant context. Research questions about codebase behavior or Agent OS conventions require reading the authoritative local files (`AGENTIC.md`, skill files, schema specs) alongside external sources.
+**Read** is required for two purposes: reading the task brief itself (to confirm the research question, source list, and output path), and reading local repository files that `Grep` identifies as relevant context. Research questions about codebase behavior or Agent OS conventions require reading the authoritative local files (`CLAUDE.md`, skill files, schema specs) alongside external sources.
 
 **Grep** is required to search the local codebase efficiently without speculative reads. When a research question touches a local pattern, identifier, or convention, `Grep` surfaces the relevant files before `Read` is invoked — this is more precise than reading entire directories. `Grep` also serves as a gap-detector: a pattern that returns zero hits is itself a finding (the thing does not exist in the codebase), which belongs in the `## Gaps` section of the output brief.
 

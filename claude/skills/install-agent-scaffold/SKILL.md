@@ -310,7 +310,20 @@ After all files are created successfully, delete `AgentOS-Setup.md`.
 
 ---
 
-## Step 5: Confirm
+## Step 5: Verify Installation
+
+Run inline verification before declaring success:
+
+1. Confirm `CLAUDE.md` exists and contains `## Orchestrator Behavior`.
+2. Confirm `claude/skills/orchestrator/SKILL.md` exists and is non-empty.
+3. Confirm `.claude/agents/` contains at least `technical-architect.md`, `qa.md`, `task-coder.md`.
+4. Confirm `skills-manifest.json` exists at the project root.
+
+If any check fails, surface the specific failure before proceeding. Do not print the Step 6 confirmation until all four checks pass.
+
+---
+
+## Step 6: Confirm
 
 ```
 ## Agent OS Installed

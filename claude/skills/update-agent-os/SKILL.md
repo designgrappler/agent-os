@@ -189,6 +189,27 @@ Skills: <counts>. Agents: <counts>. Blueprints: <counts>. Hooks: <counts>. CLAUD
 
 ---
 
+## Phase 6.5: Post-Update Health Check
+
+Runs automatically after Phase 5 whenever at least one action was applied.
+
+1. Confirm `skills-manifest.json` `release-version` matches the canonical version surfaced in Phase 4.
+2. Confirm the orchestrator skill exists at `claude/skills/orchestrator/SKILL.md`.
+3. Confirm `CLAUDE.md` contains `## Orchestrator Behavior`.
+
+Print result:
+```
+Post-update health check: PASS
+```
+Or if any check fails:
+```
+Post-update health check: FAIL — [specific check that failed]
+```
+
+A FAIL here does not block the summary — it is advisory, prompting the user to run `/check-agent-os` for full diagnosis.
+
+---
+
 ## Phase 7: CLAUDE.md Stale Reference Patch
 
 **Condition:** Runs only when the diff produced at least one change this run.

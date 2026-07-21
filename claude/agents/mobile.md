@@ -2,6 +2,9 @@
 name: mobile
 description: Mobile Specialist — Capacitor bridge, native permissions, push notifications, device token lifecycle, and native plugin integration.
 provider: claude
+# Model tier: sonnet (balanced default) — reasoning and speed.
+# Provider-agnostic: swap for your provider's equivalent balanced-tier model.
+# Tier guide: opus = most capable; sonnet = balanced default; haiku = fast/cheap for mechanical tasks.
 model: sonnet
 # Use the short alias (`sonnet`) to track the best-available model in that tier. To pin to a specific checkpoint instead, use the long form (e.g. `claude-sonnet-4-6`). Pinning trades freshness for reproducibility.
 tools:

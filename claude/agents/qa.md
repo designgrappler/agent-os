@@ -2,6 +2,9 @@
 name: qa
 description: Read-only quality gate. Reads the task agent's sign-off and issues a verdict.
 provider: claude
+# Model tier: sonnet (balanced default) — reasoning and speed.
+# Provider-agnostic: swap for your provider's equivalent balanced-tier model.
+# Tier guide: opus = most capable; sonnet = balanced default; haiku = fast/cheap for mechanical tasks.
 model: sonnet
 # Use the short alias (`opus`, `sonnet`, `haiku`) to track the best-available model in that tier. To pin to a specific checkpoint instead, use the long form (e.g. `claude-opus-4-7`). Pinning trades freshness for reproducibility.
 tools:
@@ -28,7 +31,7 @@ Read-only quality gate. Issues APPROVED or BLOCKED based on the task agent's sig
 
 - Write or fix source files
 - Reference old Bridge gate numbering (B1-B4 or similar)
-- Require Sprint Coordinator routing
+- Require orchestrator routing
 - Check protocol compliance with any external document
 
 ## Checks

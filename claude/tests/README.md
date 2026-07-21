@@ -1,12 +1,14 @@
-# Blueprint Smoke Test Suite
+# Blueprint Smoke Test Suite — Historical Reference
 
-This directory contains the Agent OS blueprint smoke test suite. Each test validates that a named blueprint spawns correctly, fires its declared tool bindings, and produces output that satisfies its Expected Output Contract (EOC).
+> **Note:** These tests were written against the pre-S43 architecture (blueprint→task-executor chain) and are retained as historical reference only. They do not reflect the current execution model.
+>
+> **Current execution model:** orchestrator → specialist → task agent. New tests should be written against this model, not against the blueprint/task-executor chain documented here.
 
-## Purpose
+## Original purpose (pre-S43)
 
-Blueprint smoke tests verify end-to-end wiring of the Blueprint → Role Agent → Task Agent execution chain (AGENTIC.md §11). A smoke test is not a unit test — it exercises the full spawn path in a real Task Agent context and checks the four required EOC sections against the blueprint's contract.
+Smoke tests that verified the Blueprint → Role Agent → Task Agent execution chain. Each test validated that a named blueprint spawned correctly, fired its declared tool bindings, and produced output that satisfied its Expected Output Contract (EOC).
 
-## Three test cases
+## Three test cases (historical)
 
 | Track | Blueprint | Test result file |
 |---|---|---|
@@ -14,16 +16,14 @@ Blueprint smoke tests verify end-to-end wiring of the Blueprint → Role Agent �
 | T34.F2 | `task-writer` | `claude/tests/results/blueprint-smoke-writer-2026-07-09.md` |
 | T34.F3 | `task-coder` | `claude/tests/results/blueprint-smoke-coder-2026-07-09.md` |
 
-## How to run
+## How tests were run (pre-S43)
 
-Each smoke test is a Skylar track. The test is executed by:
+1. Skylar read the blueprint body from `claude/blueprints/<name>.md`.
+2. Skylar spawned a `task-executor` subagent with the blueprint body + a specced synthetic brief.
+3. The Task Agent executed against real sources (local files, URLs as named in the brief).
+4. Skylar captured the output and wrote a test report to `claude/tests/results/`.
 
-1. Skylar reads the blueprint body from `claude/blueprints/<name>.md`.
-2. Skylar spawns a `task-executor` subagent (Mechanic A per AGENTIC.md §11.2) with the blueprint body + a specced synthetic brief.
-3. The Task Agent executes against real sources (local files, URLs as named in the brief).
-4. Skylar captures the output and writes a test report to `claude/tests/results/`.
-
-## Output checks (all must hold for PASS)
+## Output checks (historical, for reference)
 
 For `task-researcher`:
 - Four required sections present: `## Research Question`, `## Synthesis`, `## Sources`, `## Gaps`
@@ -31,11 +31,11 @@ For `task-researcher`:
 - `## Gaps` is non-empty
 - No fabricated citations
 
-For `task-writer` and `task-coder`: see their respective Bridge documents.
+For `task-writer` and `task-coder`: see their respective result files.
 
 ## Scratch output
 
-`claude/tests/output/` is the shared scratch directory for intermediate artifacts produced during test execution. It is version-tracked via `.gitkeep` to ensure the directory persists across worktree checkouts. Agents write intermediate files here during research; final test reports land in `claude/tests/results/`.
+`claude/tests/output/` is the shared scratch directory for intermediate artifacts produced during test execution. It is version-tracked via `.gitkeep` to ensure the directory persists across worktree checkouts.
 
 ## Result file naming convention
 

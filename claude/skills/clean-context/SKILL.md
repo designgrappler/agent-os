@@ -197,6 +197,10 @@ For each approved file:
 
 For declined files: log as `Retained — Conductor decision`.
 
+## Canonical file scope
+
+Canonical agent files (`claude/agents/*.md`) and skill files (`claude/skills/*/SKILL.md`) are eligible for stale content removal when they contain stale cross-references, dead protocol sections, or redundant content. These files are protected by the hook layer, not by verbosity — removal of outdated content is safe.
+
 ## Backlog file check
 
 Confirm `docs/backlog.md` exists. This file is the standalone backlog owned by the orchestrator and Conductor — do not archive or delete it.

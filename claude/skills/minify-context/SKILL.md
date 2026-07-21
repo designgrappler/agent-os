@@ -31,6 +31,8 @@ Default targets (compress all unless the user specifies a subset):
 
 Do NOT touch `docs/archive/` or `.claude/` files (except `.claude/projects/<sanitized-cwd>/memory/` when memory target is explicitly opted in).
 
+**Canonical file eligibility:** Canonical agent files (`claude/agents/*.md`) and skill files (`claude/skills/*/SKILL.md`) are eligible for minification when they contain stale cross-references, dead protocol sections, or redundant content. These files are protected by the hook layer, not by verbosity — minification of outdated content is safe.
+
 ---
 
 ## PROTOCOL_CANON Hard Exclusion

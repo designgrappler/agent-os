@@ -59,3 +59,21 @@ Four controls, each doing one job:
 | Task agent | Executes scoped work, writes sign-off |
 | QA | Reads sign-off, issues APPROVED or BLOCKED |
 | Sprint skills (opt-in) | `/start-sprint`, `/close-sprint`, `/track-status` — load when sprint workflow is needed |
+
+## Output and context conventions
+
+**Large structured output to file.** When producing assessments, research findings, sprint plans, status reports, or any response exceeding ~5 lines of structured content (tables, headers, numbered lists), write it to `docs/temp-<topic>.md` and surface a 1–2 sentence summary + file path in chat. Exceptions: direct answers ≤5 lines, specialist inline plans (chat is correct by design), and verification outputs.
+
+**Bounded subagent returns.** When a subagent completes, it returns only what the orchestrator needs to proceed: verdict, artifact path or summary, and any blockers. Full execution transcripts do not flow back to the orchestrator.
+
+**Pre-filtered briefs.** When spawning a specialist or task agent, include the relevant context in the brief. Do not ask agents to re-read files already present in the orchestrator's context unless verifying current state is required.
+
+**Context budget.** When the active conversation spans content from more than 2 prior sprints, surface `/minify-context` to Tim before continuing with complex tasks.
+
+## BLOCKED resolution
+
+When QA issues a BLOCKED verdict:
+1. Read the BLOCKED reason — identify the specific failure.
+2. Surface to Tim: one sentence describing what failed and what decision is needed.
+3. Wait for direction before re-dispatching the task agent.
+4. Do not attempt to resolve a BLOCKED verdict autonomously.

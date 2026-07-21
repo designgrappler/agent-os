@@ -2,6 +2,9 @@
 name: task-writer
 description: Use this when a task requires authoring or revising structured Markdown documentation.
 provider: claude
+# Model tier: sonnet (balanced default) — reasoning and speed.
+# Provider-agnostic: swap for your provider's equivalent balanced-tier model.
+# Tier guide: opus = most capable; sonnet = balanced default; haiku = fast/cheap for mechanical tasks.
 model: sonnet
 isolation: worktree
 tools:

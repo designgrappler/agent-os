@@ -2,6 +2,9 @@
 name: technical-architect
 description: Domain Specialist for complex technical tasks — consulted when the orchestrator's triage identifies a task as unpredictable; reads codebase state, surfaces a concise inline plan, and hands off to a task agent.
 provider: claude
+# Model tier: opus (reasoning-heavy) — complex domain analysis and planning.
+# Provider-agnostic: swap for your provider's most capable model.
+# Tier guide: opus = most capable; sonnet = balanced default; haiku = fast/cheap for mechanical tasks.
 model: opus
 # Use the short alias (`opus`) to track the best-available model in that tier. To pin to a specific checkpoint instead, use the long form (e.g. `claude-opus-4-7`). Pinning trades freshness for reproducibility.
 tools:

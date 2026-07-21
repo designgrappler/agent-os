@@ -1,5 +1,5 @@
 {
-  "release-version": "v0.21.1",
+  "release-version": "v0.22.0",
   "frontmatter-version": 2,
   "skills": [
     "audit-security",
@@ -19,6 +19,13 @@
     "triage-feedback",
     "update-agent-os"
   ],
+  "skill-descriptions": {
+    "check-agent-os": "When you want to verify the Agent OS installation is healthy and up to date",
+    "close-sprint": "When all sprint tracks are complete and you want to close the sprint, bump version, and archive",
+    "create-agent": "When you want to scaffold a new agent file interactively",
+    "orchestrator": "Loaded automatically at session start — defines triage logic and routing. Not user-invoked directly.",
+    "track-status": "When you want a quick status summary of open sprint tracks"
+  },
   "agents": [
     "backend",
     "critic",
