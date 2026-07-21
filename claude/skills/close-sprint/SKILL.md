@@ -53,13 +53,32 @@ Preserve all prior completed sprint pointer lines below it.
 
 Preserve any tracks from other sprints.
 
-### Step 6 — Remind about GitHub release
+### Step 6 — Commit sprint close
 
-Output this reminder before finishing:
+Stage and commit the version bump, archive file, and context reset:
 
-> Before pushing the version tag, create a GitHub release on the private repo (agent-os-private) first. Tag: `<new-version>`. Then push.
+```bash
+git add skills-manifest.json docs/archive/plan-docs/S<N>.md docs/context/plan.md docs/context/tracks.md
+git commit -m "chore(S<N>): sprint close — <new-version>, archive plan, reset context"
+```
 
-### Step 7 — Confirm
+### Step 7 — Create GitHub release and push
+
+Before creating the release, derive the release notes from the sprint archive doc at `docs/archive/plan-docs/S<N>.md`. Use the "What changed" section (or equivalent) as the release body. Do not use a fallback string — if the archive doc is missing or has no substantive content, stop and ask the user for release notes before proceeding.
+
+```bash
+gh release create <new-version> \
+  --repo designgrappler/agent-os-private \
+  --title "<new-version>" \
+  --notes "<release notes from archive doc>"
+
+git push
+git fetch origin <new-version>
+```
+
+Note: `gh release create` pushes the tag to the remote. `git fetch origin <new-version>` syncs it locally. Do not run `git push origin <new-version>` — the tag already exists on the remote after `gh release create`.
+
+### Step 8 — Confirm
 
 Output a short confirmation:
 
@@ -69,6 +88,5 @@ Sprint S<N> closed.
 Version bumped to: <new-version>
 Archive: docs/archive/plan-docs/S<N>.md
 plan.md and tracks.md reset.
-
-Reminder: create the GitHub release on agent-os-private before pushing the version tag.
+GitHub release: https://github.com/designgrappler/agent-os-private/releases/tag/<new-version>
 ```
