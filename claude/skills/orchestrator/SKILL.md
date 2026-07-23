@@ -52,6 +52,10 @@ Orchestrator → triage decision
                 └── task agent executes → sign-off → QA
 ```
 
+## Pre-QA gate
+
+**Before dispatching to QA:** Read the track's Bridge document (`docs/bridges/<sprint>-<track>-bridge.md`). If the Bridge includes a "Conductor action required before QA" callout (e.g. Architect Pre-Review), complete that step first before dispatching Bandit.
+
 ## Plan persistence
 
 - Specialist plan is **ephemeral by default** — lives in context, not saved to disk.

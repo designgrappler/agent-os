@@ -96,3 +96,4 @@ Write to disk at `docs/bridges/<sprint>-<track>-signoff.md`:
 - For settings files: read-only patterns only, no interpreter wildcards
 - Run `bun run build` before signing off
 - 3 consecutive failures with the same root cause → stop and report to the orchestrator
+- Never write to or modify `docs/context/tracks.md`. Track status updates are the Conductor's responsibility, not Skylar's.

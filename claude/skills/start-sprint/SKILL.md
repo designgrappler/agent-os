@@ -8,6 +8,8 @@ whenToUse: When the user wants to start a new sprint or begin a structured work 
 
 ### Step 1 — Gather sprint context
 
+**Infrastructure check (run first):** Review the proposed sprint tracks. If any track touches `claude/skills/`, `claude/agents/`, or lifecycle skills (`/start-sprint`, `/close-sprint`, `/clean-context`), run a lightweight system scan before proceeding: check `docs/` root for temp file accumulation, check `docs/archive/plan-docs/` against the 3-sprint window, and surface any structural issues before asking for the sprint goal.
+
 **Backlog check (always run first):** Check whether `docs/backlog.md` exists. If it does, read it and surface candidate items grouped by section before asking for the sprint goal. Present each section as a brief bullet — section name + top item(s) in one sentence. Frame the output as: "Here's what's in the backlog — what's the goal for this sprint?" This replaces the blank prompt. If `docs/backlog.md` does not exist, proceed as if the file is absent — no error, no mention.
 
 Check whether a temp plan doc already exists at `docs/temp-sprint*.md` (glob pattern). If one is found, read it and extract the sprint goal and track list from it — skip to Step 2. (A temp plan doc takes precedence over the backlog prompt; if a temp plan doc exists, surface it rather than the raw backlog.)
@@ -111,3 +113,17 @@ Plan: docs/context/plan.md updated
 
 Next step: review the tracks, then dispatch work.
 ```
+
+### Step 6 — Write sprint plan doc
+
+Produce a narrative plan doc at `docs/temp-sprint<N>-plan.md` using the following format:
+
+- **Title:** `# Sprint <N> Plan — <sprint goal>`
+- **Header:** Sprint ID, Status (DRAFT), Authored by, Date, Prior sprint, Release target
+- **Section 1 — Sprint Objective:** 1–2 paragraph summary of what this sprint clears and why
+- **Section 2 — Tracks:** One subsection per track with: Description, Scope (numbered steps), Key files, Verification criteria
+- **Section 3 — Release Target:** version + one-line description
+- **Section 4 — Sprint Close Conditions:** numbered checklist
+- **Section 5 — Sequencing:** code block showing track order and dependencies
+
+See `docs/temp-sprint48-plan.md` for a reference example of this format.

@@ -29,13 +29,17 @@ Read `skills-manifest.json` and determine the appropriate version bump:
 
 Increment `"release-version"` accordingly (e.g. `"v0.20.0"` → `"v0.20.1"` for patch, `"v0.21.0"` for minor). Write the updated value back to `skills-manifest.json`.
 
-### Step 4 — Archive the sprint plan
+### Step 4 — Plan doc archival (rolling window)
 
-Read `docs/context/plan.md` and locate the `## Current Sprint: S<N>` section. Copy its full content (all headings, goals, and notes under it) to a new file at `docs/archive/plan-docs/S<N>.md`.
+**Plan doc archival (rolling window):** Move `docs/temp-sprint<N>-plan.md` to `docs/archive/plan-docs/S<N>.md`. Then check `docs/archive/plan-docs/` — delete any entries older than the 3-sprint window (keep current sprint + 2 prior). Git history retains all older content.
 
-If `docs/archive/plan-docs/` does not exist, create it silently before writing.
+If `docs/archive/plan-docs/` does not exist, create it silently before moving.
 
-### Step 5 — Reset context files
+### Step 5 — Archive the sprint plan
+
+Read `docs/context/plan.md` and locate the `## Current Sprint: S<N>` section. Copy its full content (all headings, goals, and notes under it) to `docs/archive/plan-docs/S<N>.md` if the file does not already exist from Step 4.
+
+### Step 6 — Reset context files
 
 **`docs/context/plan.md`:** Replace the current sprint section with a single archived pointer line:
 
@@ -53,7 +57,7 @@ Preserve all prior completed sprint pointer lines below it.
 
 Preserve any tracks from other sprints.
 
-### Step 6 — Commit sprint close
+### Step 7 — Commit sprint close
 
 Stage and commit the version bump, archive file, and context reset:
 
@@ -62,7 +66,7 @@ git add skills-manifest.json docs/archive/plan-docs/S<N>.md docs/context/plan.md
 git commit -m "chore(S<N>): sprint close — <new-version>, archive plan, reset context"
 ```
 
-### Step 7 — Create GitHub release and push
+### Step 8 — Create GitHub release and push
 
 Before creating the release, derive the release notes from the sprint archive doc at `docs/archive/plan-docs/S<N>.md`. Use the "What changed" section (or equivalent) as the release body. Do not use a fallback string — if the archive doc is missing or has no substantive content, stop and ask the user for release notes before proceeding.
 
@@ -78,7 +82,7 @@ git fetch origin <new-version>
 
 Note: `gh release create` pushes the tag to the remote. `git fetch origin <new-version>` syncs it locally. Do not run `git push origin <new-version>` — the tag already exists on the remote after `gh release create`.
 
-### Step 8 — Confirm
+### Step 9 — Confirm
 
 Output a short confirmation:
 
