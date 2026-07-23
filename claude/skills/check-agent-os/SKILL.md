@@ -66,6 +66,10 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 3. **Fail rows:** list each agent where `model:` contains a long-form name. Remediation hint:
    > Edit `.claude/agents/<name>.md` and change `model:` to the short form (`opus`, `sonnet`, or `haiku`).
 
+**Note on `provider:` field:** `provider:` is an optional frontmatter field. Its absence is correct for the default Anthropic setup. Do NOT flag a missing `provider:` field as an error.
+
+**Note on `mode:` field:** `mode:` is an optional field in `agent-setup.yml` (not agent frontmatter). Its absence or a blank value is correct and means `single-user`. Do NOT flag a missing, blank, or `single-user` `mode:` value as an error. (The non-blocking multi-user warning is added in T47.3.)
+
 ### 4c: WebFetch Tools Frontmatter Check
 
 1. For each file matching `.claude/agents/*.md`, parse the frontmatter `tools:` list.
@@ -111,6 +115,20 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 4. **Fail rows:** list each file that is missing or empty. Remediation hint:
    - For `docs/context/plan.md` or `docs/context/tracks.md`:
      > These files must be authored at sprint kickoff. Run `/start-sprint` to initialize them.
+
+---
+
+## Phase 6b: Multi-User `Owner:` Enforcement (informational — does not affect OVERALL)
+
+This phase is **advisory only**. It never contributes a fail row and never changes `OVERALL`.
+
+1. Read `agent-setup.yml` from the project root and take the top-level `mode:` value (trim whitespace, strip inline `#` comments). Apply the T47.2 defaulting: file absent / key absent / blank / `single-user` / any unrecognized value → `single-user`; only `multi-user` → `multi-user`.
+2. **If mode resolves to `single-user`:** emit `Phase 6b: Multi-User Owner Enforcement — N/A (single-user mode)` and exit the phase. No enforcement in single-user.
+3. **If mode resolves to `multi-user`:** read `docs/context/tracks.md`. For each track whose `**Status:**` is `IN_PROGRESS` or `DONE`, check its `**Owner:**` value. If the owner is blank or `null`, emit one warning line:
+   > `⚠ Track <ID> is <STATUS> but has no Owner (blank/null). Assign a GitHub handle in docs/context/tracks.md, or leave it if intentional. (Non-blocking.)`
+4. If no such tracks exist (or `tracks.md` is absent), emit `Phase 6b: Multi-User Owner Enforcement — PASS (all in-flight tracks owned)`.
+
+These warnings are surfaced for visibility only. Do **not** count them in the `OVERALL: FAIL (N issues)` total — the FAIL count remains "fail rows across Phases 1–7" as defined in Phase 9.
 
 ---
 
@@ -175,7 +193,7 @@ Extract the version string (first whitespace-delimited token). Compare to thresh
 
 ## Phase 9: Report
 
-Emit one clearly-labeled section per phase. Each section states **PASSED** or **FAILED**, with fail rows and remediation hints. Phase 8 notices are informational — they do NOT affect OVERALL.
+Emit one clearly-labeled section per phase. Each section states **PASSED** or **FAILED**, with fail rows and remediation hints. Phase 8 and Phase 6b notices are informational — they do NOT affect OVERALL.
 
 ```
 ### Phase 1: Skill Install Check — PASSED
@@ -190,6 +208,7 @@ Emit one clearly-labeled section per phase. Each section states **PASSED** or **
 #### 5a: AGENTIC.md Does NOT Exist — PASSED
 #### 5b: report-track-status Does NOT Exist — PASSED
 ### Phase 6: Required docs/context/ Check — PASSED
+### Phase 6b: Multi-User Owner Enforcement — N/A (single-user mode)
 ### Phase 7: Blueprint Frontmatter Validity Check — PASSED
 ### Phase 8: Claude Code Version Notice (informational)
 Claude Code version OK (v2.1.200)
@@ -199,7 +218,7 @@ OVERALL: PASS
 
 The final line **must** be exactly one of:
 - `OVERALL: PASS`
-- `OVERALL: FAIL (N issues)` — where N is the total count of fail rows across Phases 1–7 (Phase 8 excluded).
+- `OVERALL: FAIL (N issues)` — where N is the total count of fail rows across Phases 1–7 (Phase 8 and Phase 6b excluded, both informational).
 
 ---
 
@@ -230,3 +249,4 @@ The final line **must** be exactly one of:
 - [ ] Phase 5a: AGENTIC.md existence checked; presence is a FAIL
 - [ ] Phase 5b: report-track-status existence checked; presence is a FAIL
 - [ ] Phase 8: `claude --version` invoked defensively; never contributes fail rows to OVERALL
+- [ ] Phase 6b: mode read; single-user → N/A; multi-user → advisory warnings only, never counted in OVERALL

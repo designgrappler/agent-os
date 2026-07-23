@@ -16,22 +16,24 @@ When the user runs `/install-agent-scaffold`.
 
 1. If `CLAUDE.md` exists and contains Agent OS content → stop. Tell the user this project is already initialized. Suggest `/onboard-existing-project` to update an existing setup.
 2. If `AgentOS-Setup.md` does **not** exist → go to Step 2.
-3. If `AgentOS-Setup.md` exists → go to Step 3.
+3. If `AgentOS-Setup.md` exists but `agent-setup.yml` does **not** exist → go to Step 2b.
+4. If both `AgentOS-Setup.md` and `agent-setup.yml` exist → go to Step 3.
 
 ---
 
-## Step 2: Drop Setup File
+## Step 2: Drop Setup Files
 
-Write the following content to `AgentOS-Setup.md` at the project root, then stop and tell the user:
+Write `AgentOS-Setup.md` to the project root (content below). Also write `agent-setup.yml` to the project root (content below). Then stop and tell the user:
 
-> **Step 1 of 2 complete — `AgentOS-Setup.md` created.**
+> **Step 1 of 2 complete — setup files created.**
 >
 > Fill in your project details:
-> - **Project** — your project name and description
-> - **Tech Stack** — defaults are pre-selected; replace any value you want to change
+> - **`AgentOS-Setup.md`** — your project name, tech stack, and optional doc migration
+> - **`agent-setup.yml`** — your model tier and provider (edit the values, comments explain the options)
 >
-> When you're done, run `/install-agent-scaffold` again in this chat. Step 2 will generate: `CLAUDE.md`, agent definitions, `docs/context/` files, and `skills-manifest.json`.
+> When you're done filling in both files, run `/install-agent-scaffold` again. Step 2 will generate: `CLAUDE.md`, agent definitions, `docs/context/` files, and `skills-manifest.json`.
 
+`AgentOS-Setup.md` content:
 ```markdown
 # Agent OS Setup
 
@@ -74,11 +76,54 @@ Update the paths below to match your actual files. Delete rows that don't apply.
 | [sprint notes or task list] | docs/context/tracks.md |
 ```
 
+`agent-setup.yml` content:
+```yaml
+# Agent OS — Install Configuration
+# Fill in values below, then re-run /install-agent-scaffold
+
+# model_tier: tier of model to use for this agent
+# Options: fast | balanced | powerful
+# fast = lightweight/mechanical tasks, balanced = default, powerful = reasoning-heavy tasks
+model_tier: balanced
+
+# provider: AI provider for this agent (optional — omit or leave blank for default Anthropic/Claude)
+# Options: anthropic (default) | google | openai | other
+# If "other", replace with your provider's identifier string
+provider: anthropic
+```
+
 Stop here. Do not generate any other files.
 
 ---
 
-## Step 3: Parse AgentOS-Setup.md
+## Step 2b: Missing agent-setup.yml (edge case)
+
+Reached only when `AgentOS-Setup.md` exists but `agent-setup.yml` does not.
+
+Write the following content to `agent-setup.yml` at the project root:
+
+```yaml
+# Agent OS — Install Configuration
+# Fill in values below, then re-run /install-agent-scaffold
+
+# model_tier: tier of model to use for this agent
+# Options: fast | balanced | powerful
+# fast = lightweight/mechanical tasks, balanced = default, powerful = reasoning-heavy tasks
+model_tier: balanced
+
+# provider: AI provider for this agent (optional — omit or leave blank for default Anthropic/Claude)
+# Options: anthropic (default) | google | openai | other
+# If "other", replace with your provider's identifier string
+provider: anthropic
+```
+
+Then stop and tell the user:
+
+> **`agent-setup.yml` created.** Confirm the `model_tier` and `provider` values look right, then re-run `/install-agent-scaffold`.
+
+---
+
+## Step 3: Parse AgentOS-Setup.md and agent-setup.yml
 
 Read `AgentOS-Setup.md`. Extract values as follows.
 
@@ -97,6 +142,23 @@ Read `AgentOS-Setup.md`. Extract values as follows.
 **Validation** — stop and list what's missing if any of these are blank:
 - `NAME`, `DESCRIPTION`, `BUILD_CMD`
 
+Read `agent-setup.yml`. Extract provider and tier as follows.
+
+**`model_tier`** — read the `model_tier:` value (trim whitespace, strip inline comments).
+- Valid values: `fast`, `balanced`, `powerful`.
+- If missing or not one of the three valid values → stop and tell the user: "Fill in `agent-setup.yml`: `model_tier` must be `fast`, `balanced`, or `powerful`."
+
+**`provider`** — read the `provider:` value (trim whitespace, strip inline comments).
+- If the field is absent, blank, or the value is `anthropic` → treat as default; set `PROVIDER` = `anthropic`.
+- Any other non-empty value → set `PROVIDER` = that value.
+
+**Map `model_tier` to agent frontmatter alias:**
+- `fast` → `haiku`
+- `balanced` → `sonnet`
+- `powerful` → `opus`
+
+Store the resolved alias as `MODEL_ALIAS`.
+
 If all required values are present → proceed to Step 4.
 
 ---
@@ -107,21 +169,25 @@ Create all files below. For each file that already exists, show the diff and ask
 
 ---
 
-### Model alias guidance (read before generating any agent)
+### Model and provider guidance (read before generating any agent)
 
-Every generated agent file uses these frontmatter fields:
+Every generated agent file uses the `MODEL_ALIAS` resolved in Step 3. Emit `model: <MODEL_ALIAS>` in all agent frontmatter.
 
-```yaml
-model: sonnet          # tier alias: opus | sonnet | haiku
-```
+Only emit `provider: <PROVIDER>` when `PROVIDER` is not `anthropic`. Omit the `provider:` field entirely for the default Anthropic setup — this keeps existing installs clean.
 
-Use the short alias — it tracks the best-available model in that tier.
+Examples:
+- `model_tier: balanced` + `provider: anthropic` → emit `model: sonnet` only (no `provider:` line)
+- `model_tier: powerful` + `provider: google` → emit `model: opus` and `provider: google`
 
-| Role | Tier |
+Default tier-to-role mapping (override with `MODEL_ALIAS` from `agent-setup.yml`):
+
+| Role | Default Tier |
 |---|---|
 | Technical Architect | `opus` — heavy reasoning, plan synthesis |
 | Orchestrator / Specialist / QA | `sonnet` — standard execution |
 | Lightweight / fast tasks | `haiku` — quick lookups, reformatting |
+
+When `agent-setup.yml` specifies a tier, use `MODEL_ALIAS` for all generated agents (overrides the default role-based tiers above).
 
 ---
 
@@ -304,9 +370,9 @@ Append to `.gitignore` if not already present:
 
 ---
 
-### 4i. Delete `AgentOS-Setup.md`
+### 4i. Delete setup files
 
-After all files are created successfully, delete `AgentOS-Setup.md`.
+After all files are created successfully, delete both `AgentOS-Setup.md` and `agent-setup.yml`.
 
 ---
 

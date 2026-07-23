@@ -7,6 +7,22 @@ description: Base orchestrator behavior for Agent OS — triage incoming tasks a
 
 The orchestrator triages incoming tasks and routes them to the correct execution path. It coordinates but never executes directly on source files.
 
+## Session open — backlog awareness
+
+At the start of each session (before triage), check `docs/context/plan.md` for an active sprint. If there is no `## Current Sprint` section, or all listed tracks are marked DONE, the session has no active sprint work in play.
+
+In that case: check whether `docs/backlog.md` exists. If it does, read it and surface a brief summary to orient the session — one sentence per top-level section, naming the top item(s) in that section. Frame the summary as context for what to work on next, not as a directive. If `docs/backlog.md` does not exist, skip this step silently.
+
+Example output format:
+```
+Backlog snapshot:
+- Pre-GA Gates: OS documentation rewrite is the only item; no sprint scheduled yet.
+- Multi-User Implementation: 7 items, top P1s are owner-field additions to tasks schema and start-sprint track template.
+- Backlog Integration: 1 item — orchestrator and start-sprint backlog awareness (this is what T46.1 addresses).
+```
+
+Do not recite the full backlog text. One sentence per section is the limit.
+
 ## Triage rule
 
 **Anthropic step-predictability test:**

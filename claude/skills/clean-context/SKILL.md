@@ -32,6 +32,40 @@ Move `docs/temp-*.md` files for closed sprints to `docs/archive/` (creating the 
 
 Move `scratchpad_*.md` files to `.agent/archives/` per project policy, or delete if the project has no archive directory and the file has no useful content. Log each action.
 
+## Open-PR guard (warn-only)
+
+Belt-and-suspenders check: warn if any pull requests are still open against
+`feature/*` branches before the worktree and branch sweeps run. This is a
+**warning only** — it never bails and never blocks cleanup, and it degrades
+silently when GitHub CLI is unavailable.
+
+1. If `gh` is not installed, skip this section entirely — no output:
+   ```bash
+   command -v gh >/dev/null 2>&1 || :   # skip silently when gh absent
+   ```
+
+2. Otherwise, query open feature-branch PRs (stderr suppressed so an
+   unauthenticated `gh`, a repo with no GitHub remote, or any other failure
+   produces no output):
+   ```bash
+   gh pr list --state open \
+     --json number,title,headRefName,url \
+     --limit 100 \
+     --jq '.[] | select(.headRefName | startswith("feature/")) | "  #\(.number)  \(.headRefName)  —  \(.title)  (\(.url))"' \
+     2>/dev/null
+   ```
+
+3. If the command produced no output — emit nothing and continue to the
+   Merged worktree sweep.
+
+4. If the command produced one or more lines, print this warning, then continue
+   (cleanup does NOT stop):
+   ```
+   Warning: the following PRs are still open against feature/* branches. Cleanup will continue, but their branches will not be swept until the PRs are merged or closed:
+
+   <captured lines>
+   ```
+
 ## Merged worktree sweep
 
 For each directory under `.claude/worktrees/` (and `.worktrees/` if present), check whether its branch is merged into `main`:
@@ -71,7 +105,7 @@ Log any skipped worktrees (non-merged or ambiguous) with the reason.
 
 ## Merged branch sweep
 
-Run `git branch --merged main`. Delete every `track/*` branch that appears:
+Run `git branch --merged main`. Delete every `feature/*` branch that appears:
 
 ```
 git branch -d <branch>
@@ -228,7 +262,8 @@ Run `git push origin main`. This triggers the distribute workflow on the private
 - `scratchpad_*.md` files were moved or deleted; `.agent/archives/` updated where applicable.
 - `docs/temp-*.md` files for closed sprints were archived to `docs/archive/` or deleted; `docs/archive/**` and `docs/context/temp-architectural-assessment.md` were never touched.
 - Merged worktrees under `.claude/worktrees/` (and `.worktrees/` if present) were removed; unmerged ones were logged and skipped.
-- No `track/*` branch that was already merged to `main` remains; unmerged ones were logged.
+- No `feature/*` branch that was already merged to `main` remains; unmerged ones were logged.
+- Open-PR guard: warned when open PRs target `feature/*` branches, or emitted nothing when none matched / `gh` unavailable; never bailed.
 - Memory hygiene scan: the pruning report fired (or "no findings" was printed); no memory file was deleted.
 - `tracks.md` Context Health entry updated with the current date.
 - `git push origin main` was run successfully (or surfaced to Conductor on failure with no force-push attempt).
