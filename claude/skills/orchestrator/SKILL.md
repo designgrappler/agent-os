@@ -50,11 +50,31 @@ Orchestrator → triage decision
         └── specialist reasons, surfaces plan inline (in chat)
             └── Tim confirms (high-risk) OR auto-proceeds (low-risk complex)
                 └── task agent executes → sign-off → QA
+                      └── QA APPROVED → Conductor transition prompt
+                            ├── user ready → /track-close T<N> "<outcome>"
+                            └── one more thing → hold; re-prompt after next APPROVED
 ```
 
 ## Pre-QA gate
 
 **Before dispatching to QA:** Read the track's Bridge document (`docs/bridges/<sprint>-<track>-bridge.md`). If the Bridge includes a "Conductor action required before QA" callout (e.g. Architect Pre-Review), complete that step first before dispatching Bandit.
+
+## Track transition (after QA APPROVED)
+
+When QA (Bandit) issues APPROVED on a track, the Conductor surfaces the following forward-looking transition prompt:
+
+> "Work on T\<N\> is complete. Ready to start something new, or is there anything else on this task?"
+
+**This is not a close confirmation.** The prompt asks about what is next. APPROVED does not itself fire `/track-close` — the close trigger is the user's intent to move on (two-signal model: APPROVED = quality gate, user affirmative = close trigger).
+
+**Response handling:**
+
+- **User affirmative / ready to move on** → fire `/track-close T<N> "<outcome summary>"` where the outcome summary is a one-to-two-sentence result of the track's work, matching how `What happened` reads in existing exit records. Full invocation shape: `/track-close <track-id> "<close-notes>" [next-steps="..."] [backlog-title="..."]`
+- **User says "one more thing" / has follow-up** → hold. Do not fire `/track-close`. Re-surface the same transition prompt after the *next* Bandit APPROVED on that track. The track stays open across the additional work.
+
+**Mode parity:** This transition prompt applies in both single-task mode (no active sprint) and sprint mode. No sprint wrapper is required — the prompt lives in the orchestrator, which is always loaded.
+
+**Merge-timing guard:** If `/track-close` is not resolvable in the loaded skill scope, report: "`/track-close` not yet available in this scope — track is ready to close but cannot be written; please ensure T49.1 is merged to main and reload." Do not fire a phantom invocation.
 
 ## Plan persistence
 

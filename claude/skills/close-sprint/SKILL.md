@@ -6,15 +6,17 @@ whenToUse: When the user wants to close the current sprint after all tracks are 
 
 ## Instructions
 
-### Step 1 — Check track status
+### Step 1 — Close any completed-but-not-yet-closed tracks
 
-Read `docs/context/tracks.md`. Confirm every track for the current sprint has a status of DONE, or has been explicitly deferred with a note in its Exit Record.
+Read `docs/context/tracks.md`. For each track belonging to the current sprint:
 
-If any track is still OPEN or BLOCKED (no Exit Record filled in), surface the list and stop:
+- **Work complete, exit record not yet written (OPEN with completed work):** invoke `/track-close <track-id> "<outcome>"` to write the exit record. Do not write the exit record inline — `/track-close` is the sole mechanism for writing DONE exit records.
+- **Explicitly deferred:** record a DEFERRED note in the track's exit record manually (deferral is not a DONE close; `/track-close` only writes DONE).
+- **Still OPEN or BLOCKED with no completed work:** surface the list and stop:
 
-> The following tracks are not yet resolved: [list]. Mark each as DONE or DEFERRED before closing the sprint.
+  > The following tracks are not yet resolved: [list]. Resolve or explicitly defer each before closing the sprint.
 
-Wait for confirmation before continuing.
+  Wait for confirmation before continuing.
 
 ### Step 2 — Run build
 

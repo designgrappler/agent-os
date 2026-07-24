@@ -1,5 +1,5 @@
 {
-  "release-version": "v0.24.0",
+  "release-version": "v0.25.0",
   "frontmatter-version": 2,
   "skills": [
     "audit-security",
@@ -15,6 +15,7 @@
     "streamline-approvals",
     "submit-agent-os-feedback",
     "sync-vercel-env",
+    "track-close",
     "track-status",
     "triage-feedback",
     "update-agent-os"
