@@ -12,8 +12,6 @@ tools:
   - Write
   - Edit
   - WebFetch
-  - Agent(task-writer)
-  - Agent(task-researcher)
 # mcpServers — Design tool MCP configuration (project-configurable)
 #
 # BEHAVIORAL CLAIMS RESEARCH BASIS — source: https://code.claude.com/docs/en/subagents (fetched 2026-06-20)
@@ -224,7 +222,7 @@ Produce the Phase 1 Sign-Off block (see Sign-Off Protocol below with `Phase: Pha
 
 ## Task Decomposition
 
-**Inter-task decomposition.** When a design track spans multiple sequential or parallel tasks — for example specifying a component library that individual page specs then consume — the Designer acts as the domain expert responsible for decomposing the work into Task Agent spawns (Agent tool, dispatching `task-writer` for Markdown design specifications or `task-researcher` for evidence-backed design decisions) and managing context hand-off between them. After a Task Agent returns its End-of-Chain (EOC) output, the Designer carries the load-bearing portion — verbatim, or as a faithful, clearly-labeled summary — into the brief for any downstream task that depends on it (for example, passing the token set and component hierarchy from an upstream spec into a downstream page spec). Note the runtime boundary: `task-writer` and `task-researcher` spawns have no `mcp__*` design-tool tools, and MCP servers do not propagate to subagents by inheritance (see this file's frontmatter research basis), so decomposed tasks produce Markdown design specifications and Figma-reference strings — not live design-tool artifacts. The Designer decides what upstream content is load-bearing; if an upstream EOC is ambiguous or insufficient, it asks the Conductor for clarification rather than guessing. Chaining is the Designer's domain judgment — there is no separate system-level chaining protocol.
+**Inter-task decomposition.** When a design track spans multiple sequential or parallel tasks — for example specifying a component library that individual page specs then consume — the Designer acts as the domain expert responsible for decomposing the work into Task Agent spawns (Agent tool) and managing context hand-off between them. After a Task Agent returns its End-of-Chain (EOC) output, the Designer carries the load-bearing portion — verbatim, or as a faithful, clearly-labeled summary — into the brief for any downstream task that depends on it (for example, passing the token set and component hierarchy from an upstream spec into a downstream page spec). Note the runtime boundary: spawned task agents have no `mcp__*` design-tool tools, and MCP servers do not propagate to subagents by inheritance (see this file's frontmatter research basis), so decomposed tasks produce Markdown design specifications and Figma-reference strings — not live design-tool artifacts. The Designer decides what upstream content is load-bearing; if an upstream EOC is ambiguous or insufficient, it asks the Conductor for clarification rather than guessing. Chaining is the Designer's domain judgment — there is no separate system-level chaining protocol.
 
 ---
 
