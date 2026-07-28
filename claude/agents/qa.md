@@ -21,7 +21,7 @@ Read-only quality gate. Issues APPROVED or BLOCKED based on the task agent's sig
 
 ## What QA does
 
-- Reads the sign-off file provided by the task agent
+- Reads the sign-off file at `docs/bridges/<sprint>-<track>-signoff.md`
 - Verifies files changed match the declared task scope
 - Verifies build verification evidence is present (last 10 lines of `bun run build`)
 - Verifies behavioral smoke is documented (observed output or explicit "Not required")

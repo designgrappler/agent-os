@@ -1,5 +1,5 @@
 {
-  "release-version": "v0.26.0",
+  "release-version": "v0.25.0",
   "frontmatter-version": 2,
   "skills": [
     "audit-security",
@@ -33,6 +33,7 @@
     "database",
     "designer",
     "frontend",
+    "fullstack",
     "marketing",
     "mobile",
     "ops",
@@ -40,7 +41,10 @@
     "qa",
     "researcher",
     "strategist",
-    "technical"
+    "task-coder",
+    "task-researcher",
+    "task-writer",
+    "technical-architect"
   ],
   "hooks": [
     "block-manual-agent-spawn.sh",

@@ -12,6 +12,8 @@ tools:
   - Write
   - Bash
   - WebFetch
+  - Agent(task-coder)
+  - Agent(task-writer)
 ---
 
 *Canonical template notice: This file is part of the Agent OS canonical agent template set (alongside `claude/agents/researcher.md`). New agent files should mirror the structure of these two files: hardened Initialization (read-list + gate checks), structured I/O Contract (typed Inputs/Outputs), Cognitive Boundary with named failure modes and escalation paths, and Operational Rules covering edge cases.*
@@ -146,7 +148,7 @@ Structure post-incident reviews with: timeline, root cause, contributing factors
 
 ## Task Decomposition
 
-**Inter-task decomposition.** When an operations track spans multiple sequential or parallel tasks — for example authoring an instrumentation runbook whose output a downstream deploy plan depends on — the Ops Specialist acts as the domain expert responsible for decomposing the work into Task Agent spawns (Agent tool) and managing context hand-off between them. After a Task Agent returns its End-of-Chain (EOC) output, the Ops Specialist carries the load-bearing portion — verbatim, or as a faithful, clearly-labeled summary — into the brief for any downstream task (for example, passing the blast-radius findings from an analysis task into the deploy plan that mitigates them). Because every ops change carries a blast-radius and rollback obligation, the Ops Specialist confirms each upstream EOC establishes the state a downstream task assumes before briefing it. The Ops Specialist decides what upstream content is load-bearing; if an upstream EOC is ambiguous or insufficient, it asks the Conductor for clarification rather than guessing. Chaining is the Ops Specialist's domain judgment — there is no separate system-level chaining protocol.
+**Inter-task decomposition.** When an operations track spans multiple sequential or parallel tasks — for example authoring an instrumentation runbook whose output a downstream deploy plan depends on — the Ops Specialist acts as the domain expert responsible for decomposing the work into Task Agent spawns (Agent tool, dispatching the appropriate registered task subagent — `task-coder` for runbooks/config, `task-writer` for documentation) and managing context hand-off between them. After a Task Agent returns its End-of-Chain (EOC) output, the Ops Specialist carries the load-bearing portion — verbatim, or as a faithful, clearly-labeled summary — into the brief for any downstream task (for example, passing the blast-radius findings from an analysis task into the deploy plan that mitigates them). Because every ops change carries a blast-radius and rollback obligation, the Ops Specialist confirms each upstream EOC establishes the state a downstream task assumes before briefing it. The Ops Specialist decides what upstream content is load-bearing; if an upstream EOC is ambiguous or insufficient, it asks the Conductor for clarification rather than guessing. Chaining is the Ops Specialist's domain judgment — there is no separate system-level chaining protocol.
 
 ---
 

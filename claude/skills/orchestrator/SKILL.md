@@ -57,7 +57,7 @@ Orchestrator → triage decision
 
 ## Pre-QA gate
 
-**Before dispatching to QA:** Check whether the track involves high-risk files (integration-chain skills, auth, schema, payments, core config). If so, surface to Tim for confirmation before dispatching Bandit.
+**Before dispatching to QA:** Read the track's Bridge document (`docs/bridges/<sprint>-<track>-bridge.md`). If the Bridge includes a "Conductor action required before QA" callout (e.g. Architect Pre-Review), complete that step first before dispatching Bandit.
 
 ## Track transition (after QA APPROVED)
 

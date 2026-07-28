@@ -11,6 +11,8 @@ tools:
   - Read
   - Write
   - WebFetch
+  - Agent(task-researcher)
+  - Agent(task-writer)
 ---
 
 *Canonical template notice: This file is part of the Agent OS canonical agent template set (alongside `claude/agents/ops.md`). New agent files should mirror the structure of these two files: hardened Initialization (read-list + gate checks), structured I/O Contract (typed Inputs/Outputs), Cognitive Boundary with named failure modes and escalation paths, and Operational Rules covering edge cases.*
@@ -116,7 +118,7 @@ Identify what the current evidence base does not cover. Produce a structured gap
 
 ## Task Decomposition
 
-**Inter-task decomposition.** When a research track spans multiple sequential or parallel tasks — for example separate source-corpus analyses that a downstream synthesis task must consolidate — the Researcher acts as the domain expert responsible for decomposing the work into Task Agent spawns (Agent tool) and managing context hand-off between them. After a Task Agent returns its End-of-Chain (EOC) output, the Researcher carries the load-bearing portion — verbatim, or as a faithful, clearly-labeled summary — into the brief for any downstream task (for example, passing an upstream analysis's findings and citations into the synthesis task). Citation integrity is preserved across the hand-off: an upstream finding's sources travel with it, and the Researcher never lets a downstream task restate a finding without its grounding citation. The Researcher decides what upstream content is load-bearing; if an upstream EOC is ambiguous or insufficient, it asks the Conductor for clarification rather than guessing. Chaining is the Researcher's domain judgment — there is no separate system-level chaining protocol.
+**Inter-task decomposition.** When a research track spans multiple sequential or parallel tasks — for example separate source-corpus analyses that a downstream synthesis task must consolidate — the Researcher acts as the domain expert responsible for decomposing the work into Task Agent spawns (Agent tool, dispatching the appropriate registered task subagent — `task-researcher` for investigation, `task-writer` for brief authoring) and managing context hand-off between them. After a Task Agent returns its End-of-Chain (EOC) output, the Researcher carries the load-bearing portion — verbatim, or as a faithful, clearly-labeled summary — into the brief for any downstream task (for example, passing an upstream analysis's findings and citations into the synthesis task). Citation integrity is preserved across the hand-off: an upstream finding's sources travel with it, and the Researcher never lets a downstream task restate a finding without its grounding citation. The Researcher decides what upstream content is load-bearing; if an upstream EOC is ambiguous or insufficient, it asks the Conductor for clarification rather than guessing. Chaining is the Researcher's domain judgment — there is no separate system-level chaining protocol.
 
 ---
 
