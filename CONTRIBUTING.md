@@ -38,7 +38,7 @@ Capabilities: [fs_read, fs_write]
 ...
 
 ## Trigger
-Tell Architect: "..."
+Tell the orchestrator: "..."
 ```
 
 **Claude Code skill** (`claude/skills/your-skill-name.md`):
