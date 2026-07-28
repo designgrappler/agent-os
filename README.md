@@ -16,12 +16,12 @@ Agent OS is our take on making that reliable. It's a workflow that gives every a
 Agent OS creates a set of plain Markdown files — your project description, active work, and team setup — that every agent reads at the start of each session. This is what keeps agents consistent across conversations. Context lives in files, not in conversation history.
 
 **2. Roles with real constraints**
-Each agent has a defined role and can only use the tools that role allows. An Architect plans but cannot touch your files. A Critic reviews but cannot write. This isn't a rule you ask them to follow — it's enforced at the runtime level. Roles don't drift because they structurally can't. The template library covers both dev and non-dev team functions: planning, execution, QA, design, product, strategy, and marketing. See [Agent Library](./GUIDE.md#agent-library) in the Implementation Guide.
+Each agent has a defined role and can only use the tools that role allows. An orchestrator routes and plans but never executes on your files. A QA specialist reviews but cannot write. This isn't a rule you ask them to follow — it's enforced at the runtime level. Roles don't drift because they structurally can't. The template library covers both dev and non-dev team functions: planning, execution, QA, design, product, strategy, and marketing. See [Agent Library](./GUIDE.md#agent-library) in the Implementation Guide.
 
 **3. A quality gate before work ships**
-No task is complete until a dedicated QA reviews it and issues a binary verdict: PASS or BLOCKED. QA is read-only by design — it can't fix what it finds, which means problems have to go back to the specialist before anything ships. This is the checkpoint that stops bad work from compounding.
+No task is complete until a dedicated QA specialist reviews it and issues a binary verdict: approved or blocked. QA is read-only by design — it can't fix what it finds, which means problems have to go back to the specialist before anything ships. This independent checkpoint is what stops bad work from compounding.
 
-In AUTONOMOUS mode (auto-approve), the Sprint Coordinator dispatches Specialists via the Agent tool inline, with each Specialist running in isolated context — no manual kickoff required. For complex multi-file tracks, the Skills Engineer can decompose a Handoff Bridge into Task Agent spawns: the Role Agent reads a blueprint from `claude/blueprints/`, extracts the task body, and spawns a `task-executor` subagent for each logical task. This keeps complex work reliable and auditable — every file touched traces back to a named blueprint and a bounded task scope.
+Agent OS adapts to how work is structured: **single-task** for one-off jobs, **multi-agent** for work that spans several roles, and **sprint** for complex multi-track projects. The same three-part backbone — shared context, defined roles, quality gate — holds in every mode.
 
 ---
 
@@ -35,9 +35,9 @@ A long AI conversation accumulates drift — earlier instructions carry less wei
 - A task finishes and a new one begins
 - Something goes consistently wrong — always start fresh after a failure
 
-**The Handoff Bridge is your reset tool.** When passing work from one agent to another, the system generates a structured summary of everything the next agent needs to start clean. In Claude Code this happens natively. In Antigravity, copy the Bridge into the new agent's workspace manually.
+**A new session is your reset.** Because state lives in files, nothing is lost when you start fresh: agents read the context files (`product.md`, `plan.md`, `tracks.md`) at the start of every session and pick up exactly where the work stands.
 
-For a one-line fix, skip the protocol. For anything that touches multiple areas, involves multiple agents, or needs to survive a context reset — the structure pays for itself.
+For a one-line fix, skip the ceremony. For anything that touches multiple areas, involves multiple agents, or needs to survive a context reset — the structure pays for itself.
 
 ---
 
@@ -62,7 +62,7 @@ Claude Code manages planning, execution, and review within a single IDE. Agent d
 → [Single model setup in the Implementation Guide](./GUIDE.md#single-model--one-tool-handles-everything)
 
 **Split model — Antigravity + Claude Extension**
-Gemini (via Antigravity's Agent Manager) handles planning and orchestration. Claude (via VS Code's Claude Extension) handles execution. The Handoff Bridge moves work between them.
+Gemini (via Antigravity's Agent Manager) handles planning and orchestration. Claude (via VS Code's Claude Extension) handles execution. Work moves between them through the shared Markdown context files, which both tools read.
 → [Split model setup in the Implementation Guide](./GUIDE.md#split-model--planning-tool--execution-tool)
 
 Using a different combination? The two patterns above cover most setups — use them as a reference for adapting to your tools. [See other environments →](./GUIDE.md#other-environments)
@@ -71,52 +71,52 @@ Using a different combination? The two patterns above cover most setups — use 
 
 ## 🗺️ Agent OS Skills
 
-Skills are organized by phase and map to a stage in the workflow.
+Skills are organized by phase and map to a stage in the workflow. All are invoked as slash commands in Claude Code.
 
 ### Setup
-Run once to initialize Agent OS on your project. Generates the DNA files and agent definitions.
+Run once to initialize Agent OS on your project.
 
-| Goal                     | Claude Code                   | Gemini CLI                   |
-| :----------------------- | :---------------------------- | :--------------------------- |
-| Scaffold new project     | `/install-agent-scaffold`     | `install-agent-scaffold`     |
-| Onboard existing project | `/onboard-existing-project`   | `onboard-existing-project`   |
+| Goal                     | Command                       |
+| :----------------------- | :---------------------------- |
+| Scaffold new project     | `/install-agent-scaffold`     |
+| Onboard existing project | `/onboard-existing-project`   |
 
 ### Sprint
 Define and track a unit of work. A sprint is a focused period with a clear objective and one or more active tasks (tracks).
 
-| Goal                     | Claude Code                   | Gemini CLI                   |
-| :----------------------- | :---------------------------- | :--------------------------- |
-| Open a sprint            | `/start-sprint`               | `open-sprint`                |
-| Check track status       | `/report-track-status`        | `report-track-status`        |
+| Goal                     | Command             |
+| :----------------------- | :------------------ |
+| Open a sprint            | `/start-sprint`     |
+| Check track status       | `/track-status`     |
+| Close a completed track  | `/track-close`      |
+| Close the sprint         | `/close-sprint`     |
 
-### Execution
-The active work phase. Generate handoffs for specialists, run work, and review output before it's considered done.
+### Context & Maintenance
+Keep the system healthy. Archive completed work and compress context files.
 
-| Goal                     | Claude Code                   | Gemini CLI                   |
-| :----------------------- | :---------------------------- | :--------------------------- |
-| Add specialist agent     | *(built-in)*                  | `add-specialist`             |
-| Optimize handoff         | *(native)*                    | `optimize-handoff`           |
-| Audit deliverables       | *(built-in)*                  | `audit-deliverables`         |
-
-### Maintenance
-Keep the system healthy. Archive completed work, compress context files, and sync state between sessions.
-
-| Goal                     | Claude Code                   | Gemini CLI                   |
-| :----------------------- | :---------------------------- | :--------------------------- |
-| Clean context            | *(native)*                    | `clean-context`              |
-| Compress active context  | `/minify-context`             | `minify-context`             |
-| Index memory             | *(native)*                    | `index-memory`               |
-| Sync design              | `/sync-design`                | `sync-design`                |
+| Goal                     | Command             |
+| :----------------------- | :------------------ |
+| Clean context            | `/clean-context`    |
+| Compress active context  | `/minify-context`   |
 
 ### Lifecycle
 Keep your Agent OS installation healthy and up to date.
 
-| Goal                     | Claude Code                   | Gemini CLI                   |
-| :----------------------- | :---------------------------- | :--------------------------- |
-| Health check             | `/check-agent-os`             | —                            |
-| Update installed skills  | `/update-agent-os`            | —                            |
+| Goal                     | Command             |
+| :----------------------- | :------------------ |
+| Health check             | `/check-agent-os`   |
+| Update installed skills  | `/update-agent-os`  |
+| Scaffold a new agent     | `/create-agent`     |
 
-> **Claude Code** handles handoff generation, context cleanup, and specialist onboarding natively. **Gemini CLI** uses explicit skills for each operation.
+### Feedback
+Improve Agent OS itself.
+
+| Goal                     | Command                       |
+| :----------------------- | :---------------------------- |
+| Submit feedback upstream | `/submit-agent-os-feedback`   |
+| Triage collected feedback| `/triage-feedback`            |
+
+> The orchestrator skill loads automatically at session start to handle triage and routing — it is not invoked directly.
 
 ---
 
@@ -124,10 +124,11 @@ Keep your Agent OS installation healthy and up to date.
 
 These skills work on any project — no Agent OS installation required.
 
-| Skill | Claude Code | Gemini CLI | Purpose |
-| :--- | :---: | :---: | :--- |
-| [`audit-security`](./skills/audit-security/SKILL.md) | ✓ | ✓ | Security sweep — scans for vulnerabilities, hardcoded secrets, and policy violations |
-| [`streamline-approvals`](./skills/streamline-approvals/SKILL.md) | ✓ | — | Scans transcripts, builds a read-only allowlist, writes it to `.claude/settings.json`, enables VS Code Auto mode |
+| Skill | Purpose |
+| :--- | :--- |
+| [`audit-security`](./skills/audit-security/SKILL.md) | Security sweep — scans for vulnerabilities, hardcoded secrets, and policy violations |
+| [`streamline-approvals`](./skills/streamline-approvals/SKILL.md) | Scans transcripts, builds a read-only allowlist, writes it to `.claude/settings.json`, enables VS Code Auto mode |
+| [`sync-vercel-env`](./skills/sync-vercel-env/SKILL.md) | Syncs local environment variables to a Vercel project |
 
 > This library grows independently of Agent OS. Skills that don't depend on shared DNA state belong here.
 

@@ -36,15 +36,14 @@ Each failure has a specific architectural layer that addresses it. The layers ar
 
 Each agent has a defined identity, responsibility, and tool scope. The body of the agent definition is its system prompt — its identity, responsibilities, and hard constraints.
 
-The key principle is **cognitive specialization through narrow context.** The Architect only thinks about planning. Specialists only think about execution within their domain. The Critic only thinks about whether something passes. Each agent is more precise at its job *because* it carries no context about other jobs. An agent that can also execute will always be tempted to skip planning and just code. Role separation creates the friction that forces quality at each transition.
+The key principle is **cognitive specialization through narrow context.** The orchestrator only thinks about routing. Specialists only think about execution within their domain. QA only thinks about whether something passes. Each agent is more precise at its job *because* it carries no context about other jobs. An agent that can also route will always be tempted to skip reasoning and just execute. Role separation creates the friction that forces quality at each transition.
 
 **Core roles:**
 - **Conductor** (human) — Vision, approval, final say
-- **Orchestrator** (AI) — Coordinates specialists; never executes directly
-- **Architect** (AI) — Plans, analyzes risk, produces Handoff Bridges; zero-code
-- **Specialists** (AI) — Execute within a declared scope; one domain each
-- **QA** (AI) — Audits execution diffs; read-only; issues PASS or BLOCKED
-- **Critic** (AI) — Adversarial reviewer of ideas and plans; read-only; issues APPROVED, CHALLENGED, or BLOCKED
+- **Orchestrator** (AI) — Triages tasks, routes to correct flow; never executes on project files
+- **Specialists** (AI) — Domain experts that carry judgment; execute within a declared scope; one domain each
+- **QA Specialist** (AI) — Read-only gate; binary verdict (approved/blocked); cannot modify what it reviews
+- **Sub-agents** (AI) — Created dynamically per task by specialists; not pre-shipped
 
 ---
 
@@ -52,13 +51,13 @@ The key principle is **cognitive specialization through narrow context.** The Ar
 
 Behavioral rules are instructions — what agents are told to do and not do. They operate at three levels:
 
-**Orchestrator-level (`CLAUDE.md` / project config):** Instructions for the coordinating agent. Defines the execution chain, escalation protocols, and the "no execution without a Handoff Bridge" gate.
+**Orchestrator-level (`CLAUDE.md` / project config):** Instructions for the coordinating agent. Defines the execution chain, escalation protocols, and routing behavior. The orchestrator applies a step-predictability test: if the number and nature of steps needed to complete the task can be predicted, the orchestrator invokes the relevant skill directly. If steps depend on current state and cannot be predicted, the orchestrator spawns a specialist first.
 
-**Agent-level (system prompts):** Each agent's definition contains role-specific constraints. The Architect reads context files before every response. The Critic issues PASS or BLOCKED, nothing else.
+**Agent-level (system prompts):** Each agent's definition contains role-specific constraints. The QA Specialist reads completed work and issues APPROVED or BLOCKED — nothing else.
 
-**Project-level (`AGENTIC.md`):** The Static DNA that every agent is instructed to read at initialization — tech stack, Definition of Done, team roles, commit convention. Because it's read first, it overwrites the model's general training defaults with project-specific constraints. This is called the **DNA Jolt**: LLMs weight recent tokens most heavily, so loading Static DNA first grounds the agent before any task context is introduced.
+**Project-level (`docs/context/product.md`):** The stable product context that every agent reads at initialization — product description, ICP, invariant model. Because it's read first, it grounds the agent before any task context is introduced. This is called the **DNA Jolt**: LLMs weight recent tokens most heavily, so loading stable context first grounds the agent before task-specific instructions are introduced.
 
-**Important distinction:** Keep orchestrator-level instructions separate from project-level DNA. Mixing them causes orchestrator protocols to pollute specialist context, and vice versa.
+**Important distinction:** Keep orchestrator-level instructions separate from project-level context. Mixing them causes orchestrator protocols to pollute specialist context, and vice versa.
 
 **The limitation:** Behavioral rules *can* be worn down. A sufficiently persistent prompt, a long context window that dilutes early instructions, or a model with a strong agreeableness bias can cause an agent to bend a behavioral rule. This is why Layer 3 exists.
 
@@ -68,7 +67,7 @@ Behavioral rules are instructions — what agents are told to do and not do. The
 
 Physical barriers are constraints enforced at the infrastructure level — not in the prompt, but in the runtime. They cannot be argued past, reasoned around, or forgotten.
 
-**Tool scope locking:** Each agent should only have access to the tools required for its role. A Critic needs read and shell access — not write. Even if explicitly instructed to "just fix this one line," a Critic with no write tool cannot comply. This is the difference between "don't touch the code" (behavioral) and "you have no write tool" (physical). Remove the behavioral rule and the agent might comply anyway. Remove the tool and compliance is irrelevant.
+**Tool scope locking:** Each agent should only have access to the tools required for its role. A QA Specialist needs read and shell access — not write. Even if explicitly instructed to "just fix this one line," a QA Specialist with no write tool cannot comply. This is the difference between "don't touch the code" (behavioral) and "you have no write tool" (physical). Remove the behavioral rule and the agent might comply anyway. Remove the tool and compliance is irrelevant.
 
 **Workspace isolation:** When multiple tracks are active simultaneously, isolate each in a separate workspace (git worktree, separate working directory, etc.). Cross-track contamination becomes physically impossible, not just prohibited.
 
@@ -108,72 +107,32 @@ What's worth persisting: surprising findings, validated preferences, non-obvious
 ## How a Task Flows Through the System
 
 ```
-Conductor (approval)
-  → Architect reads Static DNA + Dynamic DNA context    [Behavioral: DNA Jolt]
-  → Architect produces Handoff Bridge                   [Behavioral: context compression]
-  → Specialist opens isolated workspace for the track   [Physical: isolation]
-  → Specialist verifies upstream interface              [Behavioral: Technical Handshake]
-  → Specialist implements, scope-locked to declared files [Behavioral + Physical: tool scope]
-  → Role Agent (Specialist) reads blueprint, spawns task-executor subagents [Physical: worktree isolation per spawn]
-  → Task Agents execute; Role Agent collects outputs + Task Agent Manifest   [Behavioral: manifest gate]
-  → QA reads diff — cannot write, issues PASS/BLOCKED [Physical: tool lock + binary gate]
-  → Automated gate validates build before merge         [Physical: pre-merge check]
-  → Conductor approves merge                            [Human: final checkpoint]
+Orchestrator → triage
+  ├── simple: invoke skill → execution → QA gate → done
+  └── complex: spawn specialist
+        └── specialist surfaces inline plan
+            └── Tim confirms (high-risk) OR auto-proceeds (low-risk complex)
+                └── execution → QA gate → done
 ```
-
----
-
-## Blueprint-Driven Decomposition
-
-When a Handoff Bridge covers multiple distinct files or spans both code and documentation, the Role Agent (Specialist) may decompose execution into Task Agent spawns rather than running monolithically. Each spawn handles exactly one logical task within the Bridge's declared Execution Files scope.
-
-The chain: the Role Agent reads a blueprint file from `claude/blueprints/<name>.md`, extracts the body (everything after the YAML frontmatter's closing `---`), and spawns the Agent tool with `subagent_type: task-executor`, passing the blueprint body plus a task-specific context block as the prompt. This is called **Mechanic A** and is the only supported spawn path. The `task-executor` subagent is registered in `.claude/agents/task-executor.md`.
-
-After all spawns complete, the Role Agent produces a **Task Agent Manifest** — one entry per spawn. QA gates the manifest via four checks before the Sign-Off Immutability Gate:
-
-1. **Files-touched union invariant** — the union of all files touched by Task Agents must equal the set of files changed in the track diff. No on-disk file may be absent from the manifest; no manifest file may be absent from the diff.
-2. **Scope invariant** — every file touched by a Task Agent must be within the Bridge's declared Execution Files. Any out-of-scope file is a BLOCK.
-3. **Contract invariant** — each manifest entry's expected-output contract text must match the first sentence of the corresponding blueprint's `## Expected Output Contract` section verbatim.
-4. **Existing Role Agent gates** — all pre-existing QA gates continue to run on the Role Agent's overall sign-off. The manifest gate is additive, not a replacement.
-
-Full specification: `AGENTIC.md` §11.
 
 ---
 
 ## Two Key Protocols
 
-### The Handoff Bridge (Architect → Specialist)
+### Context in Briefs (Orchestrator → Specialist / Task Agent)
 
-The Handoff Bridge is the transition mechanism between the planning layer and the execution layer. Rather than asking the Specialist to re-read the full plan and make assumptions, the Architect compresses the relevant state into a structured template:
-
-```markdown
-### HANDOFF BRIDGE
-**Topic:** [Feature/Bug Name]
-**Track:** [ID from tracks.md]
-**Static DNA Check:** [Confirmed alignment with AGENTIC.md]
-**Dynamic DNA State:**
-- Product Context: [1-sentence requirement]
-- Current Plan: [step in plan.md]
-- Execution Files (source): [primary source/canonical files to modify]
-- Execution Files (tests): [test files in scope; [] with justification if none]
-- Execution Files (tooling/config): [build/config files; [] if none]
-**Migration Safety:** [N/A / Reversible / Irreversible]
-**Security Review:** [N/A / Auth / Payments / Schema]
-**Worktree Setup:** [automatic via isolation: worktree frontmatter; manual command only for first-run bootstrap]
-**Verification:** [command or observed output — pasted runtime output required]
-**Next Step:** [specific task for the Specialist]
-```
-
-The bridge does two things: it gives the Specialist exactly what it needs (no more, no less), and it forces the Architect to think through execution requirements before handing off. If you can't write the bridge clearly, the plan isn't ready.
+When spawning a specialist or task agent, the orchestrator includes the relevant context in the brief — what the task is, what files are in scope, and what the verification criteria are. This context is ephemeral: it lives in the invocation, not on disk. If you cannot write a clear brief, the task is not yet ready to execute.
 
 ### The Technical Handshake (Specialist → Specialist)
 
-Before accepting work from an upstream specialist, the downstream specialist verifies the interface. This is horizontal peer verification — distinct from the Handoff Bridge (which is vertical, Architect → Specialist):
+Before accepting work from an upstream specialist, the downstream specialist verifies the interface. This is horizontal peer verification — it checks that upstream work meets the downstream requirement before execution begins:
 
 - **Backend → Database:** "Does this schema support my query logic?"
 - **Frontend → Backend:** "Does this API contract match my UI requirements?"
 
 This prevents building against an unverified assumption. A UI built against a hypothetical API that hasn't been finalized yet will produce a working component and a broken integration. The Technical Handshake catches this before implementation begins.
+
+The QA Specialist performs a related check at the end of each track: it receives the completed work and verifies it against the criteria in the invocation — no separate scope document required.
 
 ---
 
@@ -185,16 +144,16 @@ This isn't about hierarchy — it's about what can exist without what. The schem
 
 ---
 
-## The DNA Taxonomy
+## The Context Model
 
-**Static DNA** lives in a root-level file (typically `AGENTIC.md`). It contains foundational constraints: tech stack, team roles, hard protocols. It changes rarely and is read once per session.
+**Product context** lives in `docs/context/product.md`. It contains the stable product description, ICP, and invariant model. Every agent reads it at initialization. It changes rarely — only when the product's scope or value proposition shifts.
 
-**Dynamic DNA** lives in a context directory (typically `docs/context/`). It contains high-churn task state: active plan, current tracks, product requirements. It changes per-sprint and is refreshed per task.
+**Sprint context** lives in `docs/context/plan.md` and `docs/context/tracks.md`. It contains high-churn task state: the active sprint objective, current track status, and decisions made during execution. It changes per-sprint and is refreshed per task.
 
 **Why the split matters:**
-1. **Token efficiency** — Dynamic DNA is only loaded when needed; Static DNA is read once at initialization
-2. **Drift prevention** — Mixing foundational rules with task details causes agents to weight them equally over time. Static rules need higher "gravity" — placing them at the repo root achieves this because agents prioritize recently-ingested tokens
-3. **Archive discipline** — Completed Dynamic DNA can be archived without touching Static DNA, keeping active context lean
+1. **Token efficiency** — Sprint context is only loaded when needed; product context is read once at initialization
+2. **Drift prevention** — Mixing stable product rules with task details causes agents to weight them equally over time. Stable context needs higher "gravity" — loading it first at initialization achieves this
+3. **Archive discipline** — Completed sprint context can be archived without touching the product context, keeping active context lean
 
 ---
 
@@ -206,10 +165,10 @@ This isn't about hierarchy — it's about what can exist without what. The schem
 | QA writes code | Tool scope lock |
 | Cross-track contamination | Workspace isolation |
 | Agent drifts out of role | Behavioral rules + narrow tool set |
-| Context bloat causes hallucination | Dynamic DNA archiving |
+| Context bloat causes hallucination | Sprint context archiving |
 | Instructions forgotten cross-session | Persistence layer |
 | Wrong interface assumed | Technical Handshake |
-| Bad plan handed to specialist | Handoff Bridge |
+| Specialist receives wrong context | Orchestrator surfaces inline plan before execution; Tim confirms on high-risk tasks |
 
 ---
 
@@ -223,7 +182,7 @@ In order of importance, if components are missing:
 4. **Without automation/skills** — Recurring operations must be performed manually.
 5. **Without persistence** — Knowledge resets each session; teams re-discover things they've already learned.
 
-**Minimum viable setup:** One root Static DNA file + a context directory + at least one Architect (zero-code) + one Specialist + one QA (read-only) + a pre-merge build gate.
+**Minimum viable setup:** Product context file (`docs/context/product.md`) + a sprint context directory + at least one Specialist + one QA Specialist (read-only) + a pre-merge build gate.
 
 ---
 

@@ -3,14 +3,14 @@
 This guide covers how to set up and operate Agent OS across different environments. For an overview of what Agent OS is and why it exists, start with the [README](./README.md).
 
 **Two things in this repo:**
-- **Agent OS** — scaffold installer + workflow skills that read from shared DNA files (`AGENTIC.md`, `plan.md`, `tracks.md`). Workflow skills require Agent OS to be installed first.
+- **Agent OS** — scaffold installer + workflow skills that read from shared context files (`docs/context/product.md`, `plan.md`, `tracks.md`). Workflow skills require Agent OS to be installed first.
 - **Standalone Skill Library** — general-purpose utilities that work on any project. Currently: `audit-security`. New skills that don't depend on Agent OS state belong here.
 
 For a platform-agnostic explanation of the architecture, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Step 0: Which Tools Are You Using?
 
-Agent OS is tool-agnostic at its core — the DNA files are plain Markdown, the roles are defined in text, and the workflow runs in any environment. Two patterns cover most setups: single model (one tool handles everything) and split model (one tool plans, another executes). We provide specific instructions for one validated example of each.
+Agent OS is tool-agnostic at its core — the context files are plain Markdown, the roles are defined in text, and the workflow runs in any environment. Two patterns cover most setups: single model (one tool handles everything) and split model (one tool plans, another executes). We provide specific instructions for one validated example of each.
 
 ---
 
@@ -21,11 +21,11 @@ Claude Code handles planning, execution, and review within a single IDE.
 
 **How Agent OS maps:**
 - Agent definitions live in `.claude/agents/` and are loaded via the chat interface — see [Agent Library](#agent-library) for the full role set
-- `AGENTIC.md`, `plan.md`, and `tracks.md` are read automatically at session start
+- Context files (`docs/context/product.md`, `plan.md`, `tracks.md`) are read automatically at session start
 - The worktree protocol runs via the VS Code terminal
 
 **Conversation hygiene:**
-VS Code Copilot agents enforce fresh context by design — each agent is a new chat. Let it work: don't continue an Architect planning thread into execution. Switch agents, which switches conversations.
+VS Code Copilot agents enforce fresh context by design — each agent is a new chat. Let it work: don't continue an orchestrator planning thread into execution. Switch agents, which switches conversations.
 
 **Known gap:** There's no programmatic enforcement of when a user switches agents in the workflow. That discipline is on the user.
 
@@ -37,22 +37,22 @@ VS Code Copilot agents enforce fresh context by design — each agent is a new c
 Gemini (via Antigravity's Agent Manager) owns planning and orchestration. Claude (via VS Code's Claude Extension) owns execution.
 
 **How Agent OS maps:**
-- Antigravity's Agent Manager is the visual equivalent of Agent OS's orchestration layer — spawn an Architect in one workspace, a Specialist in another
-- The Handoff Bridge moves between the two tools — write it in Antigravity, paste it into Claude Extension to start execution
-- `AGENTIC.md`, `plan.md`, and `tracks.md` live in the repo and are read by both agents from the same source
+- Antigravity's Agent Manager is the visual equivalent of Agent OS's orchestration layer — spawn an orchestrator in one workspace, a specialist in another
+- Context files move between the two tools — write the task context in Antigravity, paste it into Claude Extension to start execution
+- Context files (`docs/context/product.md`, `plan.md`, `tracks.md`) live in the repo and are read by both agents from the same source
 - Antigravity's parallel workspaces map directly to the worktree protocol — one workspace per active track
-- Antigravity's inline artifact feedback works natively on Handoff Bridges and plan documents
+- Antigravity's inline artifact feedback works natively on context files and plan documents
 
 **Conversation hygiene:**
 Antigravity's Agent Manager enforces context isolation architecturally — each spawned agent runs in its own workspace. This is the strongest conversation hygiene of any setup described here.
 
 **Why this combination works:**
-Gemini's strength is planning, architecture, and structured reasoning across large context. Claude's strength is precise execution with strong instruction-following. Agent OS's role separation — Architect plans, Specialist executes, Critic gates — maps cleanly onto this model split.
+Gemini's strength is planning, architecture, and structured reasoning across large context. Claude's strength is precise execution with strong instruction-following. Agent OS's role separation — orchestrator plans, specialist executes, QA specialist gates — maps cleanly onto this model split.
 
 **Known gaps:**
 - AI tools evolve quickly — always check current documentation for the tools you're using, as features may have changed since this was written.
-- Running the Critic role as a Gemini agent in Antigravity vs. Claude Extension is untested. Contributions welcome.
-- Integration between Antigravity's knowledge base and Agent OS's DNA files is undocumented. Likely high-value — flagged as a gap pending exploration.
+- Running the QA specialist role as a Gemini agent in Antigravity vs. Claude Extension is untested. Contributions welcome.
+- Integration between Antigravity's knowledge base and Agent OS's context files is undocumented. Likely high-value — flagged as a gap pending exploration.
 
 ---
 
@@ -89,18 +89,17 @@ Ensure your environment meets the following before initializing.
 
 ---
 
-## Step 2: The 3-Tier Architecture
+## Step 2: Role Architecture
 
-All roles — dev and non-dev — map to the same three tiers.
+All roles — dev and non-dev — map to one of three roles.
 
-| Tier | Role | Responsibility | Tool Access |
-| :--- | :--- | :--- | :--- |
-| **Tier 1** | **Orchestration / Conductor** | Establishes project DNA and base context | Blocked from write/exec on source |
-| **Tier 2** | **Strategic / Architect** | Plans, schedules, generates Handoff Bridges | Limited to context/docs writes |
-| **Tier 3** | **Tactical / Specialist** | Executes declared deliverables — dev roles: `frontend`, `backend`, `database`, `fullstack`; non-dev: `designer`, `pm`, `marketing` | Scoped to Handoff Bridge deliverables |
-| **Tier 3** | **Sentinel / Quality Gate** | Audits output, issues PASS/BLOCKED verdict | Read-only |
+| Role | Responsibility | Tool Access |
+| :--- | :--- | :--- |
+| **Orchestrator** | Routes tasks, tracks sprint state, manages context files | Blocked from write/exec on source files |
+| **Specialist** | Executes declared deliverables — dev: `frontend`, `backend`, `database`; non-dev: `designer`, `pm`, `marketing` | Scoped to declared task deliverables |
+| **QA Specialist** | Audits output, issues PASS/BLOCKED verdict | Read-only |
 
-**Non-dev roles** (product manager, designer, marketing manager, etc.) use the same tier structure. The difference is the *type of deliverable* — documents, briefs, and designs instead of source files. The scope lock, Technical Handshake, and Quality Gate all apply equally.
+**Non-dev roles** (product manager, designer, marketing manager, etc.) use the same role structure. The difference is the *type of deliverable* — documents, briefs, and designs instead of source files. The scope lock, Technical Handshake, and Quality Gate all apply equally.
 
 ---
 
@@ -129,7 +128,7 @@ Claude fetches the install skill from the repo and runs it. The skill runs in tw
 
 1. **Step 1** — Creates `AgentOS-Setup.md` at your project root and stops.
 2. **Fill in `AgentOS-Setup.md`** — Set your project name, fill in the team table with agent names, and confirm your tech stack (defaults are pre-selected; replace any value you want to change).
-3. **Step 2** — Run `/install-agent-scaffold` again. The skill reads your form, generates all files (`AGENTIC.md`, `CLAUDE.md`, agent definitions, `docs/context/` files, `.claude/settings.json`), then deletes `AgentOS-Setup.md`.
+3. **Step 2** — Run `/install-agent-scaffold` again. The skill reads your form, generates all files (`CLAUDE.md`, agent definitions, `docs/context/` files (including `product.md`, `plan.md`, `tracks.md`), `.claude/settings.json`), then deletes `AgentOS-Setup.md`.
 
 No interview questions — the form captures everything up front so generation runs in one clean pass.
 
@@ -140,14 +139,13 @@ No interview questions — the form captures everything up front so generation r
 Once initialized, the operational loop is:
 
 ```
-Sprint Open → Plan → Handoff Bridge → Execute → Quality Gate → Sprint Close
+Sprint Open → Plan → Execute → Quality Gate → Sprint Close
 ```
 
 | Step | Skill / Command | Trigger |
 | :--- | :--- | :--- |
 | Open sprint | `start-sprint` (Claude) / `open-sprint` (Gemini) | "Start planning" / "New sprint" |
 | Check status | `report-track-status` | "Catch me up" / "Status check" |
-| Generate handoff | `optimize-handoff` (Gemini) / *(native)* (Claude) | "Generate handoff for [specialist]" |
 | Review output | `audit-deliverables` | "Run quality gate on [specialist]'s output" |
 | Archive completed | `clean-context` (Gemini) / *(native)* (Claude) | "Clean context" |
 | Compress active files | `minify-context` | "Minify context" |
@@ -163,13 +161,13 @@ Agent OS is designed to survive context decay — but it doesn't eliminate the n
 A long conversation accumulates drift. The model's earlier context gets compressed over time. Instructions read at session start carry less weight by message 40. This is a property of all LLMs, not a failure of Agent OS.
 
 **Start a new conversation when:**
-- Switching agents — Architect to Specialist, or any agent to the Critic for review
+- Switching agents — orchestrator to specialist, or any agent to the QA specialist for review
 - A track closes and a new one opens
 - You notice the agent referencing outdated state or contradicting earlier outputs
 - After a circuit breaker fires — always start fresh after an escalation
 
-**The Handoff Bridge as a reset mechanism**
-The Handoff Bridge is not just a communication format — it's a context compression tool. A well-written Bridge contains everything the next agent needs to start clean. In Claude Code, handoffs are handled natively. In Antigravity, copy the Bridge into the new agent's workspace manually. In other environments, paste it into a new conversation rather than continuing the same thread.
+**Context handoffs as a reset mechanism**
+When switching agents or starting a new track, carry context forward explicitly. In Claude Code, the next agent reads the context files (`docs/context/product.md`, `plan.md`, `tracks.md`) at session start. In Antigravity, paste the relevant task context into the new workspace. In other environments, start a fresh conversation with a concise context block summarizing what the next agent needs.
 
 **How different environments handle this**
 
@@ -177,46 +175,37 @@ The Handoff Bridge is not just a communication format — it's a context compres
 | :--- | :--- |
 | **VS Code (Copilot agents)** | Each agent is a new chat window — fresh context by design. Switch agents and you get a clean slate automatically. |
 | **Antigravity (Agent Manager)** | Each spawned agent runs in its own workspace with its own context. The strongest isolation of any setup described here. |
-| **Claude Code / Gemini CLI** | No automatic boundary. Start new conversations manually. Use Handoff Bridges when handing off between agents. |
+| **Claude Code / Gemini CLI** | No automatic boundary. Start new conversations manually. Pass context explicitly when handing off between agents. |
 
 **Practical hygiene (any environment)**
 - Name conversations explicitly: "Track 2 — Planning", "Track 2 — Execution", "Track 2 — Review"
 - One agent, one conversation. Never mix planning and execution in the same thread.
-- If a conversation exceeds ~30 exchanges, treat it as a signal to close and start fresh with a Handoff Bridge.
+- If a conversation exceeds ~30 exchanges, treat it as a signal to close and start fresh, passing a concise context summary to the next conversation.
 
 ---
 
-## Step 5: Handoff Protocol
+## Step 5: Task Context
 
-Before any Tier 3 Specialist begins work, the Architect generates a **Handoff Bridge** via `optimize-handoff` (Gemini) or natively in Claude Code. The bridge contains:
+When the orchestrator routes a task to a specialist, it provides the task context in-session. This is not a formal artifact — it's the information the specialist needs to begin: what files are in scope, what the task is, how to verify completion, and any constraints.
 
-- **Role Identity** — who is waking and what domain they own
-- **Specialist** — which domain specialist is assigned (frontend / backend / database / fullstack / designer / pm / marketing)
-- **Execution Files (source)** — primary source/canonical files to modify
-- **Execution Files (tests)** — test files in scope; `[]` with justification if none apply
-- **Execution Files (tooling/config)** — build/config/scaffold files; `[]` if none
-- **Migration Safety** — N/A / Reversible / Irreversible; Conductor sign-off required if irreversible
-- **Security Review** — N/A / Auth / Payments / Schema; Conductor sign-off required if any
-- **Worktree Setup** — automatic via `isolation: worktree` in Specialist frontmatter; manual worktree command only needed for the Architect's chicken-and-egg first run
-- **Verification** — how to confirm the work is complete (pasted observed output required for Behavioral Verification Gate)
-- **Circuit Breaker** — escalation threshold (3 same-cause failures → Architect)
+The context is passed differently depending on the environment:
 
 ### RELAY Mode (Claude Code or external model)
-The Architect generates a fenced code block. Copy it into your external model to wake the Specialist with full context.
+The orchestrator writes a task context block. Copy it into your external model to start the specialist with full context.
 
 ### GEMINI_ONLY Mode
-The Architect generates a self-executing wake command: `gemini --skill add-specialist`
+The orchestrator generates a self-executing wake command: `gemini --skill add-specialist`
 
 ---
 
 ## Step 6: Security & Isolation
 
-**Tier 1 & 2 (Architect-level)** skills are structurally restricted from modifying production source code or final deliverables. This is enforced at the runtime level — not through instructions alone:
+**Orchestrator and planning-tier** skills are structurally restricted from modifying production source code or final deliverables. This is enforced at the runtime level — not through instructions alone:
 
 - **Gemini CLI**: `policy.toml` strips unauthorized tools from the manifest
 - **Claude Code**: `tools:` frontmatter list is enforced by the Claude Code runtime
 
-**Parallel tracks** each get an isolated workspace via `isolation: worktree` in each Specialist's agent frontmatter — the Claude Code runtime creates and cleans up the worktree automatically. No manual worktree commands required.
+**Parallel tracks** each get an isolated workspace via `isolation: worktree` in each specialist's agent frontmatter — the Claude Code runtime creates and cleans up the worktree automatically. No manual worktree commands required.
 
 ### Approval Discipline
 
@@ -257,40 +246,42 @@ The principle: pre-approve the noise so that when a real approval appears, it ge
 
 ## Agent Library
 
-The template library ships 11 roles across four categories. Copy the files you need into `.claude/agents/` and customize the persona names to fit your team.
+The template library ships roles across four categories. Copy the files you need into `.claude/agents/` and customize the persona names to fit your team.
 
 **Strategic & Planning**
 
-| File | Role | Tier | Function |
-| :--- | :--- | :---: | :--- |
-| `strategist.md` | Strategist | 2 | Pre-planning — validates assumptions, stress-tests framing before work is scheduled |
-| `architect.md` | Lead Architect | 2 | Plans, Red Flag Analysis, Handoff Bridges — zero code |
+| File | Role | Function |
+| :--- | :--- | :--- |
+| `strategist.md` | Strategist | Upstream thinking partner — product strategy, market analysis, and idea generation before planning begins |
+| `technical.md` | Technical Specialist | Consulted on complex technical tasks — reads codebase state, surfaces inline plan, hands off to a task agent |
 
 **Quality Gates**
 
-| File | Role | Tier | Function |
-| :--- | :--- | :---: | :--- |
-| `qa.md` | QA | 3 | Conformance gate — PASS / BLOCKED verdict against declared acceptance criteria |
-| `critic.md` | Critic | 3 | Adversarial review — APPROVED / CHALLENGED / BLOCKED verdict on ideas, plans, and content |
+| File | Role | Function |
+| :--- | :--- | :--- |
+| `qa.md` | QA Specialist | Read-only quality gate — reads task agent sign-off and issues a verdict |
+| `critic.md` | Critic | Adversarial review — APPROVED / CHALLENGED / BLOCKED verdict on ideas, plans, and content |
 
 **Execution — Dev**
 
-| File | Role | Tier | Function |
-| :--- | :--- | :---: | :--- |
-| `fullstack.md` | Fullstack Specialist | 3 | All layers in one track — mutually exclusive with domain specialists on overlapping tracks |
-| `frontend.md` | Frontend Specialist | 3 | Presentation layer only |
-| `backend.md` | Backend Specialist | 3 | Server-side logic and API routes only |
-| `database.md` | Database Specialist | 3 | Schema, migrations, and queries only |
+| File | Role | Function |
+| :--- | :--- | :--- |
+| `frontend.md` | Frontend Specialist | Implements UI components, interaction flows, and presentation logic — never touches backend or database |
+| `backend.md` | Backend Specialist | Implements API routes, business logic, and server-side services — never touches frontend or schema |
+| `database.md` | Database Specialist | Implements schema changes, migrations, and query logic — every change must be reversible |
+| `mobile.md` | Mobile Specialist | Capacitor bridge, native permissions, push notifications, device token lifecycle, and native plugin integration |
+| `ops.md` | Operations Specialist | Deployment, infrastructure, observability, runbook authorship, and incident response |
 
 **Execution — Non-Dev**
 
-| File | Role | Tier | Function |
-| :--- | :--- | :---: | :--- |
-| `pm.md` | Product Manager | 3 | Requirements, user stories, acceptance criteria |
-| `designer.md` | Design Specialist | 3 | UI/UX, design tokens, component specs |
-| `marketing.md` | Marketing Specialist | 3 | Copy, positioning, campaign briefs |
+| File | Role | Function |
+| :--- | :--- | :--- |
+| `pm.md` | Product Manager | Converts strategy into prioritized requirements — defines the What and When |
+| `designer.md` | Design Specialist | UI/UX, design tokens, and component specs — two-phase: design tool approval then handoff artifacts |
+| `marketing.md` | Marketing Specialist | Translates strategy into channel-specific copy and campaigns — never invents features |
+| `researcher.md` | Researcher | Evidence-backed insights from user research synthesis, competitive analysis, and literature review |
 
-> **Fullstack vs. domain specialists:** a user picks one or the other per track — not both. If a project uses individual domain specialists and a layer is uncovered, the Architect opens a new track for that layer rather than expanding an existing specialist's scope.
+> **Domain specialists:** a user picks the appropriate specialist per track. If a project uses individual domain specialists and a layer is uncovered, the orchestrator opens a new track for that layer rather than expanding an existing specialist's scope.
 
 ---
 
@@ -305,7 +296,7 @@ All skills below require Agent OS to be initialized via `install-agent-scaffold`
 | Skill | Claude Code | Gemini CLI | Purpose |
 | :--- | :---: | :---: | :--- |
 | `install-agent-scaffold` | ✓ | ✓ | Full one-pass setup — new projects |
-| `onboard-existing-project` | ✓ | ✓ | Reads first, generates DNA — existing projects |
+| `onboard-existing-project` | ✓ | ✓ | Reads first, generates context files — existing projects |
 
 **Sprint**
 
@@ -320,7 +311,6 @@ All skills below require Agent OS to be initialized via `install-agent-scaffold`
 | Skill | Claude Code | Gemini CLI | Purpose |
 | :--- | :---: | :---: | :--- |
 | `add-specialist` | *(built-in)* | ✓ | Add a specialist agent to an existing team |
-| `optimize-handoff` | *(native)* | ✓ | Handoff Bridge generation |
 | `audit-deliverables` | *(built-in)* | ✓ | Binary PASS/BLOCKED verdict — dev and non-dev |
 
 **Maintenance**
@@ -336,7 +326,7 @@ All skills below require Agent OS to be initialized via `install-agent-scaffold`
 
 | Skill | Claude Code | Gemini CLI | Purpose |
 | :--- | :---: | :---: | :--- |
-| `check-agent-os` | ✓ | — | Health check — verifies skills, CLAUDE.md refs, docs, model names, WebFetch in agent tools, and Specialist `isolation: worktree`; emits PASS/FAIL |
+| `check-agent-os` | ✓ | — | Health check — verifies skills, CLAUDE.md refs, docs, model names, WebFetch in agent tools, and specialist `isolation: worktree`; emits PASS/FAIL |
 | `update-agent-os` | ✓ | — | Diffs installed skills against canonical manifest; installs, renames, or removes on confirmation |
 
 ---
@@ -350,38 +340,7 @@ These skills work on any project — no Agent OS installation required.
 | `audit-security` | ✓ | ✓ | Security sweep — vulnerabilities, secrets, policy violations |
 | `sync-vercel-env` | ✓ | — | Reads `.env`, confirms an exclude list, then pushes remaining keys to Vercel (Production + Preview) |
 
-> New skills that don't depend on `AGENTIC.md`, `tracks.md`, or the Handoff Bridge workflow belong in this library.
-
----
-
-## Blueprint Decomposition
-
-Blueprint decomposition is a pattern for splitting a Handoff Bridge into discrete, independently-executed tasks. The Role Agent (Skylar, the Skills Engineer) decides whether to decompose when reading the Bridge: if the Bridge names two or more distinct Execution Files, or if it spans both code/config files and documentation files, decomposition is appropriate. Single-file tracks or naturally atomic tracks do not require it — monolithic execution is correct for those.
-
-### How Skylar spawns Task Agents (Mechanic A)
-
-Mechanic A is the only supported spawn path. When decomposing, the Role Agent:
-
-1. Reads the blueprint file at `claude/blueprints/<name>.md`
-2. Extracts the body — everything after the closing `---` of the YAML frontmatter
-3. Composes a task prompt: the blueprint body plus a task-specific context block that names the Execution Files in scope, a one-sentence task description, the verification command, and any constraints specific to this invocation
-4. Spawns the Agent tool with `subagent_type: task-executor` using the composed prompt
-
-Each spawn handles exactly one logical task and returns structured output per the blueprint's Expected Output Contract. The Role Agent collects all Task Agent outputs, then synthesizes the Sign-Off and Task Agent Manifest for QA review.
-
-Blueprints are Markdown templates, not registered subagents — attempting to use a blueprint name as `subagent_type` directly fails with an unknown-subagent error and is not supported.
-
-### Blueprint discovery
-
-Blueprints live at `claude/blueprints/<name>.md` in the repo. Current blueprints:
-
-| Blueprint | Purpose |
-| :--- | :--- |
-| `task-coder` | Code edits — source file modifications and configuration changes |
-| `task-writer` | Documentation authoring — structured Markdown file creation and revision |
-| `task-researcher` | Read-only research — analysis and findings without file writes |
-
-Each blueprint has YAML frontmatter (`name`, `description`, `tools`, `expected_output`, `model`, `schema_version`) and three required body sections: System Prompt Strategy, Expected Output Contract, and Allowed Tool Bindings — Reasoning.
+> New skills that don't depend on the context files or sprint workflow belong in this library.
 
 ---
 
