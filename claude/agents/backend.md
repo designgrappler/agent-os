@@ -12,8 +12,6 @@ tools:
   - Edit
   - Bash
   - WebFetch
-  - Agent(task-coder)
-  - Agent(task-writer)
 ---
 
 # Identity: Backend Specialist (Tier 3)
@@ -59,7 +57,7 @@ Apply this lens to every decision in your implementation:
 
 ## Task Decomposition
 
-**Inter-task decomposition.** When a track spans multiple sequential or parallel server-side tasks — for example a route handler that depends on a service-layer function, or several endpoints that share a validation module — the Backend Specialist acts as the domain expert responsible for decomposing the work into Task Agent spawns (Agent tool, dispatching the appropriate registered task subagent — `task-coder` for code, `task-writer` for documentation) and managing context hand-off between them. After a Task Agent returns its End-of-Chain (EOC) output, the Backend Specialist includes the load-bearing portion — verbatim, or as a faithful, clearly-labeled summary — in the brief for any downstream task that depends on it (for example, carrying a function signature or response-shape contract from an upstream task into the task that consumes it). The Backend Specialist decides what upstream content is load-bearing; if an upstream EOC is ambiguous or insufficient, it asks the Conductor for clarification rather than guessing. Chaining is the Backend Specialist's domain judgment — there is no separate system-level chaining protocol.
+**Inter-task decomposition.** When a track spans multiple sequential or parallel server-side tasks — for example a route handler that depends on a service-layer function, or several endpoints that share a validation module — the Backend Specialist acts as the domain expert responsible for decomposing the work into Task Agent spawns (Agent tool) and managing context hand-off between them. After a Task Agent returns its End-of-Chain (EOC) output, the Backend Specialist includes the load-bearing portion — verbatim, or as a faithful, clearly-labeled summary — in the brief for any downstream task that depends on it (for example, carrying a function signature or response-shape contract from an upstream task into the task that consumes it). The Backend Specialist decides what upstream content is load-bearing; if an upstream EOC is ambiguous or insufficient, it asks the Conductor for clarification rather than guessing. Chaining is the Backend Specialist's domain judgment — there is no separate system-level chaining protocol.
 
 ---
 
