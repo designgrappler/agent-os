@@ -1,224 +1,102 @@
 # Agent OS: Implementation Guide
 
-This guide covers how to set up and operate Agent OS across different environments. For an overview of what Agent OS is and why it exists, start with the [README](./README.md).
-
-**Two things in this repo:**
-- **Agent OS** — scaffold installer + workflow skills that read from shared context files (`docs/context/product.md`, `plan.md`, `tracks.md`). Workflow skills require Agent OS to be installed first.
-- **Standalone Skill Library** — general-purpose utilities that work on any project. Currently: `audit-security`. New skills that don't depend on Agent OS state belong here.
-
-For a platform-agnostic explanation of the architecture, see [ARCHITECTURE.md](./ARCHITECTURE.md).
-
-## Step 0: Which Tools Are You Using?
-
-Agent OS is tool-agnostic at its core — the context files are plain Markdown, the roles are defined in text, and the workflow runs in any environment. Two patterns cover most setups: single model (one tool handles everything) and split model (one tool plans, another executes). We provide specific instructions for one validated example of each.
+This guide covers two things: starting your first session and running common workflows. For what Agent OS is and why it exists, see [README.md](./README.md). For how each part works, see [CONCEPTS.md](./CONCEPTS.md).
 
 ---
 
-### Single Model — One Tool Handles Everything
-*Example: VS Code + Claude Code*
+## Part 1: Your first session
 
-Claude Code handles planning, execution, and review within a single IDE.
+### What does a session look like?
 
-**How Agent OS maps:**
-- Agent definitions live in `.claude/agents/` and are loaded via the chat interface — see [Agent Library](#agent-library) for the full role set
-- Context files (`docs/context/product.md`, `plan.md`, `tracks.md`) are read automatically at session start
-- The worktree protocol runs via the VS Code terminal
+**Example: a researcher produces a competitive analysis**
 
-**Conversation hygiene:**
-VS Code Copilot agents enforce fresh context by design — each agent is a new chat. Let it work: don't continue an orchestrator planning thread into execution. Switch agents, which switches conversations.
+Mia is a PM working on a new feature. She wants to understand how three competitors handle onboarding before writing her requirements.
 
-**Known gap:** There's no programmatic enforcement of when a user switches agents in the workflow. That discipline is on the user.
+1. Mia opens a session with the orchestrator and says: "I need a competitive analysis of how Notion, Linear, and Figma handle new user onboarding."
+2. The orchestrator reads the context files — it already knows the product and what work is in progress — and routes the request to the researcher.
+3. The researcher reads `product.md`, studies the three competitors, and produces a synthesis: what each does, what patterns appear across all three, and where the opportunity is.
+4. Before the analysis reaches Mia, the QA specialist reads it against the original request. Does it cover all three competitors? Does it answer the questions asked? QA approves it.
+5. Mia receives an approved analysis. She did not re-explain the product. She did not have to check whether the work was complete.
 
----
+### How do I install it?
 
-### Split Model — Planning Tool + Execution Tool
-*Example: Antigravity (Gemini) + Claude Extension*
-
-Gemini (via Antigravity's Agent Manager) owns planning and orchestration. Claude (via VS Code's Claude Extension) owns execution.
-
-**How Agent OS maps:**
-- Antigravity's Agent Manager is the visual equivalent of Agent OS's orchestration layer — spawn an orchestrator in one workspace, a specialist in another
-- Context files move between the two tools — write the task context in Antigravity, paste it into Claude Extension to start execution
-- Context files (`docs/context/product.md`, `plan.md`, `tracks.md`) live in the repo and are read by both agents from the same source
-- Antigravity's parallel workspaces map directly to the worktree protocol — one workspace per active track
-- Antigravity's inline artifact feedback works natively on context files and plan documents
-
-**Conversation hygiene:**
-Antigravity's Agent Manager enforces context isolation architecturally — each spawned agent runs in its own workspace. This is the strongest conversation hygiene of any setup described here.
-
-**Why this combination works:**
-Gemini's strength is planning, architecture, and structured reasoning across large context. Claude's strength is precise execution with strong instruction-following. Agent OS's role separation — orchestrator plans, specialist executes, QA specialist gates — maps cleanly onto this model split.
-
-**Known gaps:**
-- AI tools evolve quickly — always check current documentation for the tools you're using, as features may have changed since this was written.
-- Running the QA specialist role as a Gemini agent in Antigravity vs. Claude Extension is untested. Contributions welcome.
-- Integration between Antigravity's knowledge base and Agent OS's context files is undocumented. Likely high-value — flagged as a gap pending exploration.
-
----
-
-### Other Environments
-
-Agent OS applies to any tool that supports: (1) reading Markdown files at session start, (2) role-scoped agents with tool restrictions, and (3) structured handoff artifacts. The two examples above cover the single model and split model patterns — use them as a reference for adapting to other combinations. If you validate a new setup, contributions are welcome via [CONTRIBUTING.md](./CONTRIBUTING.md).
-
----
-
-## Step 1: Prerequisite Audit
-
-> **New project or existing project?** If your project already has code, files, or history — run `onboard-existing-project` (Gemini) or `/onboard-existing-project` (Claude Code) before anything else. It reads what you already have and won't overwrite files without your approval. `install-agent-scaffold` assumes a blank slate.
-
-| Situation | Gemini CLI | Claude Code |
-| :--- | :--- | :--- |
-| **New project** | `install-agent-scaffold` | `/install-agent-scaffold` |
-| **Existing project** | `onboard-existing-project` | `/onboard-existing-project` |
-
-Ensure your environment meets the following before initializing.
-
-### Gemini CLI Path
-| Component | Requirement |
-| :--- | :--- |
-| **CLI** | `gemini` CLI installed (`npm install -g @google/gemini-cli`) |
-| **Policy Hub** | `~/.gemini/policies/conductor_enforcement.toml` initialized |
-| **Workspace** | Root-level directory write access |
-
-### Claude Code Path
-| Component | Requirement |
-| :--- | :--- |
-| **CLI** | Claude Code installed (`npm install -g @anthropic-ai/claude-code`) |
-| **Workspace** | Root-level directory write access |
-| **Git** | Repository initialized (hooks require git) |
-
----
-
-## Step 2: Role Architecture
-
-All roles — dev and non-dev — map to one of three roles.
-
-| Role | Responsibility | Tool Access |
-| :--- | :--- | :--- |
-| **Orchestrator** | Routes tasks, tracks sprint state, manages context files | Blocked from write/exec on source files |
-| **Specialist** | Executes declared deliverables — dev: `frontend`, `backend`, `database`; non-dev: `designer`, `pm`, `marketing` | Scoped to declared task deliverables |
-| **QA Specialist** | Audits output, issues PASS/BLOCKED verdict | Read-only |
-
-**Non-dev roles** (product manager, designer, marketing manager, etc.) use the same role structure. The difference is the *type of deliverable* — documents, briefs, and designs instead of source files. The scope lock, Technical Handshake, and Quality Gate all apply equally.
-
----
-
-## Step 3: Initialization Flow
-
-### Gemini CLI
-```bash
-# Deploy the full setup bundle in one pass:
-gemini skills install https://github.com/designgrappler/agent-os --path skills/install-agent-scaffold
-```
-Then trigger: *"Install the agent scaffold for this project."*
-
-The bundle runs a **Pre-Flight Interview** — all questions are gathered first, no files created until the interview is complete:
-1. Project name and description
-2. Tech stack or toolset
-3. Team type (dev / creative / mixed)
-4. Personnel names for all roles
-5. Workflow mode (`GEMINI_ONLY` or `RELAY`)
-
-### Claude Code
-Tell Claude:
+Tell your AI:
 
 > "Install Agent OS on this project: https://github.com/designgrappler/agent-os"
 
-Claude fetches the install skill from the repo and runs it. The skill runs in two steps:
+The install skill runs in two steps:
 
-1. **Step 1** — Creates `AgentOS-Setup.md` at your project root and stops.
-2. **Fill in `AgentOS-Setup.md`** — Set your project name, fill in the team table with agent names, and confirm your tech stack (defaults are pre-selected; replace any value you want to change).
-3. **Step 2** — Run `/install-agent-scaffold` again. The skill reads your form, generates all files (`CLAUDE.md`, agent definitions, `docs/context/` files (including `product.md`, `plan.md`, `tracks.md`), `.claude/settings.json`), then deletes `AgentOS-Setup.md`.
+1. A setup form (`AgentOS-Setup.md`) is created at your project root. Fill in your project name, team member names, and tech stack or toolset.
+2. Run the install command again. The skill reads your form and generates all project files: agent definitions in `.claude/agents/`, context files in `docs/context/` (`product.md`, `plan.md`, `tracks.md`), and a `CLAUDE.md` that connects everything.
 
-No interview questions — the form captures everything up front so generation runs in one clean pass.
+**Existing project?** Use the onboard path: `"Onboard Agent OS on this existing project: https://github.com/designgrappler/agent-os"` — it reads what you already have and will not overwrite files without your approval.
 
----
+### What do I do first?
 
-## Step 4: The Sprint Workflow
-
-Once initialized, the operational loop is:
-
-```
-Sprint Open → Plan → Execute → Quality Gate → Sprint Close
-```
-
-| Step | Skill / Command | Trigger |
-| :--- | :--- | :--- |
-| Open sprint | `start-sprint` (Claude) / `open-sprint` (Gemini) | "Start planning" / "New sprint" |
-| Check status | `report-track-status` | "Catch me up" / "Status check" |
-| Review output | `audit-deliverables` | "Run quality gate on [specialist]'s output" |
-| Archive completed | `clean-context` (Gemini) / *(native)* (Claude) | "Clean context" |
-| Compress active files | `minify-context` | "Minify context" |
-
-`start-sprint` / `open-sprint` and `report-track-status` **auto-trigger** on natural language phrases — no explicit command needed when configured via the `CLAUDE.md` Auto-Invocations table (Claude Code) or the Trigger section of each skill (Gemini).
+State your goal. The orchestrator reads your context files and routes the task to the right specialist. You do not pick the specialist manually.
 
 ---
 
-## Conversation Hygiene
+## Part 2: Common workflows
 
-Agent OS is designed to survive context decay — but it doesn't eliminate the need to manage conversations deliberately.
+### Research project
 
-A long conversation accumulates drift. The model's earlier context gets compressed over time. Instructions read at session start carry less weight by message 40. This is a property of all LLMs, not a failure of Agent OS.
+**When to use:** You need to gather, evaluate, and synthesize information before making a decision. Examples: competitive analysis, market research, literature review, user research synthesis.
 
-**Start a new conversation when:**
-- Switching agents — orchestrator to specialist, or any agent to the QA specialist for review
-- A track closes and a new one opens
-- You notice the agent referencing outdated state or contradicting earlier outputs
-- After a circuit breaker fires — always start fresh after an escalation
-
-**Context handoffs as a reset mechanism**
-When switching agents or starting a new track, carry context forward explicitly. In Claude Code, the next agent reads the context files (`docs/context/product.md`, `plan.md`, `tracks.md`) at session start. In Antigravity, paste the relevant task context into the new workspace. In other environments, start a fresh conversation with a concise context block summarizing what the next agent needs.
-
-**How different environments handle this**
-
-| Environment | How context boundaries work |
-| :--- | :--- |
-| **VS Code (Copilot agents)** | Each agent is a new chat window — fresh context by design. Switch agents and you get a clean slate automatically. |
-| **Antigravity (Agent Manager)** | Each spawned agent runs in its own workspace with its own context. The strongest isolation of any setup described here. |
-| **Claude Code / Gemini CLI** | No automatic boundary. Start new conversations manually. Pass context explicitly when handing off between agents. |
-
-**Practical hygiene (any environment)**
-- Name conversations explicitly: "Track 2 — Planning", "Track 2 — Execution", "Track 2 — Review"
-- One agent, one conversation. Never mix planning and execution in the same thread.
-- If a conversation exceeds ~30 exchanges, treat it as a signal to close and start fresh, passing a concise context summary to the next conversation.
+1. State the research goal to the orchestrator: what you want to know and, if relevant, which sources or competitors to cover.
+2. The orchestrator routes to the researcher. The researcher reads `product.md` and produces a structured synthesis.
+3. The QA specialist reviews the output against the brief: does it cover the right sources? does it answer the questions asked? QA approves or sends back for revision.
+4. You receive an approved synthesis, ready to brief the next specialist or use directly.
 
 ---
 
-## Step 5: Task Context
+### Design sprint
 
-When the orchestrator routes a task to a specialist, it provides the task context in-session. This is not a formal artifact — it's the information the specialist needs to begin: what files are in scope, what the task is, how to verify completion, and any constraints.
+**When to use:** You have a new surface, feature, or experience to design and want the work to run from brief through multiple directions to a reviewed output.
 
-The context is passed differently depending on the environment:
-
-### RELAY Mode (Claude Code or external model)
-The orchestrator writes a task context block. Copy it into your external model to start the specialist with full context.
-
-### GEMINI_ONLY Mode
-The orchestrator generates a self-executing wake command: `gemini --skill add-specialist`
+1. State the design brief to the orchestrator: the goal, the user, any constraints.
+2. The orchestrator routes to the designer. If research is needed first, it opens a research track before the design track.
+3. The designer produces multiple distinct directions. Each is fully formed; directions are not merged or averaged.
+4. The QA specialist verifies the directions match the brief: are they distinct? do they address the stated goal? QA approves or sends back for revision.
+5. You review approved directions and select one.
 
 ---
 
-## Step 6: Security & Isolation
+### Content brief to draft
 
-**Orchestrator and planning-tier** skills are structurally restricted from modifying production source code or final deliverables. This is enforced at the runtime level — not through instructions alone:
+**When to use:** You need written content — campaign copy, a product brief, an article — where quality means matching what was planned.
 
-- **Gemini CLI**: `policy.toml` strips unauthorized tools from the manifest
-- **Claude Code**: `tools:` frontmatter list is enforced by the Claude Code runtime
+1. State the content goal to the orchestrator: audience, message, channel.
+2. If the content depends on research, the orchestrator opens a research track first. The QA specialist reviews the research before it moves to writing.
+3. The marketing specialist reads the approved research and produces the content.
+4. The QA specialist reviews the content against the brief: right channel, right audience, right message? QA approves or sends back for revision.
+5. You receive approved content.
 
-**Parallel tracks** each get an isolated workspace via `isolation: worktree` in each specialist's agent frontmatter — the Claude Code runtime creates and cleans up the worktree automatically. No manual worktree commands required.
+---
 
-### Approval Discipline
+### Sprint workflow
 
-In multi-agent workflows, **approval exhaustion** is a real failure mode. When the system prompts for approval too frequently, users start approving without reading — and the safety guarantee disappears.
+**When to use:** A larger body of work with multiple specialists running in parallel or sequence. The sprint workflow tracks what is open, in progress, blocked, and done.
 
-The fix is not to disable approvals, but to sort them correctly:
+1. Open a sprint: tell the orchestrator "Start a sprint" or invoke `/start-sprint`. The orchestrator asks for the sprint objective and creates the first track.
+2. The orchestrator routes each track to the appropriate specialist. Specialists update `tracks.md` as work progresses.
+3. Check status at any point: "What is the current status?" — the orchestrator reads `tracks.md` and reports.
+4. When all tracks are approved by QA, close the sprint: `/close-sprint`. The orchestrator archives the plan, bumps the version, and resets for the next sprint.
 
-| Approval type | Examples | Policy |
-| :--- | :--- | :--- |
-| **Must prompt** | `git push`, schema migrations, destructive operations | Always require approval — these are the checkpoints that matter |
-| **Auto-approve** | File reads, `git status`, `git diff`, type-check runs, build commands | Pre-approve — routine operations create exhaustion without adding safety |
+---
 
-**Claude Code** — add to `.claude/settings.local.json`:
+## Part 3: Setup
+
+### VS Code + Claude Code
+
+Claude Code manages planning, execution, and review in a single IDE. Agent definitions live in `.claude/agents/` and are loaded via the chat interface.
+
+**Prerequisites:** Claude Code installed (`npm install -g @anthropic-ai/claude-code`), a git-initialized repo, root-level write access.
+
+**Conversation hygiene:** Switch agents — orchestrator to specialist, or any specialist to QA — by starting a new chat. Context carries forward through the shared files, not the conversation history.
+
+**Pre-approve routine operations** to reduce approval fatigue. Add to `.claude/settings.local.json`:
+
 ```json
 {
   "permissions": {
@@ -227,122 +105,64 @@ The fix is not to disable approvals, but to sort them correctly:
       "Bash(git status)",
       "Bash(git diff *)",
       "Bash(git log *)",
-      "Bash(git branch *)",
       "Bash(ls *)",
-      "Bash(find *)",
       "Bash(grep *)",
-      "Bash(bunx tsc --noEmit)",
       "Bash(bun run *)"
     ]
   }
 }
 ```
 
-**Gemini CLI** — configure read-only and build operations as pre-approved capability bundles in `policy.toml`. Keep `git push` and any write operations outside the pre-approved set.
-
-The principle: pre-approve the noise so that when a real approval appears, it gets real attention.
+Pre-approve the routine so that real approval prompts get real attention.
 
 ---
 
-## Agent Library
+### Antigravity + Claude Extension
 
-The template library ships roles across four categories. Copy the files you need into `.claude/agents/` and customize the persona names to fit your team.
+Gemini (via Antigravity's Agent Manager) handles planning and orchestration. Claude (via VS Code's Claude Extension) handles execution. Context files live in the repo; both tools read from the same source.
 
-**Strategic & Planning**
+- Antigravity's Agent Manager is the orchestration layer. Spawn one workspace per active track.
+- Claude Extension is the execution layer. Paste task context from Antigravity to start a specialist with full context.
+- Context isolation is architectural: each Antigravity workspace runs in its own agent context.
 
-| File | Role | Function |
-| :--- | :--- | :--- |
-| `strategist.md` | Strategist | Upstream thinking partner — product strategy, market analysis, and idea generation before planning begins |
-| `technical.md` | Technical Specialist | Consulted on complex technical tasks — reads codebase state, surfaces inline plan, hands off to a task agent |
-
-**Quality Gates**
-
-| File | Role | Function |
-| :--- | :--- | :--- |
-| `qa.md` | QA Specialist | Read-only quality gate — reads task agent sign-off and issues a verdict |
-| `critic.md` | Critic | Adversarial review — APPROVED / CHALLENGED / BLOCKED verdict on ideas, plans, and content |
-
-**Execution — Dev**
-
-| File | Role | Function |
-| :--- | :--- | :--- |
-| `frontend.md` | Frontend Specialist | Implements UI components, interaction flows, and presentation logic — never touches backend or database |
-| `backend.md` | Backend Specialist | Implements API routes, business logic, and server-side services — never touches frontend or schema |
-| `database.md` | Database Specialist | Implements schema changes, migrations, and query logic — every change must be reversible |
-| `mobile.md` | Mobile Specialist | Capacitor bridge, native permissions, push notifications, device token lifecycle, and native plugin integration |
-| `ops.md` | Operations Specialist | Deployment, infrastructure, observability, runbook authorship, and incident response |
-
-**Execution — Non-Dev**
-
-| File | Role | Function |
-| :--- | :--- | :--- |
-| `pm.md` | Product Manager | Converts strategy into prioritized requirements — defines the What and When |
-| `designer.md` | Design Specialist | UI/UX, design tokens, and component specs — two-phase: design tool approval then handoff artifacts |
-| `marketing.md` | Marketing Specialist | Translates strategy into channel-specific copy and campaigns — never invents features |
-| `researcher.md` | Researcher | Evidence-backed insights from user research synthesis, competitive analysis, and literature review |
-
-> **Domain specialists:** a user picks the appropriate specialist per track. If a project uses individual domain specialists and a layer is uncovered, the orchestrator opens a new track for that layer rather than expanding an existing specialist's scope.
+**Known gaps:** Running the QA specialist as a Gemini agent in Antigravity vs. Claude Extension is untested. Integration between Antigravity's knowledge base and Agent OS context files is undocumented.
 
 ---
 
-## Skill Library Reference
+### Other environments
 
-### Agent OS Skills
-
-All skills below require Agent OS to be initialized via `install-agent-scaffold` or `onboard-existing-project` first.
-
-**Setup**
-
-| Skill | Claude Code | Gemini CLI | Purpose |
-| :--- | :---: | :---: | :--- |
-| `install-agent-scaffold` | ✓ | ✓ | Full one-pass setup — new projects |
-| `onboard-existing-project` | ✓ | ✓ | Reads first, generates context files — existing projects |
-
-**Sprint**
-
-| Skill | Claude Code | Gemini CLI | Purpose |
-| :--- | :---: | :---: | :--- |
-| `start-sprint` | ✓ | — | Launch a sprint, set objective, create first track (Claude Code) |
-| `open-sprint` | — | ✓ | Launch a sprint, set objective, create first track (Gemini CLI) |
-| `report-track-status` | ✓ | ✓ | Situational status report across all active tracks |
-
-**Execution**
-
-| Skill | Claude Code | Gemini CLI | Purpose |
-| :--- | :---: | :---: | :--- |
-| `add-specialist` | *(built-in)* | ✓ | Add a specialist agent to an existing team |
-| `audit-deliverables` | *(built-in)* | ✓ | Binary PASS/BLOCKED verdict — dev and non-dev |
-
-**Maintenance**
-
-| Skill | Claude Code | Gemini CLI | Purpose |
-| :--- | :---: | :---: | :--- |
-| `clean-context` | *(native)* | ✓ | Archive stale and completed items |
-| `minify-context` | ✓ | ✓ | Compress verbose active context files |
-| `index-memory` | *(native)* | ✓ | Long-term decision and milestone archival |
-| `sync-design` | ✓ | ✓ | UI alignment with design tokens |
-
-**Lifecycle**
-
-| Skill | Claude Code | Gemini CLI | Purpose |
-| :--- | :---: | :---: | :--- |
-| `check-agent-os` | ✓ | — | Health check — verifies skills, CLAUDE.md refs, docs, model names, WebFetch in agent tools, and specialist `isolation: worktree`; emits PASS/FAIL |
-| `update-agent-os` | ✓ | — | Diffs installed skills against canonical manifest; installs, renames, or removes on confirmation |
+Agent OS applies to any tool that supports reading Markdown files at session start, role-scoped agents with tool restrictions, and structured handoffs. Use the two setups above as reference patterns for adapting to other combinations. If you validate a new environment, contributions are welcome via [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ---
 
-### Standalone Skill Library
+## Part 4: Skills reference
 
-These skills work on any project — no Agent OS installation required.
+All Agent OS skills require initialization via `install-agent-scaffold` or `onboard-existing-project`.
 
-| Skill | Claude Code | Gemini CLI | Purpose |
-| :--- | :---: | :---: | :--- |
-| `audit-security` | ✓ | ✓ | Security sweep — vulnerabilities, secrets, policy violations |
-| `sync-vercel-env` | ✓ | — | Reads `.env`, confirms an exclude list, then pushes remaining keys to Vercel (Production + Preview) |
+| Skill | Description |
+|---|---|
+| `install-agent-scaffold` | Full one-pass setup for new projects |
+| `onboard-existing-project` | Reads your existing project; generates context files without overwriting |
+| `start-sprint` | Launch a sprint, set objective, create first track |
+| `close-sprint` | Close a sprint, archive completed work, bump version |
+| `track-status` | Quick status summary of open sprint tracks |
+| `track-close` | Close a single track and mark it done |
+| `create-agent` | Scaffold a new agent file interactively |
+| `check-agent-os` | Verify Agent OS installation is healthy and up to date |
+| `update-agent-os` | Diff installed skills against canonical manifest; update on confirmation |
+| `clean-context` | Archive stale and completed context items |
+| `minify-context` | Compress verbose active context files |
+| `streamline-approvals` | Reduce approval prompt volume by building a pre-approved allowlist |
+| `orchestrator` | Loaded automatically at session start — not user-invoked directly |
 
-> New skills that don't depend on the context files or sprint workflow belong in this library.
+**Standalone skills** (no Agent OS installation required):
+
+| Skill | Description |
+|---|---|
+| `audit-security` | Security sweep: vulnerabilities, secrets, policy violations |
+| `sync-vercel-env` | Sync local environment variables to Vercel |
+| `submit-agent-os-feedback` | Submit feedback about Agent OS |
 
 ---
 
-**Inspired by Google Conductor.**
 *(c) 2026 DZNR VENTURES®*
