@@ -23,6 +23,69 @@ Backlog snapshot:
 
 Do not recite the full backlog text. One sentence per section is the limit.
 
+## Context mode detection
+
+After checking plan.md, determine the context mode for this session:
+
+1. Check whether `docs/context/task.md` exists and contains `Status: active`. If yes → **ephemeral mode**.
+2. If `docs/context/product.md` exists and the user's request references the project by name or references prior sprint/track work → **persistent mode**.
+3. If neither condition is met → infer from request framing using this table:
+
+| Signal in the request | Inferred mode |
+|---|---|
+| Bounded deliverable ("write," "build," "fix," "analyze") | Ephemeral |
+| "Continue working on..." / references to prior sprint | Persistent |
+| References to a named project, product, or sprint | Persistent |
+| Ambiguous / no prior context file | Ephemeral (default) |
+
+**Confirm the inferred mode in one sentence before proceeding:**
+
+For ephemeral:
+> "Treating this as a standalone task — [one-sentence restatement of goal]. Tell me if this is part of something larger."
+
+For persistent (when product.md exists):
+> "Working in [project name] context. [one-sentence sprint state from plan.md if available]."
+
+**Read `docs/context/task.md` when in ephemeral mode** (alongside product.md if present).
+
+**The rule is: infer and confirm, never configure.** Do not ask "is this a one-off task or an ongoing project?" — that is a configuration prompt. State the framing; the user corrects if wrong.
+
+## Creating task.md (ephemeral mode)
+
+When ephemeral mode is active and a new task begins, before creating `docs/context/task.md`:
+
+1. Check whether `docs/context/task.md` already exists.
+2. **If `docs/archive/tasks/` directory exists:** set `Status: done` in the current `task.md`, then move it to `docs/archive/tasks/YYYY-MM-DD-[slug].md` where slug is the first five words of the task title, hyphenated.
+3. **If `docs/archive/tasks/` does not exist:** overwrite `task.md` silently, but add this line to the new file's `## Agent notes` section: "Prior task.md overwritten. To keep task history, create docs/archive/tasks/."
+4. Create the new `task.md` with the current task's content.
+
+## Recurring topic observation
+
+After creating a new `task.md`, check `docs/archive/tasks/` for prior task files (if the directory exists). If three or more archived tasks share a domain keyword with the current task and no `docs/context/product.md` exists, surface this observation — do not ask a question requiring an answer:
+
+> "You've worked on [topic] a few times. If this is becoming an ongoing effort, I can set it up as a project."
+
+This fires at most once per session and only when the archive directory exists with sufficient history.
+
+## Task promotion (task.md → product.md)
+
+When the user signals that a task has grown into an ongoing project — via phrases like "this is turning into a project," "let's make this ongoing," "I want to keep working on this," "can we make this a project," or similar — run the promotion path:
+
+1. Read `docs/context/task.md`.
+2. Ask the user: "I'll convert this to a project context. What should I call it?" (one question, wait for response).
+3. Create `docs/context/product.md` synthesized from `task.md`:
+   - Task title → project name (in the document header)
+   - `## Goal` content → vision / what this project is for
+   - `## Scope` content → current focus
+   - `## Constraints` content → relevant context / constraints
+   - Set "Who it's for" to unknown — prompt the user to fill in if needed
+4. Archive `task.md`: set `Status: done`, move to `docs/archive/tasks/YYYY-MM-DD-[slug].md` (create `docs/archive/tasks/` if absent).
+5. Confirm: "Project context created — [name]. product.md is now the persistent context. You can fill in 'Who it's for' when ready."
+
+**This path does not replace `/onboard-existing-project`.** That skill handles full project scaffolding. This is a lightweight shortcut for the specific case where `task.md` exists and the user wants to graduate it to a project.
+
+**Do not auto-detect promotion.** The signal must come from the user — do not infer promotion from session count or task length.
+
 ## Triage rule
 
 **Anthropic step-predictability test:**

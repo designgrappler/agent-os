@@ -167,6 +167,8 @@ If all required values are present → proceed to Step 4.
 
 Create all files below. For each file that already exists, show the diff and ask: merge, replace, or skip.
 
+> **Note:** `task.md` is NOT created during scaffold. It is created by the orchestrator at session start when ephemeral mode is detected. Scaffold creates `product.md` for new project initialization only.
+
 ---
 
 ### Model and provider guidance (read before generating any agent)
