@@ -125,7 +125,7 @@ Sprint S<N> open.
 Goal: <sprint goal>
 Tracks: <count> track(s) added to docs/context/tracks.md
 Plan: docs/context/plan.md updated
-Sprint plan: docs/temp-sprint<N>-plan.md
+Sprint plan: [docs/temp-sprint<N>-plan.md](docs/temp-sprint<N>-plan.md)
 
 Next step: review the tracks, then dispatch work.
 ```

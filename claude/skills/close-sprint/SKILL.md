@@ -50,6 +50,11 @@ Increment `"release-version"` accordingly (e.g. `"v0.20.0"` → `"v0.20.1"` for 
 
 **Plan doc archival (rolling window):** Move `docs/temp-sprint<N>-plan.md` to `docs/archive/plan-docs/S<N>.md`. Then check `docs/archive/plan-docs/` — delete any entries older than the 3-sprint window (keep current sprint + 2 prior). Git history retains all older content.
 
+After moving the plan doc, stage the deletion so it does not appear as an uncommitted change:
+```bash
+git add docs/temp-sprint<N>-plan.md
+```
+
 If `docs/archive/plan-docs/` does not exist, create it silently before moving.
 
 ### Step 5 — Archive the sprint plan
