@@ -18,6 +18,21 @@ Read `docs/context/tracks.md`. For each track belonging to the current sprint:
 
   Wait for confirmation before continuing.
 
+### Step 1b — Backlog audit
+
+After all tracks are confirmed DONE, scan `docs/backlog.md` for items that correspond to work completed in this sprint.
+
+Match on: items explicitly tagged with the track ID (e.g. `(T53.1)`), or items whose title closely matches a completed track description.
+
+**If matches found:** surface them to the user:
+> "The following backlog items appear to correspond to completed work this sprint. Remove them?
+> - [item title]"
+> Wait for confirmation before removing.
+
+**If no matches found:** skip silently. Do not mention this step in output.
+
+**Removal:** if confirmed, remove the matched line(s) from `docs/backlog.md`. Do not remove section headers or surrounding items.
+
 ### Step 2 — Run build
 
 Run `bun run build`. If it fails, surface the error and stop. Do not continue until the build passes.
