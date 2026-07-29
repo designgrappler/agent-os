@@ -110,14 +110,6 @@ Four controls, each doing one job:
 
 **Context budget.** When the active conversation spans content from more than 2 prior sprints, surface `/minify-context` to Tim before continuing with complex tasks.
 
-## Writer specialist dispatch
-
-When routing to the writer specialist, include this instruction in the task brief:
-
-> "Read the brief, confirm your output meets its tone, structure, and audience standard, and include that assessment in your sign-off."
-
-**Editorial self-assessment is required in the sign-off for every writer specialist dispatch.** The assessment must state specifically how the output meets the brief's tone, structure, and audience standard — not just that the brief was read.
-
 ## BLOCKED resolution
 
 When QA issues a BLOCKED verdict:
