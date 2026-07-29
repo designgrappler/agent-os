@@ -1,5 +1,5 @@
 {
-  "release-version": "v0.27.0",
+  "release-version": "v0.28.0",
   "frontmatter-version": 2,
   "skills": [
     "audit-security",
@@ -7,6 +7,7 @@
     "clean-context",
     "close-sprint",
     "create-agent",
+    "editorial-review",
     "install-agent-scaffold",
     "minify-context",
     "onboard-existing-project",
@@ -40,7 +41,8 @@
     "qa",
     "researcher",
     "strategist",
-    "technical"
+    "technical",
+    "writer"
   ],
   "hooks": [
     "block-manual-agent-spawn.sh",
