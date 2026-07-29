@@ -102,7 +102,7 @@ If the file already has entries from a prior sprint, append the new entries belo
 
 ### Step 5 — Confirm
 
-Output a short confirmation:
+Output a short confirmation after Step 6 completes (so the plan doc link is accurate):
 
 ```
 Sprint S<N> open.
@@ -110,6 +110,7 @@ Sprint S<N> open.
 Goal: <sprint goal>
 Tracks: <count> track(s) added to docs/context/tracks.md
 Plan: docs/context/plan.md updated
+Sprint plan: docs/temp-sprint<N>-plan.md
 
 Next step: review the tracks, then dispatch work.
 ```
