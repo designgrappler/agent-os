@@ -100,6 +100,21 @@ Resolve `<OWNER_VALUE>` by mode:
 
 If the file already has entries from a prior sprint, append the new entries below them.
 
+### Step 4b — Backlog promotion
+
+After tracks are written to `docs/context/tracks.md`, scan `docs/backlog.md` for items that correspond to the tracks just opened.
+
+Match on: items explicitly tagged with the track ID (e.g. `(T54.1)`), or items whose title closely matches a track description from the sprint goal.
+
+**If matches found:** surface them to the user:
+> "The following backlog items appear to correspond to tracks opened in this sprint. Remove them?
+> - [item title]"
+> Wait for confirmation before removing.
+
+**If confirmed:** remove the matched line(s) from `docs/backlog.md`. Do not remove section headers or surrounding items.
+
+**If no matches found:** skip silently.
+
 ### Step 5 — Confirm
 
 Output a short confirmation after Step 6 completes (so the plan doc link is accurate):
