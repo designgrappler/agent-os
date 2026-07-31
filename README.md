@@ -1,10 +1,10 @@
 # Agent OS
 
-If you've used AI agents for any serious project, you've probably hit the same wall: the agent starts confidently, makes progress, then slowly drifts, repeating itself, contradicting earlier decisions, or losing track of what it was supposed to do. On multi-step work with multiple agents, this compounds fast.
+If you've used AI agents for any serious project, you've probably hit the same wall: the agent starts confidently, makes progress, then slowly drifts — repeating itself, contradicting earlier decisions, or losing track of what it was supposed to do. On multi-step work with multiple agents, this compounds fast.
 
-Agent OS is our take on making that reliable. It's a workflow that gives every agent a defined role, a readable source of truth, and a quality gate before work is considered done. It runs inside whatever tool you're already using (VS Code, Antigravity, any CLI) because the governance layer is plain Markdown, not platform-specific.
+Agent OS makes that reliable. It gives every agent a defined role, a readable source of truth, and a quality gate before work is considered done. The governance layer is plain Markdown, so it runs inside whatever tool you're already using.
 
-**Who it's for:** Anyone already using AI agents who wants their work to stop going sideways. Not just developers; the same pattern works for writing, research, design, and operations. If your project has a clear pattern of work and a desired outcome, Agent OS fits.
+**Who it's for:** Anyone using AI agents who wants their work to stop going sideways. The pattern works for development, writing, research, design, and operations.
 
 **What it's not:** A replacement for your AI tool. It runs alongside Claude, Gemini, or any model you're already using.
 
@@ -13,31 +13,18 @@ Agent OS is our take on making that reliable. It's a workflow that gives every a
 ## How It Works
 
 **1. Shared memory your agents can trust**
-Agent OS creates a set of plain Markdown files (your project description, active work, and team setup) that every agent reads at the start of each session. Context lives in files, not in conversation history, which is what keeps agents consistent across conversations.
+Agent OS creates plain Markdown context files every agent reads at the start of each session. For persistent projects, `product.md` carries the long-lived context. For one-off tasks, `task.md` carries the scoped brief. State lives in files, not conversation history — which is what keeps agents consistent across sessions and context resets.
 
 **2. Roles with real constraints**
-Each agent has a defined role and can only use the tools that role allows. An orchestrator (the agent that routes your task to the right specialist) routes and plans but never executes on your files. A QA specialist reviews but cannot write. Roles don't drift because they structurally can't.
+Each agent has a defined role and can only use the tools that role allows. An orchestrator routes and plans but never executes on your files. A QA specialist reviews but cannot write. Roles don't drift because they structurally can't.
 
 **3. A quality gate before work ships**
-No task is complete until a dedicated QA specialist reviews it and issues a binary verdict: approved or blocked. QA is read-only by design, so it can't fix what it finds, which means problems have to go back to the specialist before anything ships.
+No task is complete until a dedicated QA specialist reviews it and issues a binary verdict: approved or blocked. QA is read-only by design, so it can't fix what it finds — problems go back to the specialist before anything ships.
+
+**4. External tools via connectors**
+Skills declare what external tools they need. The orchestrator checks your connector registry at `~/.claude/connectors.md` and prompts to connect any missing tools before the skill runs.
 
 For a full explanation of each part, see [CONCEPTS.md](./CONCEPTS.md).
-
----
-
-## Conversation Hygiene
-
-A long AI conversation accumulates drift; earlier instructions carry less weight as the conversation grows. Agent OS is designed to survive this, but good habits make it more reliable.
-
-**Start a new conversation when:**
-- Switching from planning to execution, or from execution to review
-- Opening a new piece of work
-- A task finishes and a new one begins
-- Something goes consistently wrong; always start fresh after a failure
-
-**A new session is your reset.** Because state lives in files, nothing is lost when you start fresh: agents read the context files (`product.md`, `plan.md`, `tracks.md`) at the start of every session and pick up exactly where the work stands.
-
-For a one-line fix, skip the ceremony. For anything that touches multiple areas, involves multiple agents, or needs to survive a context reset, the structure pays for itself.
 
 ---
 
@@ -47,52 +34,16 @@ Tell your AI:
 
 > "Install Agent OS on this project: https://github.com/designgrappler/agent-os"
 
-That's it. Your AI fetches the install skill from the repo and runs it. For new projects it scaffolds everything from scratch; for existing projects it reads what you already have and won't overwrite files without your approval.
+Your AI fetches the install skill from the repo and runs it. For new projects it scaffolds everything from scratch; for existing projects it reads what you already have and won't overwrite files without your approval. After install completes, your project has context files in place and agent definitions ready — open a new conversation and tell your orchestrator what you want to work on.
 
 For setup details and IDE-specific paths, see the [Implementation Guide](./GUIDE.md).
-
----
-
-## Your Setup
-
-Agent OS runs inside the tools you're already using. We provide specific setup instructions for two patterns, single model and split model, with one validated example of each.
-
-**Single model — VS Code + Claude Code**
-Claude Code manages planning, execution, and review within a single IDE. Agent definitions live in `.claude/agents/` and are invoked directly from the chat interface.
-[Single model setup in the Implementation Guide](./GUIDE.md#single-model--one-tool-handles-everything)
-
-**Split model — Antigravity + Claude Extension**
-Gemini (via Antigravity's Agent Manager) handles planning and orchestration. Claude (via VS Code's Claude Extension) handles execution. Work moves between them through the shared Markdown context files, which both tools read.
-[Split model setup in the Implementation Guide](./GUIDE.md#split-model--planning-tool--execution-tool)
-
-Using a different combination? The two patterns above cover most setups; use them as a reference for adapting to your tools. [See other environments](./GUIDE.md#other-environments)
-
----
-
-## Agent OS Skills
-
-For available skills and how to use them, see the [Implementation Guide](./GUIDE.md).
-
----
-
-## Standalone Skill Library
-
-These skills work on any project, with no Agent OS installation required.
-
-| Skill | Purpose |
-| :--- | :--- |
-| [`audit-security`](./skills/audit-security/SKILL.md) | Security sweep: scans for vulnerabilities, hardcoded secrets, and policy violations |
-| [`streamline-approvals`](./skills/streamline-approvals/SKILL.md) | Scans transcripts, builds a read-only allowlist, writes it to `.claude/settings.json`, enables VS Code Auto mode |
-| [`sync-vercel-env`](./skills/sync-vercel-env/SKILL.md) | Syncs local environment variables to a Vercel project |
-
-> This library grows independently of Agent OS. Skills that don't depend on shared DNA state belong here.
 
 ---
 
 ## Technical Reference
 
 - [Concepts](./CONCEPTS.md) — core concepts: orchestrator, specialists, QA gate, context files
-- [Implementation Guide](./GUIDE.md) — setup, IDE paths, conversation hygiene, security and isolation
+- [Implementation Guide](./GUIDE.md) — setup, IDE paths, available skills, security and isolation
 - [System Architecture](./ARCHITECTURE.md) — the five layers, key protocols, and reliability model
 - [Contributing](./CONTRIBUTING.md) — adding skills, validating new environments, expanding agent types
 

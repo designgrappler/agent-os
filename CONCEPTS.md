@@ -1,99 +1,118 @@
-# Concepts
+# Agent OS: Core Concepts
 
-Agent OS is built on four concepts. Once you understand these, the system's behavior makes sense and you can put it to work without knowing how it's built under the hood.
+Five concepts. Once you understand these, the system's behavior makes sense and you can put it to work immediately.
 
 ---
 
 ## Orchestrator
 
-The orchestrator is the agent that receives your request and routes it to the right specialist.
+The orchestrator is not a separate program — it is the primary model you are already talking to. Claude, Gemini, or whichever LLM you have configured: that model, given a defined role, a set of constraints, and the ability to coordinate work.
 
-When you describe a task, the orchestrator reads the context files for your project, determines which specialist is the right fit, and hands off with the relevant background already attached. You do not configure this routing manually.
+When you describe a task, the orchestrator reads the context files for your project, determines what kind of work is needed, and routes it to the right specialist with the relevant background already attached. You do not configure this routing manually.
 
-**Example:** You ask for a competitive analysis of three tools in your market. The orchestrator determines a researcher is the right specialist, packages the request with your product context, and hands it off. The researcher begins without you having to explain the project from scratch.
+This matters because the same model that answers questions in a generic chat becomes a structured coordinator when given a defined role. The orchestrator knows what it is for, what to delegate, and when to bring a decision back to you.
 
-**What it is not:** A general-purpose assistant you prompt directly for answers. The orchestrator routes and coordinates -- it does not execute the work itself.
+**What it is not:** A general-purpose assistant you prompt directly for answers. The orchestrator routes and coordinates — it does not execute the work itself.
 
 ---
 
 ## Specialists
 
-Specialists are domain experts with defined roles and specific constraints. Each carries judgment about how to do work in their domain -- not just what to produce, but how to scope it and what to stay out of.
+Specialists are domain experts — each with a defined role, specific constraints, and access to the tools their domain actually requires.
 
-When the orchestrator hands a task to a specialist, that specialist brings domain knowledge and follows its own set of principles. Specialists do not drift into each other's domains.
+What distinguishes specialists is not just knowledge: it is tool access. A researcher can run web searches and pull documents. A frontend specialist reads and edits code files. A designer generates and modifies Figma designs. An ops specialist queries deployment logs and infrastructure APIs. Each specialist is equipped with the tools their work needs — MCP servers, code execution, search, design tooling, external APIs — not a generic set of everything.
 
-**Canonical specialist roster:**
+When the orchestrator hands a task to a specialist, that specialist brings domain judgment and follows its own principles about scope. Specialists do not drift into each other's domains.
 
-| Role | What they do |
-|---|---|
-| **Technical** | Complex technical tasks -- reads codebase state, surfaces a plan, and coordinates implementation |
-| **Designer** | User experience and visual work -- produces design directions and handoff artifacts |
-| **Researcher** | Evidence-backed synthesis -- competitive analysis, literature review, and user research |
-| **Marketing** | Channel-specific copy and campaigns -- translates strategy into words |
-| **Frontend** | UI components and interaction logic -- scoped to the presentation layer |
-| **Backend** | API routes, business logic, and server-side services |
-| **Database** | Schema changes, migrations, and query logic -- every change reversible by default |
-| **Mobile** | Native device integration, push notifications, and platform-specific behavior |
-| **Ops** | Deployment, infrastructure, and incident response |
-| **PM** | Translates strategy into prioritized requirements -- defines what and when |
-| **Strategist** | Upstream thinking partner -- market analysis, product strategy, and opportunity framing |
-| **Critic** | Adversarial review -- stress-tests plans and surfaces failure modes before execution |
-| **QA** | Read-only quality gate -- issues a binary verdict on completed work |
+**Examples of specialists and their tools:**
 
-**Example:** A designer specialist produces three visual directions for a new onboarding flow. A researcher specialist reads competitor sites and synthesizes findings into a brief. Each works within their domain and does not touch the other's output.
+| Specialist | Domain | Tools they use |
+|---|---|---|
+| **Researcher** | Synthesis and analysis | Web search, document fetch |
+| **Designer** | Visual and UX work | Figma MCP, design export |
+| **Frontend** | UI and interaction logic | File read/write, build tools |
+| **Backend** | APIs and server-side logic | File read/write, shell execution |
+| **Ops** | Deployment and infrastructure | Shell, logs, infrastructure APIs |
+| **Strategist** | Product and market thinking | Web search, document synthesis |
+| **Critic** | Adversarial review | Read-only — no execution |
+| **QA** | Quality gate | Read-only — no modifications |
 
-**What they are not:** Interchangeable. Each specialist is scoped to its domain. Asking a designer for backend implementation or a researcher for final copy is outside their defined role -- the orchestrator routes those requests to the right specialist instead.
+**Example (non-dev):** You ask for a competitive analysis of three marketing tools. A researcher specialist runs web searches, pulls the relevant pages, and synthesizes findings into a brief. A strategist specialist reads that synthesis and frames the strategic opportunity. Each works within their domain and does not touch the other's output.
+
+**Example (dev):** A frontend specialist implements a new settings page. A backend specialist writes the API route it needs. Each is scoped to their layer — neither touches the other's files.
+
+**What they are not:** Interchangeable. Each specialist is scoped to its domain. The orchestrator routes requests to the right one — you do not have to choose.
 
 ---
 
 ## QA Gate
 
-The QA gate is the review step that verifies work matches what was agreed before it reaches you.
+The QA gate is an iteration loop, not a one-shot approval step. Work runs through it until it matches the plan — and only then does it reach you.
 
-Every completed task passes through a dedicated QA specialist -- a read-only agent that cannot modify what it reviews. QA reads the completed work against the original plan and issues one of two verdicts: approved or blocked. Blocked work goes back for revision. Approved work comes to you.
+A dedicated QA specialist reviews completed work. QA is read-only: it cannot modify what it reviews. It reads the output against the original plan and issues one of two verdicts:
 
-This matters especially for non-engineering work, where "done" is not always obvious. QA is not checking code syntax -- it is checking whether the output matches the plan. Did the researcher address the right questions? Does the design match the stated brief? QA answers those questions before the work reaches you.
+- **Approved** — the work matches the plan; it moves forward
+- **Blocked** — the work does not match the plan; a specific reason is given and it returns to the specialist
 
-**Example:** Your researcher produces a competitive analysis. Your designer uses it to produce three onboarding directions. Before either piece of work reaches you, QA verifies the competitive analysis answers the brief and that the design directions are responsive to the research findings. Work that does not meet the criteria comes back for revision -- not to you to fix.
+When work is blocked, QA states the exact reason. The specialist receives that feedback, addresses it, and resubmits. QA re-reviews. The loop continues until the work is approved. It does not reach you until it has passed.
 
-**What it is not:** A final polish step or a rubber stamp. QA blocks work that does not meet the criteria and sends it back. The system does not pass incomplete or misaligned work through because an agent got close.
+The loop matters because agents can miss things. QA provides a second pass with defined criteria, run by an agent that has no stake in the output and cannot accidentally change what it is evaluating. QA is not checking whether something is good — it is checking whether it matches what was agreed.
+
+**Example:** A researcher submits a competitive analysis. QA reads it against the brief: Did it cover the specified competitors? Does it answer the framing question from the plan? One section is thin. QA blocks with a specific note. The researcher expands that section and resubmits. QA approves. The work reaches you.
+
+**What it is not:** A final polish step or a rubber stamp. Incomplete or misaligned work does not pass through because an agent got close. The loop catches it.
 
 ---
 
 ## Context Files
 
-Context files are shared notes that every agent reads at the start of each session.
+Context files are the persistent memory of your project — instructions, constraints, active work state, and project identity that every agent reads before acting.
 
-There are three:
+This is richer than "notes." A context file is the ground truth the entire system operates from. When it says the product targets enterprise buyers, every specialist works from that fact. When it says the current goal is onboarding, that focus applies everywhere. When it records that a research track is complete and a design track is in progress, no agent asks you to re-explain where things stand.
 
-- **`product.md`** -- what the project is, who it is for, and what problem it solves
-- **`plan.md`** -- what is currently in progress: the active sprint or current work
-- **`tracks.md`** -- the status of each piece of work: done, in progress, or blocked
+Context is actively managed to avoid bloat. Files stay focused on what is current and relevant — stale content is removed, not accumulated.
 
-Every agent reads all three before doing anything. The result is that agents carry the same understanding of the project without you having to re-explain it each session.
+**Two types of context file:**
 
-**Example:** You close a session mid-way through a design sprint. Next session, you describe a new task. The orchestrator, researcher, designer, and QA each read the same three context files before acting -- they know what the project is, where work stands, and what has already been completed. No re-briefing required.
+- **`product.md`** — persistent project memory: what the product is, who it is for, the problem it solves, and the constraints that apply. Used for ongoing work across multiple sessions.
+- **`task.md`** — one-off task context: the specific deliverable, the scope, and the criteria for done. Used when the work is discrete and does not belong to an ongoing product.
 
-**What they are not:** Conversation history. Context files are plain Markdown files that persist across sessions and are identical for every agent. They are not a transcript of what was said -- they are the stable, updatable ground truth for the project.
+Use `product.md` when you are working on something that spans multiple sessions — a product, a codebase, a campaign. Use `task.md` when you have a one-off deliverable and do not need persistent memory after it is done.
+
+**Example:** You open a new session and ask for help revising onboarding copy. The orchestrator reads `product.md` — it knows the product, the users, and the voice. It reads `plan.md` — it knows the onboarding redesign is in progress. No re-briefing required.
+
+**What they are not:** Conversation history. Context files are plain Markdown files that persist across sessions, readable by every agent. They are not a transcript — they are the stable, updatable ground truth for the project.
 
 ---
 
-## How these work together
+## Connectors
 
-Here is a complete flow for a non-engineering example: designing a new onboarding experience for a SaaS product.
+Connectors are the external tools and services your skills can access — web search, APIs, MCP servers, and other integrations — registered once and available across all your projects.
 
-**Setup:** Three context files exist. `product.md` describes the product and its target users. `plan.md` notes that the current goal is a redesigned onboarding flow. `tracks.md` shows a research track and a design track, both not yet started.
+Skills declare what tools they need via a `requires:` field. When you invoke a skill, the orchestrator checks your connector registry (`~/.claude/connectors.md`) to see if the required tool is available. If it is, the skill runs without interruption. If it is not, you are prompted once: provide the connection details, the orchestrator writes the config to your registry, and the task continues. You never configure this manually mid-task again.
 
-**Step 1 -- You describe the work.** You tell the orchestrator you want to redesign onboarding based on what competitors are doing well. The orchestrator reads the context files, identifies two pieces of work (competitive research first, then design), and routes the first task to the researcher.
+Agents can also use connected tools opportunistically — if a connected tool is relevant to the work, an agent can use it without a hard `requires:` declaration.
 
-**Step 2 -- Research.** The researcher reads `product.md` to understand the product context, then studies competitor onboarding flows and synthesizes findings. The output is a brief: what competitors do well, what patterns appear, and where opportunities exist.
+**Example:** A research skill declares `requires: brave-search`. The first time you invoke that skill, the orchestrator checks your registry. Brave Search is not there. The orchestrator asks for the server details, writes the config, and continues with the task. Every subsequent skill that needs web search finds it already registered.
 
-**Step 3 -- QA reviews the research.** Before the brief reaches you or the designer, QA reads the research against the original ask. Did it cover the right competitors? Does it answer the questions the plan called for? If yes, QA approves. If not, QA sends it back with what is missing.
+**What it is not:** Per-project configuration. Connectors are registered globally. A tool you connect in one project is available in all of them.
 
-**Step 4 -- Design.** The designer reads the approved research brief and `product.md`, then produces three distinct onboarding direction concepts. Each is separate and fully formed.
+---
 
-**Step 5 -- QA reviews the design.** QA reads the three design directions against the research brief and the plan. Are the directions responsive to the research findings? Do they address the brief? QA approves or blocks accordingly.
+## One integrated system
 
-**Step 6 -- Work reaches you.** You receive the approved research brief and the approved design directions. The work has already been verified to match what was planned. Your job is to make a decision -- not to check whether the work was done correctly.
+These five concepts are not independent features — they form one loop. The orchestrator directs. Specialists execute using the tools their domain requires. QA enforces the plan before anything reaches you. Context files give every agent the same understanding of the project. Connectors supply external capabilities where they are needed, without mid-task setup.
 
-Throughout this flow, every agent read the same context files. No agent had to ask you to re-explain the project. The QA gate ran twice and caught anything that did not match the plan before it reached you.
+Here is what that loop looks like — once for a content project, once for a development project.
+
+**Content: redesigning a product onboarding email sequence**
+
+`product.md` describes a SaaS product for small business owners. `plan.md` states the goal: a new onboarding email sequence for users who signed up but never activated. A researcher specialist runs web searches on onboarding patterns, pulls competitor examples, and synthesizes a brief. QA reviews it against the plan — blocks once because a user segment specified in the plan is missing. The researcher addresses it and resubmits. QA approves. A marketing specialist reads the approved brief and writes three email variants. QA reviews those against the brief. Approved. Two email variants and the brief reach you, already verified.
+
+**Development: adding a new API endpoint and a dashboard component**
+
+`task.md` defines the work: add a `/status` endpoint and expose it in the dashboard header. A backend specialist implements the route, scoped to the server layer. A frontend specialist reads the endpoint spec and implements the header component, scoped to the UI layer. QA reviews both against the task definition and approves. Work reaches you.
+
+In both cases: you described the goal once. Every agent read the same context. Specialists used the tools specific to their domain. QA ran a loop until the output matched the plan. Connectors supplied the search and API access specialists needed without mid-task configuration.
+
+That is the system.
