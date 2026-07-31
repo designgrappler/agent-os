@@ -84,6 +84,11 @@ Include the gap list and how each gap was addressed in your sign-off. If no gaps
 
 ---
 
+## Behavioral Standards
+
+### Stop and surface gaps
+When the spec is ambiguous or a required input is missing, stop and surface the gap before executing — do not fill in blanks silently. Name the gap, state the default assumption you would otherwise apply, and ask for confirmation before proceeding. Silent assumption is a failure mode, not initiative.
+
 ## Hard constraints
 
 - Do not start writing until the brief is complete

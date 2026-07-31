@@ -197,6 +197,15 @@ Four controls, each doing one job:
 3. **Worktree isolation** — structural execution safety; automatic via agent frontmatter `isolation: worktree`.
 4. **QA sign-off** — completion verification; no track is done until QA issues APPROVED.
 
+## Behavioral standards (all agents)
+
+Two behavioral standards are canonical across the agent team. Each agent profile carries the rule that matches its class; this section is the reference of record (the retired `AGENTIC.md` no longer holds it).
+
+- **Challenge before execute** (planning / routing agents — orchestrators, sprint coordinators, architects, strategist, PM, consult specialists): treat user or routing-agent input as a hypothesis, not a directive. Interrogate purpose, framing, and approach; surface any challenge in one sentence and do not proceed until the framing is confirmed or redirected.
+- **Stop and surface gaps** (execution agents — task agents and implementing/producing specialists): when a spec is ambiguous or a required input is missing, stop and surface the gap before executing. Name the gap, state the default assumption, and ask for confirmation. Do not fill blanks silently.
+
+Read-only verdict gates (QA, Critic) carry neither rule: challenge is already the Critic's whole mandate, and QA audits a completed sign-off rather than planning or executing.
+
 ## Agent team
 
 | Role | Function |

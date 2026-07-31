@@ -128,55 +128,11 @@ This phase is **advisory only**. It never contributes a fail row and never chang
    > `⚠ Track <ID> is <STATUS> but has no Owner (blank/null). Assign a GitHub handle in docs/context/tracks.md, or leave it if intentional. (Non-blocking.)`
 4. If no such tracks exist (or `tracks.md` is absent), emit `Phase 6b: Multi-User Owner Enforcement — PASS (all in-flight tracks owned)`.
 
-These warnings are surfaced for visibility only. Do **not** count them in the `OVERALL: FAIL (N issues)` total — the FAIL count remains "fail rows across Phases 1–7" as defined in Phase 9.
+These warnings are surfaced for visibility only. Do **not** count them in the `OVERALL: FAIL (N issues)` total — the FAIL count remains "fail rows across Phases 1–6" as defined in Phase 8.
 
 ---
 
-## Phase 7: Blueprint Frontmatter Validity Check
-
-### 7.1 Absent-directory precondition
-
-If `~/.claude/blueprints/` does not exist, emit:
-> `Phase 7: Blueprint Frontmatter Validity Check — PASS (no blueprints installed — run /update-agent-os to install)`
-
-Exit Phase 7 cleanly.
-
-### 7.2 File enumeration
-
-Enumerate all `~/.claude/blueprints/*.md` files. Run the per-file validation block for each.
-
-### 7.3 Per-file validation block
-
-For each `~/.claude/blueprints/<filename>.md`:
-
-**a. Frontmatter parse.** Parse YAML frontmatter. If missing or malformed:
-> `<filename>: invalid or missing frontmatter`
-> Remediation: Run `/update-agent-os` to restore the canonical version.
-
-**b. Required field presence.** Confirm all six required fields: `name`, `description`, `tools`, `expected_output`, `model`, `schema_version`. For each missing field:
-> `<filename>: required frontmatter field absent: <field>`
-
-**c. `name:` ↔ filename invariant.** `name:` must equal filename minus `.md`. If mismatch:
-> `<filename>: name field does not match filename`
-
-**d. `task-` prefix invariant.** `name:` must start with `task-`. If not:
-> `<filename>: name does not start with the required task- prefix`
-
-**e. `expected_output:` first-sentence sync rule.** Locate `## Expected Output Contract` in the body. If absent:
-> `<filename>: required body section "## Expected Output Contract" absent`
-
-If present, compare the first sentence of the section body to the frontmatter `expected_output:` value. If mismatch:
-> `<filename>: expected_output sync rule violation — frontmatter value does not match first sentence of body's ## Expected Output Contract section`
-> Frontmatter: <value>
-> Body first sentence: <extracted>
-
-### 7.4 Pass condition
-
-Phase 7 passes if every enumerated file passes all checks (or if `~/.claude/blueprints/` is absent).
-
----
-
-## Phase 8: Claude Code Version Notice (informational only — does not affect OVERALL)
+## Phase 7: Claude Code Version Notice (informational only — does not affect OVERALL)
 
 Run `claude --version` defensively:
 ```bash
@@ -191,9 +147,9 @@ Extract the version string (first whitespace-delimited token). Compare to thresh
 
 ---
 
-## Phase 9: Report
+## Phase 8: Report
 
-Emit one clearly-labeled section per phase. Each section states **PASSED** or **FAILED**, with fail rows and remediation hints. Phase 8 and Phase 6b notices are informational — they do NOT affect OVERALL.
+Emit one clearly-labeled section per phase. Each section states **PASSED** or **FAILED**, with fail rows and remediation hints. Phase 7 and Phase 6b notices are informational — they do NOT affect OVERALL.
 
 ```
 ### Phase 1: Skill Install Check — PASSED
@@ -209,8 +165,7 @@ Emit one clearly-labeled section per phase. Each section states **PASSED** or **
 #### 5b: report-track-status Does NOT Exist — PASSED
 ### Phase 6: Required docs/context/ Check — PASSED
 ### Phase 6b: Multi-User Owner Enforcement — N/A (single-user mode)
-### Phase 7: Blueprint Frontmatter Validity Check — PASSED
-### Phase 8: Claude Code Version Notice (informational)
+### Phase 7: Claude Code Version Notice (informational)
 Claude Code version OK (v2.1.200)
 
 OVERALL: PASS
@@ -218,11 +173,11 @@ OVERALL: PASS
 
 The final line **must** be exactly one of:
 - `OVERALL: PASS`
-- `OVERALL: FAIL (N issues)` — where N is the total count of fail rows across Phases 1–7 (Phase 8 and Phase 6b excluded, both informational).
+- `OVERALL: FAIL (N issues)` — where N is the total count of fail rows across Phases 1–6 (Phase 7 and Phase 6b excluded, both informational).
 
 ---
 
-## Phase 10: Timestamp on Success
+## Phase 9: Timestamp on Success
 
 - **If `OVERALL: PASS`:** write today's ISO date (e.g. `2026-07-20`) to `.agent-os-checked` at the project root. Print:
   > `Wrote .agent-os-checked (next reminder in 30 days)`
@@ -241,12 +196,12 @@ The final line **must** be exactly one of:
 
 ## Verification Checklist (Internal — Run Before Reporting Complete)
 - [ ] Canonical source resolved before Phase 1 ran
-- [ ] All phases (1–9) executed in order; Phase 9 Report and Phase 10 Timestamp run last
+- [ ] All phases (1–8) executed in order; Phase 8 Report and Phase 9 Timestamp run last
 - [ ] Report ends with explicit `OVERALL: PASS` or `OVERALL: FAIL (N issues)` line
 - [ ] On PASS, `.agent-os-checked` written with today's ISO date
 - [ ] On FAIL, `.agent-os-checked` NOT created or modified
 - [ ] Every fail row includes a remediation hint
 - [ ] Phase 5a: AGENTIC.md existence checked; presence is a FAIL
 - [ ] Phase 5b: report-track-status existence checked; presence is a FAIL
-- [ ] Phase 8: `claude --version` invoked defensively; never contributes fail rows to OVERALL
+- [ ] Phase 7: `claude --version` invoked defensively; never contributes fail rows to OVERALL
 - [ ] Phase 6b: mode read; single-user → N/A; multi-user → advisory warnings only, never counted in OVERALL

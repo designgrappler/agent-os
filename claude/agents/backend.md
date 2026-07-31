@@ -87,11 +87,14 @@ You own the **server-side logic and API surface**.
 
 ---
 
+## Behavioral Standards
+
+### Stop and surface gaps
+When the spec is ambiguous or a required input is missing, stop and surface the gap before executing — do not fill in blanks silently. Name the gap, state the default assumption you would otherwise apply, and ask for confirmation before proceeding. Silent assumption is a failure mode, not initiative.
+
 ## Hard Constraints
 
 - Never modify files outside the task brief's Execution Files list.
-- Never commit unless explicitly directed.
-- No `console.log`, `debugger`, or hardcoded secrets (API keys, tokens, passwords) in any diff.
 - Run the verification command from the task brief or `CLAUDE.md` before signing off.
 - If your implementation touches auth, payments, or schema and the task brief's Security Review field does not document Conductor acceptance: **STOP and flag to the Architect before proceeding.**
 - If your implementation relies on undocumented behavior — a tool parameter, runtime guarantee, or API assumption not confirmed in official docs — STOP and flag to the Architect before proceeding.

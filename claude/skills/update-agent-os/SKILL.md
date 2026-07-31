@@ -1,9 +1,9 @@
 ---
 name: update-agent-os
-description: Synchronizes your local `~/.claude/skills/`, `~/.claude/agents/`, and `~/.claude/blueprints/` installation against the canonical Agent OS library.
+description: Synchronizes your local `~/.claude/skills/`, `~/.claude/agents/` installation against the canonical Agent OS library.
 ---
 # Update Agent OS
-Synchronizes your local `~/.claude/skills/`, `~/.claude/agents/`, and `~/.claude/blueprints/` installations against the canonical Agent OS library. Reads the canonical manifest from a remote URL (with a local clone fallback), diffs your installed skills and agents against the canonical set, surfaces the current release version and release notes, and presents a per-row action table for you to approve before anything is changed. Nothing is written, renamed, or removed without your explicit confirmation.
+Synchronizes your local `~/.claude/skills/` and `~/.claude/agents/` installations against the canonical Agent OS library. Reads the canonical manifest from a remote URL (with a local clone fallback), diffs your installed skills and agents against the canonical set, surfaces the current release version and release notes, and presents a per-row action table for you to approve before anything is changed. Nothing is written, renamed, or removed without your explicit confirmation.
 
 ## Trigger
 When the user runs `/update-agent-os`, execute the following phases in order.
@@ -19,7 +19,6 @@ When the user runs `/update-agent-os`, execute the following phases in order.
    - Agent files: `~/Developer/agent-os/claude/agents/`
    - Notify the user: "Could not reach the canonical URL — using local clone at `~/Developer/agent-os/` as fallback."
 3. **If neither the URL nor the local clone resolves:** stop and ask the user to supply a path or URL. Do not proceed to Phase 2 until a canonical source is confirmed.
-4. **Blueprints manifest:** Locate `blueprints-manifest.json` at the same level as `skills-manifest.json` in the resolved canonical source. If absent, treat the canonical blueprint set as empty and proceed without error.
 
 ---
 
@@ -38,13 +37,6 @@ When the user runs `/update-agent-os`, execute the following phases in order.
    - If **present**: continue.
 5. List all `<name>.md` files in `~/.claude/agents/`. This is the **installed agent set**.
 6. Read the `agents` array from the resolved manifest. This is the **canonical agent set**.
-
-**Blueprints:**
-7. Check whether `~/.claude/blueprints/` exists.
-   - If **absent**: silently create the directory (`mkdir -p ~/.claude/blueprints/`).
-   - If **present**: continue.
-8. List all `<name>.md` files in `~/.claude/blueprints/`. This is the **installed blueprint set**.
-9. Read the `blueprints` array from the resolved `blueprints-manifest.json`. If absent, canonical blueprint set is empty.
 
 **Hooks:**
 H1. Read the `hooks[]` array from the resolved `skills-manifest.json`. This is the **canonical hook set** (a list of `.sh` filenames). For each entry, read the canonical hook file contents from `<canonical-source>/claude/hooks/<E>`.
@@ -77,8 +69,6 @@ Display neither list yet — hold all data for Phase 3.
 
 **For agents** — produce three parallel lists with the same logic.
 
-**For blueprints** — produce three parallel lists with the same logic.
-
 **For hooks** — skip entirely if the canonical hook set is empty.
 
 **a. New** — filenames in canonical `hooks[]` but absent from `.claude/hooks/`.
@@ -96,7 +86,7 @@ If the diff contains at least one rename or removal: scan `CLAUDE.md` for refere
 
 Surface release information first — display release version and notes before the action table.
 
-Display the diff table. One row per skill, agent, blueprint, hook, or CLAUDE.md reference affected. Prefix rows with `[skill]`, `[agent]`, `[blueprint]`, `[hook]`, or `[claude.md]`. If no differences, state: "Your installation is up to date — no changes needed." and stop.
+Display the diff table. One row per skill, agent, hook, or CLAUDE.md reference affected. Prefix rows with `[skill]`, `[agent]`, `[hook]`, or `[claude.md]`. If no differences, state: "Your installation is up to date — no changes needed." and stop.
 
 ```
 | Name                              | Type      | Status                   | Proposed action                                                           |
@@ -112,9 +102,17 @@ Display the diff table. One row per skill, agent, blueprint, hook, or CLAUDE.md 
 **Safety-control gate for hook rows:** Before presenting any `[hook]` row, display verbatim:
 > `This is a safety-control hook. Review the diff carefully before approving.`
 
-**Hook rows require individual confirmation.** "Approve all" applies only to non-hook rows.
+**Safety-control gate for Outdated rows:** Before presenting any `[skill]` or `[agent]` row with Status `Outdated`, display verbatim:
+> `This file exists locally and will be overwritten. Review before approving.`
 
-Ask: "Approve all non-hook actions, a subset (list the names), or decline? For hook rows, each requires a separate confirmation."
+Then show the diff between the local file and the canonical file for that row before asking for confirmation.
+
+**Approval tiers:**
+- **New rows** (no local file exists) — eligible for "Approve all". No overwrite risk.
+- **Outdated rows** (local file differs from canonical) — require individual per-file confirmation. Cannot be included in "Approve all".
+- **Hook rows** — require individual per-hook confirmation (unchanged).
+
+Ask: "Approve all NEW actions (no overwrite risk), a subset, or decline? Outdated rows each require individual confirmation — they will be listed separately."
 
 Wait for the user's response before proceeding to Phase 5.
 
@@ -138,9 +136,6 @@ For each action the user approved, execute one at a time:
 - **Remove:** delete `~/.claude/agents/<name>.md`. Print: `removed ~/.claude/agents/<name>.md`
 - **Skip:** print: `skipped <name>`
 
-**Blueprints:**
-- Same install/rename/update/remove/skip pattern as Skills and Agents, using `~/.claude/blueprints/<name>.md`.
-
 **CLAUDE.md references** (applied after all skill and agent changes):
 - For each approved `[claude.md]` row, apply the edit to `CLAUDE.md`. Print: `updated CLAUDE.md line <N>: <old-ref> → <new-ref>`
 
@@ -149,7 +144,7 @@ For each action the user approved, execute one at a time:
 - **Update (confirmed per-hook):** overwrite `.claude/hooks/<E>`. Print: `updated .claude/hooks/<E>`
 - **Remove (confirmed per-hook opt-in only):** delete `.claude/hooks/<E>`. Print: `removed .claude/hooks/<E>`
 - **Keep (default for Removed-from-canonical):** print: `skipped .claude/hooks/<E> (kept local)`
-- **Do NOT edit `.claude/settings.json`.** If a new hook was installed, print advisory: `note: verify .claude/settings.json PreToolUse wiring references .claude/hooks/<E>`
+- **Do NOT edit user-owned `.claude/settings.json` fields** (`permissions`, allow/deny lists, `mcpServers`, custom hooks). Canonical fields are patched if-absent by Phase 5.7 only. If a new hook was installed, print advisory: `note: verify .claude/settings.json PreToolUse wiring references .claude/hooks/<E>`
 
 Never apply an action the user did not explicitly approve.
 
@@ -159,13 +154,14 @@ Never apply an action the user did not explicitly approve.
 
 **Condition:** Runs automatically after Phase 5 whenever at least one action was applied.
 
-Re-syncs `.claude/skills/`, `.claude/agents/`, `.claude/blueprints/` against `~/.claude/` equivalents. Global is canonical — any file absent or diverged locally is overwritten with the global copy.
+Re-syncs `.claude/skills/` and `.claude/agents/` against `~/.claude/` equivalents. Applies the same two-tier rule as Phase 4/5:
 
-**Skills** (`~/.claude/skills/<name>/SKILL.md` vs `.claude/skills/<name>/SKILL.md`): copy/overwrite as needed.
+- **Files absent locally (New):** copy from global automatically — no overwrite risk.
+- **Files present locally but diverged (Outdated):** require the same individual per-file confirmation that was required in Phase 5 before they can be overwritten. Display the diff and prompt: `This project-local file diverges from the global copy. Overwrite with global version?` Wait for per-file confirmation. Do not batch-approve Outdated project-local files.
 
-**Agents** (`~/.claude/agents/<name>.md` vs `.claude/agents/<name>.md`): copy/overwrite as needed.
+**Skills** (`~/.claude/skills/<name>/SKILL.md` vs `.claude/skills/<name>/SKILL.md`): apply two-tier rule.
 
-**Blueprints** (`~/.claude/blueprints/<name>.md` vs `.claude/blueprints/<name>.md`): copy/overwrite as needed.
+**Agents** (`~/.claude/agents/<name>.md` vs `.claude/agents/<name>.md`): apply two-tier rule.
 
 **Absent-path (§9.7.1):** if a project-local target directory is absent, create it silently. Never crash; never prompt.
 
@@ -184,7 +180,7 @@ Status tokens: `synced` / `already-in-sync` / `warning — sync failed: <reason>
 
 ```
 Refresh complete: N installed, N renamed, N removed, N updated, N skipped.
-Skills: <counts>. Agents: <counts>. Blueprints: <counts>. Hooks: <counts>. CLAUDE.md: <N> reference(s) updated.
+Skills: <counts>. Agents: <counts>. Hooks: <counts>. CLAUDE.md: <N> reference(s) updated.
 ```
 
 ---
@@ -220,18 +216,52 @@ If `CLAUDE.md` is absent: print `No CLAUDE.md in working directory — skipping 
 
 ---
 
+---
+
+## Phase 5.7: Canonical settings.json patch-if-absent
+
+**Condition:** Runs automatically after Phase 5 whenever at least one action was applied.
+
+Reads `.claude/settings.json` and adds **canonical** fields **only when they are absent**. This never overwrites an existing value and never touches a user-owned field.
+
+1. If `.claude/settings.json` does not exist, skip this phase entirely (the install path owns first creation). Do not create the file here.
+2. Read and parse `.claude/settings.json`. If it is malformed JSON, skip with advisory: `Phase 5.7 skipped — .claude/settings.json is not valid JSON; not modified.` Never rewrite a file you could not parse.
+3. For each canonical field below, patch **only if the field is absent**. If the field is present with any value, leave it untouched (no overwrite):
+   - **`worktree.baseRef`** — canonical value: `"head"`. If the `worktree` object is absent, create it with `{ "baseRef": "head" }`. If `worktree` exists but `baseRef` is absent, add `baseRef: "head"`. If `worktree.baseRef` already has a value, do nothing.
+   - **Standard `Stop` hook** — canonical value: the hygiene-reminder Stop hook block that `install-agent-scaffold` writes (section 4g of `install-agent-scaffold/SKILL.md`). If `hooks.Stop` is absent, add the standard block. If `hooks.Stop` already exists (any entry), do nothing — never append to or rewrite an existing Stop hook array.
+4. **Never read, write, add, remove, or reorder** `permissions`, allow/deny lists, `mcpServers`, or any hook other than an absent standard `Stop`. These are user-owned.
+5. Preserve all existing fields, key order where practical, and formatting. Write back only if at least one canonical field was added.
+6. Print a status block:
+   ```
+   Canonical settings.json patch-if-absent:
+     worktree.baseRef   added ("head")   |  already present (unchanged)
+     hooks.Stop         added            |  already present (unchanged)
+   ```
+   Status tokens: `added` / `already present (unchanged)` / `skipped — no settings.json` / `skipped — invalid JSON`.
+
+---
+
+## Coupled-file contract
+
+`update-agent-os` (update path) and `install-agent-scaffold` (install path) govern the same distributed system from two directions. They are a **coupled pair**:
+
+- Any change to how this skill treats a **canonical** field or file MUST be reflected in `install-agent-scaffold/SKILL.md`, and vice versa, so install and update stay in sync.
+- **Settings.json note:** this skill **patches canonical fields into `.claude/settings.json` only when they are absent** (`worktree.baseRef`, the standard `Stop` hook — see the patch-if-absent step) and **never overwrites user-owned fields** (`permissions`, allow/deny lists, `mcpServers`, custom hooks). The canonical tier is supplied once by `install-agent-scaffold`; this skill only adds a missing canonical default. Do not extend this skill to write or overwrite any user-owned field without an approved safety review.
+- **QA directive:** when either `update-agent-os/SKILL.md` or `install-agent-scaffold/SKILL.md` is in a track's scope, the reviewer must open the coupled file and confirm it needs no matching change. Changing one without a recorded decision on the other is a review failure.
+
+---
+
 ## Hard Constraints
 
 - **Write targets are enumerated.** This skill writes only to:
   1. `~/.claude/skills/<name>/SKILL.md`
   2. `~/.claude/agents/<name>.md`
-  3. `~/.claude/blueprints/<name>.md`
-  4. `.claude/skills/<name>/SKILL.md` (Phase 5.5 only)
-  5. `.claude/agents/<name>.md` (Phase 5.5 only)
-  6. `.claude/blueprints/<name>.md` (Phase 5.5 only)
-  7. `.claude/hooks/<name>.sh` (confirm-required per-hook)
-  8. `CLAUDE.md` — reference updates only (Phase 5 and Phase 7, user-approved)
-- **Never write to `.claude/settings.json`** or any path not in the enumerated list above.
+  3. `.claude/skills/<name>/SKILL.md` (Phase 5.5 only)
+  4. `.claude/agents/<name>.md` (Phase 5.5 only)
+  5. `.claude/hooks/<name>.sh` (confirm-required per-hook)
+  6. `CLAUDE.md` — reference updates only (Phase 5 and Phase 7, user-approved)
+  7. `.claude/settings.json` — Phase 5.7 patch-if-absent of canonical fields only (`worktree.baseRef`, standard `Stop` hook); never overwrites an existing value, never touches user-owned fields.
+- **Never overwrite user-owned `.claude/settings.json` fields** (`permissions`, allow/deny lists, `mcpServers`, custom hooks). The only permitted `.claude/settings.json` write is Phase 5.7 patch-if-absent of canonical fields (`worktree.baseRef`, standard `Stop` hook). Never write any path not in the enumerated list above.
 - **Never delete a file the user has not explicitly approved for removal.**
 - **Phase 3 Diff must prefer the manifest's `renames` array** over any name-similarity heuristic. Heuristic is suggestion-only.
 - **Surface release notes before presenting the action table.**
@@ -247,19 +277,21 @@ If `CLAUDE.md` is absent: print `No CLAUDE.md in working directory — skipping 
 - [ ] Canonical source resolved before any prompt was shown (URL primary, local clone fallback)
 - [ ] If fallback used, user was notified
 - [ ] `~/.claude/skills/` and `~/.claude/agents/` existence checked; absent directories created silently
-- [ ] `~/.claude/blueprints/` existence checked; absent directory created silently
 - [ ] Release version read from manifest; release notes surfaced before action table
-- [ ] Phase 3 Diff run for skills, agents, blueprints
+- [ ] Phase 3 Diff run for skills and agents
 - [ ] Cross-array invariant guard applied before each `renames` lookup
 - [ ] Manifest invariant violations surfaced as diagnostics
 - [ ] Compatibility-window check applied; missing-but-defaultable fields surfaced as drift, not errors
 - [ ] CLAUDE.md scanned only when diff contains at least one rename or removal
 - [ ] Phase 4 table shown and user confirmed before any file was modified
 - [ ] No file modified without explicit confirmation
+- [ ] Outdated rows were NOT covered by "Approve all" — each required individual confirmation
+- [ ] Diff shown for each Outdated row before the user confirmed
 - [ ] Phase 6 summary printed with per-type counts
 - [ ] Phase 7 ran (if diff changes occurred); CLAUDE.md checked against every renames[].from
-- [ ] Phase 5.5 ran (if at least one action applied); project-local dirs synced; status lines printed
+- [ ] Phase 5.5 ran (if at least one action applied); project-local New files synced automatically; project-local Outdated files required per-file confirmation before overwrite; status lines printed
+- [ ] Phase 5.5 did NOT overwrite diverged project-local files without per-file confirmation
 - [ ] Phase 5.5 did NOT modify `.claude/hooks/` or any file outside write targets
 - [ ] Hooks phase: per-hook explicit confirmation required for each Outdated/New hook; no blanket "approve all" for hooks
 - [ ] Hooks phase: no hook with Removed-from-canonical status auto-removed; default was Keep
-- [ ] Hooks phase: no `.claude/settings.json` write performed
+- [ ] Hooks phase: no user-owned `.claude/settings.json` field (`permissions`, `mcpServers`, custom hooks) overwritten; any settings.json write was Phase 5.7 canonical patch-if-absent only

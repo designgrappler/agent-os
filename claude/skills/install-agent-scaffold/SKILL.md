@@ -370,6 +370,13 @@ If `.claude/settings.json` already exists, merge — do not remove existing entr
 }
 ```
 
+**Settings.json tiers (canonical vs project-specific).** The `.claude/settings.json` this step writes contains two tiers of fields:
+
+- **Canonical tier** — part of the distributed Agent OS system, identical across installs: `worktree.baseRef` and the standard `Stop` hook (both written above). `operatingMode`, when present, is canonical but is managed by `/streamline-approvals`, not by this scaffold.
+- **Project-specific tier** — owned by the user, never overwritten by any Agent OS skill: `permissions` (allow/deny lists), user-added custom hooks, and any `mcpServers` entries.
+
+This scaffold supplies the canonical tier once, at install. `/update-agent-os` patches a **canonical** field into an existing `.claude/settings.json` only when that field is **absent** (e.g. `worktree.baseRef` or the standard `Stop` hook is missing) — it never overwrites a canonical field that is already present, and it never touches a project-specific field. The project-specific tier is always the user's to own.
+
 ---
 
 ### 4h. `.gitignore` additions
@@ -422,6 +429,15 @@ After writing (or skipping) `~/.claude/connectors.md`:
 ### 4j. Delete setup files
 
 After all files are created successfully, delete both `AgentOS-Setup.md` and `agent-setup.yml`.
+
+---
+
+## Coupled-file contract
+
+`install-agent-scaffold` (install path) and `update-agent-os` (update path) govern the same distributed system from two directions. They are a **coupled pair**:
+
+- Any change that adds, removes, or renames a **canonical** field in the `.claude/settings.json` template (section 4g above), or adds/removes a scaffold-generated canonical file, MUST be reflected in `update-agent-os/SKILL.md` so the install and update paths stay in sync — and vice versa.
+- **QA directive:** when either `install-agent-scaffold/SKILL.md` or `update-agent-os/SKILL.md` is in a track's scope, the reviewer must open the coupled file and confirm it needs no matching change. Changing one without a recorded decision on the other is a review failure.
 
 ---
 

@@ -12,6 +12,10 @@ whenToUse: When the user wants to start a new sprint or begin a structured work 
 
 **Backlog check (always run first):** Check whether `docs/backlog.md` exists. If it does, read it and surface candidate items grouped by section before asking for the sprint goal. Present each section as a brief bullet — section name + top item(s) in one sentence. Frame the output as: "Here's what's in the backlog — what's the goal for this sprint?" This replaces the blank prompt. If `docs/backlog.md` does not exist, proceed as if the file is absent — no error, no mention.
 
+**Systemic-drift triage (run right after the backlog check):** Before asking for the sprint goal, scan the backlog items just surfaced and ask: *"Does any open backlog item represent an architectural spec that agents are actively following incorrectly?"* If yes, that item heads the sprint. Distinguish the two cases:
+- **Stop-and-fix** — the issue causes active drift on every sprint that runs. It heads the current sprint.
+- **Queue** — a missing improvement that does not get worse with time. It stays in the backlog.
+
 Check whether a temp plan doc already exists at `docs/temp-sprint*.md` (glob pattern). If one is found, read it and extract the sprint goal and track list from it — skip to Step 2. (A temp plan doc takes precedence over the backlog prompt; if a temp plan doc exists, surface it rather than the raw backlog.)
 
 If no temp plan doc exists and no backlog file exists, ask the user:
