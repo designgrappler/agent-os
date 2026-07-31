@@ -52,8 +52,14 @@ Increment `"release-version"` accordingly (e.g. `"v0.20.0"` → `"v0.20.1"` for 
 
 After moving the plan doc, stage the deletion so it does not appear as an uncommitted change:
 ```bash
-git add docs/temp-sprint<N>-plan.md
+git rm docs/temp-sprint<N>-plan.md
 ```
+
+Then scan for any other `docs/temp-<sprint-scoped>-*.md` files whose name contains the sprint number (e.g. `docs/temp-s<N>-*.md`). For each found, run:
+```bash
+git rm <file>
+```
+Log each additional file removed. This catches spike docs, test results, editorial notes, and other sprint-scoped temp artifacts.
 
 If `docs/archive/plan-docs/` does not exist, create it silently before moving.
 
@@ -87,6 +93,20 @@ Stage and commit the version bump, archive file, and context reset:
 git add skills-manifest.json docs/archive/plan-docs/S<N>.md docs/context/plan.md docs/context/tracks.md
 git commit -m "chore(S<N>): sprint close — <new-version>, archive plan, reset context"
 ```
+
+### Step 7b — Merged worktree sweep
+
+After the sprint close commit, sweep merged worktrees:
+
+1. For each directory under `.claude/worktrees/`:
+   - Get the branch: `git -C <repo-root> -C <path> branch --show-current`
+   - Check if merged: `git -C <repo-root> branch --merged main | grep <branch>`
+   - If merged: `git -C <repo-root> worktree remove <path>` and log `removed worktree: <path> (branch: <branch>)`
+   - If not merged or branch state ambiguous: log `skipped: <path> (not merged)` — do not remove
+2. Delete all merged `worktree-agent-*` branches: `git -C <repo-root> branch --merged main | grep worktree-agent- | xargs git -C <repo-root> branch -d`
+3. Log total removed count.
+
+Note: use `git -C <repo-root>` form for all git commands in this step, where `<repo-root>` is the project root directory. This avoids the shell loop git-not-in-PATH issue that affects subshell environments.
 
 ### Step 8 — Create GitHub release and push
 

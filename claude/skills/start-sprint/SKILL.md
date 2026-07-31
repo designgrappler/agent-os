@@ -117,7 +117,9 @@ Match on: items explicitly tagged with the track ID (e.g. `(T54.1)`), or items w
 
 ### Step 5 — Confirm
 
-Output a short confirmation after Step 6 completes (so the plan doc link is accurate):
+Output a short confirmation after Step 6 completes (so the plan doc link is accurate).
+
+**The "Sprint plan:" line must use markdown link syntax — `[path](path)` — not plain text.**
 
 ```
 Sprint S<N> open.
