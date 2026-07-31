@@ -50,6 +50,49 @@ For persistent (when product.md exists):
 
 **The rule is: infer and confirm, never configure.** Do not ask "is this a one-off task or an ongoing project?" — that is a configuration prompt. State the framing; the user corrects if wrong.
 
+## Connector resolution
+
+When a skill is invoked, check its frontmatter for a `requires:` field before execution proceeds.
+
+**If `requires:` is absent:** proceed directly — no connector check.
+
+**If `requires:` is present:**
+
+1. Read `~/.claude/connectors.md`.
+   - If the file does not exist, treat every connector named in `requires:` as absent.
+2. For each connector name in `requires:`:
+   - **`Status: active` in the registry** → proceed.
+   - **Absent from the registry OR `Status: disabled`** → fire the add-connector flow before execution.
+
+**Add-connector flow prompt** (fire when a connector is absent or disabled):
+
+```
+This skill needs [connector-name] to proceed.
+
+Add it now?
+  Type: mcp / api / cli  →  ___
+  Command (server path, URL, or binary): ___
+  Purpose (one line): ___
+  Notes (optional): ___
+```
+
+**On confirmation:** append a new section to `~/.claude/connectors.md`:
+```markdown
+## [connector-name]
+- **Type:** [mcp/api/cli]
+- **Command:** [server path, URL, or binary]
+- **Purpose:** [purpose]
+- **Status:** active
+- **Notes:** [notes or blank]
+```
+If Type is `mcp`, write the MCP server block to `~/.claude/settings.json` under `mcpServers` using the Command value. Confirm: "Connector added. Continuing with [skill-name]."
+
+**On skip:** surface "Cannot proceed — [connector-name] is required by this skill." and halt.
+
+**Agents are not checked.** This connector gate fires only at skill dispatch. Agents use connectors opportunistically — if a connector is absent, the agent reasons with what it has. No connector check runs at agent dispatch.
+
+Full connector flow details (disabled path, write sequencing, recovery on failure) are in `docs/context/connectors.md`.
+
 ## Creating task.md (ephemeral mode)
 
 When ephemeral mode is active and a new task begins, before creating `docs/context/task.md`:

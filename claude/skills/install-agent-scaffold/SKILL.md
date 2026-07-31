@@ -74,6 +74,16 @@ Update the paths below to match your actual files. Delete rows that don't apply.
 | [roadmap, backlog, or requirements doc] | docs/context/plan.md |
 | [design spec or product brief] | docs/context/product.md |
 | [sprint notes or task list] | docs/context/tracks.md |
+
+---
+
+## Tools / Connectors (optional)
+
+List any MCP servers or external tools you use. Leave blank to add later.
+
+| Name | Type | Command | Purpose | Notes |
+|------|------|---------|---------|-------|
+|      |      |         |         |       |
 ```
 
 `agent-setup.yml` content:
@@ -372,7 +382,44 @@ Append to `.gitignore` if not already present:
 
 ---
 
-### 4i. Delete setup files
+### 4i. `~/.claude/connectors.md`
+
+Check whether the connectors table in `AgentOS-Setup.md` has any filled rows (rows where the `Name` cell is not blank):
+
+- **If rows are filled:** create `~/.claude/connectors.md` with the following structure, using the entries from the filled table rows. Set `Status` to `active` for each entry. Only write this file if it does not already exist — if `~/.claude/connectors.md` already exists, skip silently and log: `~/.claude/connectors.md already exists — skipped.`
+
+  ```markdown
+  # Connectors
+
+  ## [name from table]
+  - **Type:** [type]
+  - **Command:** [command from table, or blank]
+  - **Purpose:** [purpose]
+  - **Status:** active
+  - **Notes:** [notes or blank]
+  ```
+
+- **If table is empty or all rows blank:** skip silently. Do not create the file.
+
+---
+
+### 4i-b. Connectors symlink
+
+After writing (or skipping) `~/.claude/connectors.md`:
+
+1. Create a symlink for in-project access:
+   ```bash
+   ln -sf ~/.claude/connectors.md docs/context/connectors.md
+   ```
+   If `docs/context/connectors.md` already exists as a symlink, skip silently.
+2. Append to `.gitignore` if not already present:
+   ```
+   docs/context/connectors.md
+   ```
+
+---
+
+### 4j. Delete setup files
 
 After all files are created successfully, delete both `AgentOS-Setup.md` and `agent-setup.yml`.
 

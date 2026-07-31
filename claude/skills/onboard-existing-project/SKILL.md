@@ -67,6 +67,20 @@ Then present **only the gaps** as a numbered list. **Wait for all answers before
 > - **Product vision** — If `docs/context/product.md` already exists and is non-empty, mark CONFIRMED and skip. Otherwise: if `PRODUCT_CANDIDATES` is non-empty, list them numbered and ask: "Fill in `product.md` now? Pick a candidate number to synthesize, or type your own 2–3 sentence description. Or type 'skip' to leave the placeholder." If `PRODUCT_CANDIDATES` is empty, ask: "Fill in `product.md` now? Type a 2–3 sentence description of what this product is and who it serves, or type 'skip'."
 >
 > **Existing docs** (if found and not yet mapped): list docs found and propose how they map to `docs/context/`. Confirm or reject each mapping. *(Skip if docs/context/ already has plan.md, tracks.md, product.md.)*
+>
+> - **Connectors (optional)** — Check whether `~/.claude/connectors.md` exists:
+>   - **If it exists:** mark CONFIRMED and skip — do not ask about connectors.
+>   - **If it does not exist:** ask: "Do you use any external tools (web search, image generation, docs)? I can add them to your connectors registry at `~/.claude/connectors.md`. Type a comma-separated list of tool names, or 'skip' to add later."
+>     - If the user provides names: create `~/.claude/connectors.md` with one section per name (Type and Purpose left blank for the user to fill in, Status: active):
+      ```markdown
+      ## [connector-name]
+      - **Type:**
+      - **Command:**
+      - **Purpose:**
+      - **Status:** active
+      - **Notes:**
+      ```
+>     - If the user types 'skip' or leaves blank: skip silently.
 
 ---
 
@@ -180,6 +194,11 @@ If already exists: merge — do not remove existing entries.
 
 If does not exist, create with the standard template from `install-agent-scaffold` Step 4g.
 
+### 4g-b. Connectors symlink
+
+1. Create symlink: `ln -sf ~/.claude/connectors.md docs/context/connectors.md` — skip if already exists.
+2. Add `docs/context/connectors.md` to `.gitignore` if not already present.
+
 ### 4h. `.gitignore` additions
 
 Append `.worktrees/` and `.claude/settings.local.json` if not already present.
@@ -203,7 +222,8 @@ Append `.worktrees/` and `.claude/settings.local.json` if not already present.
 1. Review CLAUDE.md — confirm the tech stack and configuration are correct.
 2. Update docs/context/plan.md with your current sprint objective.
 3. Review any migrated docs and remove stale content.
-4. Run `/start-sprint` to open your first sprint.
+4. Add your tools: if you skipped connectors, run `/install-agent-scaffold` or add entries manually to `~/.claude/connectors.md`. *(only include this line if connectors.md was not created during onboarding)*
+5. Run `/start-sprint` to open your first sprint.
 
 **Verification:** Run [BUILD COMMAND] to confirm the build is clean before starting work.
 
@@ -221,3 +241,4 @@ Append `.worktrees/` and `.claude/settings.local.json` if not already present.
 - [ ] If CLAUDE.md was preserved, every skill reference resolved or was offered a targeted patch
 - [ ] Phase 4f produced a `docs/context/product.md` in one of three valid end-states
 - [ ] Phase 5 Adoption Summary labels the `docs/context/product.md` end-state explicitly
+- [ ] If connectors.md was not created, step 4 of the Adoption Summary includes the add-tools prompt
