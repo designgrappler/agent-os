@@ -38,30 +38,30 @@ Once installed, start by stating your goal. The orchestrator handles the rest.
 ### Tasks — one-off deliverables
 
 **Research or competitive analysis**
-State what you want to know and which sources to cover. The orchestrator routes to the researcher, who reads `product.md` and produces a structured synthesis. QA verifies coverage and completeness before it reaches you.
+State what you want to know and which sources to cover. The orchestrator routes to `researcher`, who reads `product.md` and produces a structured synthesis. QA verifies coverage and completeness before it reaches you.
 
 > "Give me a competitive analysis of how Notion, Linear, and Figma handle new user onboarding."
 
 **Written content — article, brief, campaign copy**
-State the goal, audience, and channel. If the content depends on research, the orchestrator runs a research track first and passes the approved output to the writer. QA reviews the result against the original brief.
+State the goal, audience, and channel. If the content depends on research, the orchestrator runs a research track first and passes the approved output to `writer`. QA reviews the result against the original brief.
 
 > "Write a product announcement for our new analytics feature. Audience: existing power users. Channel: email."
 
 **Code feature**
-Describe what you need built and where it lives. The orchestrator routes to the appropriate specialist (frontend, backend, or full-stack). QA reviews the implementation against the stated requirements.
+Describe what you need built and where it lives. The orchestrator routes to the appropriate specialist (`frontend`, `backend`, or both for full-stack work). QA reviews the implementation against the stated requirements.
 
 > "Add a CSV export button to the reports table. It should download the current filtered view."
 
 ### Projects — ongoing work
 
 **Design sprint**
-State the brief: goal, user, constraints. The orchestrator routes to the designer. The designer produces multiple distinct directions — directions are not merged or averaged. QA verifies they match the brief and are genuinely distinct. You review approved directions and select one.
+State the brief: goal, user, constraints. The orchestrator routes to `designer`. The designer produces multiple distinct directions — directions are not merged or averaged. QA verifies they match the brief and are genuinely distinct. You review approved directions and select one.
 
 **Feature build**
 For larger features with multiple moving parts, the orchestrator decomposes the work into tracks — research, design, implementation, review — and routes each to the appropriate specialist. Tracks run in sequence or in parallel depending on dependencies. You check in at each gate.
 
 **Marketing campaign**
-State the campaign objective, audience, and channels. The orchestrator opens a strategy track, then a research track if competitive context is needed, then routes to the marketing specialist for copy and channel execution. QA gates each stage.
+State the campaign objective, audience, and channels. The orchestrator opens a strategy track, then a research track if competitive context is needed, then routes to `marketing` for copy and channel execution. QA gates each stage.
 
 ---
 
@@ -191,6 +191,29 @@ These skills work without an Agent OS installation.
 | `sync-vercel-env` | Sync local environment variables to Vercel |
 | `submit-agent-os-feedback` | Submit feedback about Agent OS |
 | `editorial-review` | Review written content against editorial standards |
+
+---
+
+## Part 5: Agents reference
+
+Agents are role-scoped specialists the orchestrator routes work to. You do not invoke agents directly — state your goal and the orchestrator selects the right agent.
+
+| Agent | Description |
+|---|---|
+| `orchestrator` | Reads your request, determines what kind of work it is, and routes it to the right agent. Never edits source files directly. |
+| `researcher` | Investigates questions using real sources — competitive analysis, user research, literature review. Never fabricates citations. |
+| `qa` | Reads a completed task sign-off and issues a pass or fail verdict. Zero-write: it audits, never fixes. |
+| `writer` | Produces structured written content — documentation, briefs, articles, reports — from a complete brief. |
+| `designer` | Designs the user experience and visual layer. Works in a design tool first, then produces implementation specs for the engineering agents. |
+| `frontend` | Implements UI components, interaction flows, and styling in the codebase. |
+| `backend` | Implements API routes, business logic, and server-side services in the codebase. |
+| `database` | Implements schema changes, migrations, and query logic. Every change must be reversible or have a documented rollback plan. |
+| `technical` | Consulted on complex technical tasks — reads codebase state, surfaces a concise plan, and hands off to the right agent for execution. |
+| `mobile` | Handles mobile-native work: Capacitor bridge, push notifications, native permissions, device token lifecycle, and platform-specific build config. |
+| `ops` | Owns deployment, infrastructure, observability, runbooks, and incident response. Always states blast radius and rollback before any change. |
+| `marketing` | Translates strategy and product requirements into channel-specific copy and campaign briefs. Never invents features. |
+| `strategist` | Upstream thinking partner for product strategy, market analysis, and idea exploration. Operates before planning and produces no implementation plans. |
+| `critic` | Adversarial reviewer of ideas, plans, and content. Stress-tests assumptions and surfaces failure modes. Zero-write. |
 
 ---
 
