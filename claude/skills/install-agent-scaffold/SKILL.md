@@ -97,6 +97,9 @@ Update the paths below to match your actual files. Delete rows that don't apply.
 
 List any MCP servers or external tools you use. Leave blank to add later.
 
+> Entries here are written to `~/.claude/connectors.md` (global — shared across all your projects) and symlinked into this project at `docs/context/connectors.md`.
+> If `~/.claude/connectors.md` already exists, it will not be overwritten — add new entries to it manually after setup.
+
 | Name | Type | Command | Purpose | Notes |
 |------|------|---------|---------|-------|
 |      |      |         |         |       |
