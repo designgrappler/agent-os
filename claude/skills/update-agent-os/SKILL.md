@@ -3,7 +3,7 @@ name: update-agent-os
 description: Synchronizes your local `~/.claude/skills/`, `~/.claude/agents/` installation against the canonical Agent OS library.
 ---
 # Update Agent OS
-Synchronizes your local `~/.claude/skills/` and `~/.claude/agents/` installations against the canonical Agent OS library. Reads the canonical manifest from a remote URL (with a local clone fallback), diffs your installed skills and agents against the canonical set, surfaces the current release version and release notes, and presents a per-row action table for you to approve before anything is changed. Nothing is written, renamed, or removed without your explicit confirmation.
+Synchronizes your local `~/.claude/skills/` and `~/.claude/agents/` installations against the canonical Agent OS library. Reads the canonical manifest from GitHub, diffs your installed skills and agents against the canonical set, surfaces the current release version and release notes, and presents a per-row action table for you to approve before anything is changed. Nothing is written, renamed, or removed without your explicit confirmation.
 
 ## Trigger
 When the user runs `/update-agent-os`, execute the following phases in order.
@@ -274,8 +274,7 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 ---
 
 ## Verification Checklist (Internal — Run Before Reporting Complete)
-- [ ] Canonical source resolved before any prompt was shown (URL primary, local clone fallback)
-- [ ] If fallback used, user was notified
+- [ ] Canonical source (GitHub) resolved before any prompt was shown; clear error surfaced if unreachable
 - [ ] `~/.claude/skills/` and `~/.claude/agents/` existence checked; absent directories created silently
 - [ ] Release version read from manifest; release notes surfaced before action table
 - [ ] Phase 3 Diff run for skills and agents
