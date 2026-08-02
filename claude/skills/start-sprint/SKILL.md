@@ -108,7 +108,13 @@ If the file already has entries from a prior sprint, append the new entries belo
 
 After tracks are written to `docs/context/tracks.md`, scan `docs/backlog.md` for items that correspond to the tracks just opened.
 
-Match on: items explicitly tagged with the track ID (e.g. `(T54.1)`), or items whose title closely matches a track description from the sprint goal.
+Match on ANY of the following signals — be liberal, not conservative:
+- Items explicitly tagged with the track ID (e.g. `(T54.1)`)
+- Items whose title closely matches a track description or sprint goal keyword
+- Items that describe a feature, bug, or capability that the sprint tracks are implementing (semantic match — same domain and intent, even if different wording)
+- Items in a backlog section whose section heading corresponds to the sprint's domain (e.g. a "Multi-User Implementation" section when the sprint opens multi-user tracks)
+
+**When in doubt, surface the item.** It is better to ask the user about a false positive than to silently leave a completed-work item in the backlog. The user confirms removal — the skill never removes silently.
 
 **If matches found:** surface them to the user:
 > "The following backlog items appear to correspond to tracks opened in this sprint. Remove them?
@@ -117,7 +123,7 @@ Match on: items explicitly tagged with the track ID (e.g. `(T54.1)`), or items w
 
 **If confirmed:** remove the matched line(s) from `docs/backlog.md`. Do not remove section headers or surrounding items.
 
-**If no matches found:** skip silently.
+**If no matches found after a thorough semantic scan:** skip silently. Log internally that the scan ran.
 
 ### Step 5 — Confirm
 
