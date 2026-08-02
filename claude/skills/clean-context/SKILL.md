@@ -132,6 +132,29 @@ Steps:
    ```
 4. Log the count of files deleted. If zero, log `docs/bridges/ — no bridge files to delete`.
 
+**Archive bridge cleanup:** `docs/archive/bridges/` accumulated files from an earlier archival policy that has since been replaced by deletion. Run this sub-step unconditionally after the main bridge sweep:
+
+1. Check whether `docs/archive/bridges/` exists.
+2. If it exists, remove the entire directory:
+   ```
+   git rm -r docs/archive/bridges/
+   ```
+   Log: `docs/archive/bridges/ removed (N files) — git history is the audit record`
+3. If it does not exist, log `docs/archive/bridges/ not found — skipping` and continue.
+
+## Connector config sweep
+
+Scan `docs/context/connectors/` for files that are no longer needed:
+
+1. If `docs/context/connectors/` does not exist or is empty, log `docs/context/connectors/ — no connector files found` and continue.
+2. List all files in the directory.
+3. For each file, check whether a corresponding MCP entry exists in `.claude/settings.json` (search for the connector name from the filename).
+   - If the connector is active in settings.json: log `retained: <filename> (active connector)` and skip.
+   - If no matching entry in settings.json: surface it to the user: "Connector file `<filename>` has no matching MCP entry in settings.json — remove it?" Wait for confirmation before deleting.
+4. Log total retained/removed count.
+
+Note: these files are gitignored — no git staging needed.
+
 ## Collapse closed sprint in context files
 
 Run after the Bridge file sweep and before the Memory hygiene scan. This step collapses the just-closed sprint's full content in `docs/context/plan.md` and `docs/context/tracks.md` down to one-line pointers, so context files do not accumulate every sprint's full content indefinitely.
@@ -268,5 +291,7 @@ Run `git push origin main`. This triggers the distribute workflow on the private
 - `tracks.md` Context Health entry updated with the current date.
 - `git push origin main` was run successfully (or surfaced to Conductor on failure with no force-push attempt).
 - `docs/bridges/` was swept: all bridge/sign-off files deleted except `README.md`, and deletions staged with `git add -A docs/bridges/` — or `docs/bridges/ not found — skipping` / `no bridge files to delete` was logged when applicable.
+- `docs/archive/bridges/` was removed via `git rm -r` with file count logged — or `docs/archive/bridges/ not found — skipping` was logged when absent.
+- `docs/context/connectors/` was scanned: active connectors retained, unmatched files surfaced to user for confirmation before deletion — or `no connector files found` logged when directory absent/empty.
 - `docs/context/plan.md` current sprint section collapsed to one-line pointer (or bail message printed when archive absent).
 - `docs/context/tracks.md` current sprint tracks section collapsed to one-line pointer (or bail message printed when archive absent).
