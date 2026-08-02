@@ -124,7 +124,13 @@ git fetch origin <new-version>
 
 Note: `gh release create` pushes the tag to the remote. `git fetch origin <new-version>` syncs it locally. Do not run `git push origin <new-version>` — the tag already exists on the remote after `gh release create`.
 
-### Step 9 — Confirm
+### Step 9 — Run /clean-context
+
+After the push succeeds, invoke `/clean-context`. This sweeps bridge files, merged worktrees, merged branches, and scratchpads automatically as the final act of sprint close.
+
+`/clean-context` runs its own safety check (uncommitted work, dirty worktrees) and will bail with a warning if anything is unresolved — surface any bail messages to the user and do not proceed to Step 10 until the issue is resolved.
+
+### Step 10 — Confirm
 
 Output a short confirmation:
 
@@ -135,4 +141,18 @@ Version bumped to: <new-version>
 Archive: docs/archive/plan-docs/S<N>.md
 plan.md and tracks.md reset.
 GitHub release: https://github.com/designgrappler/agent-os-private/releases/tag/<new-version>
+/clean-context: complete
 ```
+
+## Verification checklist
+
+- All tracks for the closed sprint have DONE or DEFERRED exit records before Step 2 ran.
+- `bun run build` passed.
+- `skills-manifest.json` version bumped to the correct next version.
+- Sprint plan doc archived to `docs/archive/plan-docs/S<N>.md`.
+- `docs/context/plan.md` current sprint block collapsed to a single pointer line.
+- `docs/context/tracks.md` sprint block collapsed to a single pointer line.
+- Sprint close commit created with the correct message format.
+- Merged worktrees swept (Step 7b): merged ones removed, non-merged ones logged.
+- GitHub release created; `git push` and `git fetch origin <new-version>` ran without error.
+- `/clean-context` invoked after push and completed without bail (or bail message surfaced to user if it fired).
