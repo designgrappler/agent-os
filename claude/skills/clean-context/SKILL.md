@@ -148,9 +148,9 @@ Scan `docs/context/connectors/` for files that are no longer needed:
 
 1. If `docs/context/connectors/` does not exist or is empty, log `docs/context/connectors/ — no connector files found` and continue.
 2. List all files in the directory.
-3. For each file, check whether a corresponding MCP entry exists in `.claude/settings.json` (search for the connector name from the filename).
-   - If the connector is active in settings.json: log `retained: <filename> (active connector)` and skip.
-   - If no matching entry in settings.json: surface it to the user: "Connector file `<filename>` has no matching MCP entry in settings.json — remove it?" Wait for confirmation before deleting.
+3. For each file, check whether a corresponding MCP entry exists in `~/.claude/settings.json` (the global settings file where `/setup-connector` writes MCP entries — not the project-level `.claude/settings.json`). Search for the connector name from the filename.
+   - If the connector is active in `~/.claude/settings.json`: log `retained: <filename> (active connector)` and skip.
+   - If no matching entry found: surface it to the user: "Connector file `<filename>` has no matching MCP entry in ~/.claude/settings.json — remove it?" Wait for confirmation before deleting.
 4. Log total retained/removed count.
 
 Note: these files are gitignored — no git staging needed.
@@ -292,6 +292,6 @@ Run `git push origin main`. This triggers the distribute workflow on the private
 - `git push origin main` was run successfully (or surfaced to Conductor on failure with no force-push attempt).
 - `docs/bridges/` was swept: all bridge/sign-off files deleted except `README.md`, and deletions staged with `git add -A docs/bridges/` — or `docs/bridges/ not found — skipping` / `no bridge files to delete` was logged when applicable.
 - `docs/archive/bridges/` was removed via `git rm -r` with file count logged — or `docs/archive/bridges/ not found — skipping` was logged when absent.
-- `docs/context/connectors/` was scanned: active connectors retained, unmatched files surfaced to user for confirmation before deletion — or `no connector files found` logged when directory absent/empty.
+- `docs/context/connectors/` was scanned: active connectors retained (checked against `~/.claude/settings.json` — the global settings file where `/setup-connector` writes MCP entries), unmatched files surfaced to user for confirmation before deletion — or `no connector files found` logged when directory absent/empty.
 - `docs/context/plan.md` current sprint section collapsed to one-line pointer (or bail message printed when archive absent).
 - `docs/context/tracks.md` current sprint tracks section collapsed to one-line pointer (or bail message printed when archive absent).
