@@ -108,6 +108,28 @@ Pre-approve the routine so that real approval prompts get real attention.
 
 ---
 
+### Using Agent OS without a git repo
+
+Agent OS installs cleanly into folders with no git repository. Skills run, agents run, and all file-based features work normally. The features that are unavailable without git:
+
+- **Sprint workflow** (`/start-sprint`, `/close-sprint`) — requires git for version tracking
+- **Worktree isolation** — agent frontmatter `isolation: worktree` skips to inline execution and prints a one-line notice when no git repo is present; no error, no crash
+- **Beads issue tracker** (`bd`) — silently no-ops when no git repo is detected; no output, no error at session start
+
+The install skills (`/install-agent-scaffold` and `/onboard-existing-project`) detect the missing repo automatically and generate a lighter `CLAUDE.md` that omits sprint and worktree references. All `.claude/` files produced are valid and remain valid after you add git.
+
+#### Activating the full feature set after the fact
+
+Running `git init` in an existing Agent OS folder is all that is required:
+
+```bash
+git init
+```
+
+On the next session start, Agent OS detects the repo and the full feature set becomes available — sprint workflow, worktree isolation, and Beads. No reinstall or reconfiguration is needed. All `.claude/` files stay valid; the only difference is that `CLAUDE.md` will not yet include the `## Worktree Protocol` section. You can add it manually, or run `/onboard-existing-project` to have the skill add the missing sections automatically.
+
+---
+
 ### Other environments
 
 Agent OS works in any environment that supports reading Markdown files at session start and role-scoped agents with tool restrictions. See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup patterns and how to contribute a new environment configuration.

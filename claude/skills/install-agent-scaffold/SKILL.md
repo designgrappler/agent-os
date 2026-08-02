@@ -14,6 +14,22 @@ When the user runs `/install-agent-scaffold`.
 
 ## Step 1: Pre-flight
 
+**Git detection (always run first).** Check whether the current folder is inside a git repository:
+
+```bash
+git rev-parse --git-dir 2>/dev/null
+```
+
+- **If the command succeeds (exit 0):** set `GIT_PRESENT=true`. Proceed normally.
+- **If the command fails (non-zero exit):** set `GIT_PRESENT=false`. Continue installation with the following adjustments active throughout:
+  - In Step 4a (`CLAUDE.md`): omit the `## Worktree Protocol` section and `## Sprint Workflow` section. In their place, emit:
+    ```
+    > **Note:** No git repo detected — sprint workflow, worktree isolation, and Beads issue tracking are unavailable in this session. Run `git init` to activate the full Agent OS feature set on next session start. No reinstall needed — all `.claude/` files remain valid.
+    ```
+  - In Step 4g (`.claude/settings.json`): omit the `worktree.baseRef` field from the generated JSON.
+  - In Step 4h (`.gitignore` additions): skip this step — no git repo means no `.gitignore` to update.
+  - In Step 6 (Confirm output): add a notice line: `**Git repo:** Not detected — sprint workflow and Beads unavailable. Run \`git init\` to enable the full feature set on next session start.`
+
 1. If `CLAUDE.md` exists and contains Agent OS content → stop. Tell the user this project is already initialized. Suggest `/onboard-existing-project` to update an existing setup.
 2. If `AgentOS-Setup.md` does **not** exist → go to Step 2.
 3. If `AgentOS-Setup.md` exists but `agent-setup.yml` does **not** exist → go to Step 2b.

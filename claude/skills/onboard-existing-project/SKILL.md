@@ -12,6 +12,26 @@ When the user runs `/onboard-existing-project`, execute the following phases in 
 
 ---
 
+## Phase 0: Git Detection
+
+Before any discovery, check whether the current folder is inside a git repository:
+
+```bash
+git rev-parse --git-dir 2>/dev/null
+```
+
+- **If the command succeeds (exit 0):** set `GIT_PRESENT=true` and proceed to Phase 1 normally.
+- **If the command fails (non-zero exit):** set `GIT_PRESENT=false`. Continue with the following adjustments active for the rest of this skill run:
+  - In Phase 4 (`CLAUDE.md` generation): omit the `## Worktree Protocol` section and the `## Sprint Workflow` section. Replace them with a single note block:
+    ```
+    > **Note:** No git repo detected — sprint workflow, worktree isolation, and Beads issue tracking are unavailable in this session. Run `git init` to activate the full Agent OS feature set on next session start. No reinstall needed — all `.claude/` files remain valid.
+    ```
+  - In Phase 4 (`.claude/settings.json` generation): omit the `worktree.baseRef` field.
+  - In Phase 4g (`.gitignore` additions): skip this step entirely — there is no `.gitignore` to update without a git repo.
+  - In Phase 5 (Adoption Summary): add a notice line: `**Git repo:** Not detected — sprint workflow and Beads unavailable. Run \`git init\` to enable.`
+
+---
+
 ## Phase 1: Discovery (Run Silently — No Questions Yet)
 
 Read the following files and paths. Do not ask any questions. Extract as much as possible to pre-fill.
@@ -193,6 +213,14 @@ Apply exactly one of the following branches:
 If already exists: merge — do not remove existing entries.
 
 If does not exist, create with the standard template from `install-agent-scaffold` Step 4g.
+
+**Canonical field patch (when `GIT_PRESENT=true`):** After merge or create, check whether `worktree.baseRef` is present in the resulting file. If absent, add it:
+```json
+"worktree": {
+  "baseRef": "head"
+}
+```
+This ensures users who ran `git init` after a no-git install get the correct worktree config without needing to run `/update-agent-os`.
 
 ### 4g-b. Connectors symlink
 
