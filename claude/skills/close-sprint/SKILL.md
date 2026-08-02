@@ -44,6 +44,8 @@ Read `skills-manifest.json` and determine the appropriate version bump:
 - **Minor** — new skills, new agents, or new features added this sprint
 - **Major** — breaking changes that require manual user action
 
+See `docs/context/versioning-policy.md` for the canonical definition of each tier and examples.
+
 Increment `"release-version"` accordingly (e.g. `"v0.20.0"` → `"v0.20.1"` for patch, `"v0.21.0"` for minor). Write the updated value back to `skills-manifest.json`.
 
 ### Step 4 — Plan doc archival (rolling window)
