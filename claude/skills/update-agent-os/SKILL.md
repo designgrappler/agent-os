@@ -14,10 +14,11 @@ When the user runs `/update-agent-os`, execute the following phases in order.
 
 1. Look for `skills-manifest.json` in the project root. If it has a `canonical-registry` URL, use that to fetch the live manifest.
 2. **If the URL fetch fails** (network unavailable, 404, or any HTTP error), fall back to the local canonical clone:
+   - Before reading from it, run `git -C ~/Developer/agent-os pull` to sync the clone with the remote. If the pull fails (network unavailable, no remote, etc.), proceed with the stale clone and notify the user: "Could not pull latest — using stale local clone at `~/Developer/agent-os/`."
+   - If the pull succeeds, notify the user: "Could not reach the canonical URL — pulled latest local clone at `~/Developer/agent-os/`."
    - Manifest: `~/Developer/agent-os/skills-manifest.json`
    - Skill files: `~/Developer/agent-os/claude/skills/`
    - Agent files: `~/Developer/agent-os/claude/agents/`
-   - Notify the user: "Could not reach the canonical URL — using local clone at `~/Developer/agent-os/` as fallback."
 3. **If neither the URL nor the local clone resolves:** stop and ask the user to supply a path or URL. Do not proceed to Phase 2 until a canonical source is confirmed.
 
 ---
