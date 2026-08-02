@@ -182,6 +182,35 @@ When QA (Bandit) issues APPROVED on a track, the Conductor surfaces the followin
 
 **Merge-timing guard:** If `/track-close` is not resolvable in the loaded skill scope, report: "`/track-close` not yet available in this scope — track is ready to close but cannot be written; please ensure T49.1 is merged to main and reload." Do not fire a phantom invocation.
 
+## Pre-merge gate
+
+**Before any worktree merge or worktree removal**, run a dirty-state check:
+
+```
+git -C <worktree-path> status --porcelain
+```
+
+**If output is non-empty** — the worktree has uncommitted changes — **halt immediately** with this named error:
+
+```
+ERROR: pre-merge gate — uncommitted changes in worktree
+  Path: <worktree-path>
+  Uncommitted files:
+    <output of git status --porcelain, one line per file>
+
+Merge blocked. The worktree must be clean before merge or removal. Options:
+  1. Return to the task agent to commit or stash the changes.
+  2. Inspect the files and confirm whether they should be committed or discarded.
+Do not proceed until the worktree reports a clean state.
+```
+
+**If output is empty** — worktree is clean — proceed with merge or removal.
+
+**Verification checklist (pre-merge):**
+- [ ] `git -C <worktree-path> status --porcelain` returns empty before merge proceeds
+- [ ] Any non-empty output halts and surfaces the named error with worktree path and file list
+- [ ] Merge does not proceed until a clean-state recheck confirms empty output
+
 ## Plan persistence
 
 - Specialist plan is **ephemeral by default** — lives in context, not saved to disk.
@@ -190,12 +219,13 @@ When QA (Bandit) issues APPROVED on a track, the Conductor surfaces the followin
 
 ## Safety controls
 
-Four controls, each doing one job:
+Five controls, each doing one job:
 
 1. **Triage rule** — mechanical routing by file type and step-predictability; not by conversational framing.
 2. **Specialist plan + Tim confirmation** — lightweight gate for high-risk tasks before execution begins.
 3. **Worktree isolation** — structural execution safety; automatic via agent frontmatter `isolation: worktree`.
-4. **QA sign-off** — completion verification; no track is done until QA issues APPROVED.
+4. **Pre-merge gate** — dirty-state check before any worktree merge or removal; halts on uncommitted changes.
+5. **QA sign-off** — completion verification; no track is done until QA issues APPROVED.
 
 ## Behavioral standards (all agents)
 
