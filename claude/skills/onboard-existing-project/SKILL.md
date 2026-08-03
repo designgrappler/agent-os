@@ -142,14 +142,25 @@ If this file does not exist in the project, create it by copying from the canoni
 
 ### 4c. `.claude/agents/` — Role agent files
 
-Copy the following canonical agent files into `.claude/agents/` if not already present:
+Fetch the following agent files and write them to `.claude/agents/` if not already present:
+
 - `technical-architect.md`
 - `qa.md`
 - `task-coder.md`
 - `task-researcher.md`
 - `task-writer.md`
 
-For each that already exists, show the diff and ask: replace, or skip.
+**Fetch strategy — for each file, in order:**
+
+1. **GitHub (primary):** fetch from `https://raw.githubusercontent.com/designgrappler/agent-os/main/claude/agents/<name>.md`
+2. **Local cache (fallback):** if the GitHub fetch fails (network unavailable, non-200 response), read from `~/.claude/agents/<name>.md`
+3. **Failure:** if both sources fail, surface a clear error:
+   > `Could not fetch <name>.md from GitHub or ~/.claude/agents/. Check your network connection or run /update-agent-os to populate the local cache.`
+   Do not silently skip.
+
+For each file that already exists locally, show the diff and ask: replace, or skip.
+
+Write each successfully fetched file to `.claude/agents/<name>.md`. Create the directory if it does not exist.
 
 ### 4d. `docs/context/plan.md`
 
