@@ -24,11 +24,11 @@ git rev-parse --git-dir 2>/dev/null
 - **If the command fails (non-zero exit):** set `GIT_PRESENT=false`. Continue with the following adjustments active for the rest of this skill run:
   - In Phase 4 (`CLAUDE.md` generation): omit the `## Worktree Protocol` section and the `## Sprint Workflow` section. Replace them with a single note block:
     ```
-    > **Note:** No git repo detected — sprint workflow, worktree isolation, and Beads issue tracking are unavailable in this session. Run `git init` to activate the full Agent OS feature set on next session start. No reinstall needed — all `.claude/` files remain valid.
+    > **Git not detected** — Agent OS works best with version control. A git repo unlocks sprint workflow, safe parallel agents (worktree isolation), and Beads issue tracking. Run `git init` when you're ready — no reinstall needed.
     ```
   - In Phase 4 (`.claude/settings.json` generation): omit the `worktree.baseRef` field.
   - In Phase 4g (`.gitignore` additions): skip this step entirely — there is no `.gitignore` to update without a git repo.
-  - In Phase 5 (Adoption Summary): add a notice line: `**Git repo:** Not detected — sprint workflow and Beads unavailable. Run \`git init\` to enable.`
+  - In Phase 5 (Adoption Summary): add a notice line: `**Git not detected** — Agent OS works best with version control. A git repo unlocks sprint workflow, safe parallel agents (worktree isolation), and Beads issue tracking. Run \`git init\` when you're ready — no reinstall needed.`
 
 ---
 
