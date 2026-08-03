@@ -30,7 +30,7 @@ git rev-parse --git-dir 2>/dev/null
   - In Step 4h (`.gitignore` additions): skip this step — no git repo means no `.gitignore` to update.
   - In Step 6 (Confirm output): add a notice line: `**Git repo:** Not detected — sprint workflow and Beads unavailable. Run \`git init\` to enable the full feature set on next session start.`
 
-1. If `CLAUDE.md` exists and contains Agent OS content → stop. Tell the user this project is already initialized. Suggest `/onboard-existing-project` to update an existing setup.
+1. If `CLAUDE.md` exists and contains `## Orchestrator Behavior` → stop. Tell the user this project is already initialized. Suggest `/onboard-existing-project` to update an existing setup.
 2. If `AgentOS-Setup.md` does **not** exist → go to Step 2.
 3. If `AgentOS-Setup.md` exists but `agent-setup.yml` does **not** exist → go to Step 2b.
 4. If both `AgentOS-Setup.md` and `agent-setup.yml` exist → go to Step 3.
