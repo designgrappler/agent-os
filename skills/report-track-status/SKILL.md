@@ -25,7 +25,7 @@ The "Situation Report" of the Agent OS. Reads the current project state and prod
 
 ### Step 1 — Read State
 Read the following files in order:
-1. `.agent/context/AGENTIC.md` — team roster and protocols
+1. `CLAUDE.md` — team roster and protocols
 2. `.agent/context/plan.md` — current sprint objective
 3. `.agent/context/tracks.md` — all active tracks and their status
 

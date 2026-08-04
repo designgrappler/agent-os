@@ -11,14 +11,14 @@ Capabilities: [fs_read, fs_write]
 # Skill: Install Agent Scaffold
 
 ## Description
-The project setup wizard for Agent OS. Drops an `AgentOS-Setup.md` file for the user to fill in, then generates all required files in a single pass: `AGENTIC.md`, `CLAUDE.md` (or equivalent), agent definitions, `docs/context/` stubs, and hook configuration.
+The project setup wizard for Agent OS. Drops an `AgentOS-Setup.md` file for the user to fill in, then generates all required files in a single pass: `CLAUDE.md` (or equivalent), agent definitions, `docs/context/` stubs, `docs/backlog.md`, and hook configuration.
 
 Uses a form-fill pattern — no Q&A interview. The user fills in the form at their own pace, then triggers generation.
 
 ## Operational Rules
 
 - **Zero-Code Identity**: Tier 1 Meta-Controller. Structurally forbidden from modifying production source code (`/src`, `/lib`). If a task requires code, yield to a Specialist.
-- **Foundational Check**: Before writing any files, check whether `AGENTIC.md` exists. If it does, stop and direct the user to `onboard-existing-project`.
+- **Foundational Check**: Before writing any files, check whether `CLAUDE.md` already contains Agent OS content (e.g. `## Team`, `## Orchestrator Behavior` sections). If it does, stop and direct the user to `onboard-existing-project`.
 - **Two-Phase Execution**:
   1. **Phase 1 — Form drop**: If `AgentOS-Setup.md` does not exist, write the setup form and stop. Tell the user to fill it in and re-run.
   2. **Phase 2 — Validate and generate**: If `AgentOS-Setup.md` exists, validate all required fields are filled, then generate all files in one uninterrupted pass.
@@ -39,8 +39,8 @@ Uses a form-fill pattern — no Q&A interview. The user fills in the form at the
   - `SPECIALISTS` = all remaining rows (not Conductor, not Orchestrator, not Lead Architect, not QA) — each with name, domain (Role column minus " Specialist"), and scope (Scope column)
   - For each tech stack field (`**Runtime:**`, `**Framework:**`, etc.): take value between `:` and `<!--`, trim whitespace; if blank use the default shown in the comment
   - `MIGRATIONS` = rows in doc migration table where Current file is not a placeholder
-- **Generation sequence**: `AGENTIC.md` → `CLAUDE.md` (or tool-equivalent) → `docs/context/` stubs → agent definitions (architect, QA, each specialist) → settings/hook config → `INSTALL_CHECKLIST.md` → `.gitignore` additions → delete `AgentOS-Setup.md`.
-- **INSTALL_CHECKLIST.md**: written to project root after all other files. Required section: verify build command works, review AGENTIC.md. Optional section: product focus, team conventions. Pre-check the scaffold item.
+- **Generation sequence**: `CLAUDE.md` (or tool-equivalent) → `docs/context/` stubs → `docs/backlog.md` stub → agent definitions (architect, QA, each specialist) → settings/hook config → `INSTALL_CHECKLIST.md` → `.gitignore` additions → delete `AgentOS-Setup.md`.
+- **INSTALL_CHECKLIST.md**: written to project root after all other files. Required section: verify build command works, review CLAUDE.md. Optional section: product focus, team conventions. Pre-check the scaffold item.
 - **Agent definitions**: generate using the standard domain-specific template for each selected role. Dev specialists (fullstack, frontend, backend, database): `tools: Read, Write, Edit, Bash`. Non-dev specialists (designer, pm, marketing): `tools: Read, Write, Edit`. Architect: `model: claude-opus-4-7`, initialization reads 5 files (4 DNA files + INSTALL_CHECKLIST.md) and surfaces unchecked required items to the Conductor before proceeding. All others: `model: claude-sonnet-4-6`.
 - **Sign-off**: After all files are written, output a summary listing every file created, the team roster with @mention names, and next steps. Confirm: "Agent OS is live. Call @[ARCHITECT] to open your first sprint."
 
@@ -109,9 +109,9 @@ Update the paths below to match your actual files. Delete rows that don't apply.
 ```
 
 ## Verification
-1. `AGENTIC.md` exists and contains `Tech Stack`, `Project Team`, and `Handoff Bridge Template` sections.
+1. `CLAUDE.md` exists and contains `Tech Stack`, `Project Team`, and `Orchestrator Behavior` sections.
 2. One agent definition file exists per team member (architect, QA, each specialist).
-3. `docs/context/plan.md` and `docs/context/tracks.md` stubs were created.
+3. `docs/context/plan.md`, `docs/context/tracks.md`, and `docs/backlog.md` stubs were created.
 4. `INSTALL_CHECKLIST.md` exists at project root with scaffold item pre-checked.
 5. `AgentOS-Setup.md` was deleted after generation.
 6. No `.js`, `.ts`, `.css`, or source files were written.

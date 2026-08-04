@@ -92,7 +92,7 @@ To unblock:
   - Resolve all in-flight tasks (move them to DONE or BLOCKED), OR
   - Cancel the affected tasks explicitly via /sync-tasks-to-tracks.
 
-See AGENTIC.md §3 for the tasks-in-flight Edit/Write guard enforcement model.
+See CLAUDE.md §3 for the tasks-in-flight Edit/Write guard enforcement model.
 EOF
 
 exit 2

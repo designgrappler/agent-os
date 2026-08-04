@@ -19,7 +19,7 @@ The "Visual Auditor" of the Agent OS. This skill ensures that the implementation
 - **Zero-Pause Automation**: When you declare the start of a visual audit or sync (e.g., "Verifying the hero section layout now"), you **MUST** trigger the `browser_subagent` or relevant tool call in the same turn. Do not stop and wait for a user "ok."
 - **Aesthetic Audit**: 
     1. Perform a visual sweep of the latest build using the browser.
-    2. Compare against the design tokens in `.agent/context/AGENTIC.md`.
+    2. Compare against the design tokens in `CLAUDE.md`.
     3. Document discrepancies in `tracks.md` and propose tactical fixes.
 
 ## Verification (How to test if this skill is working)

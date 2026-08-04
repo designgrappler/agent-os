@@ -3,7 +3,7 @@
 #
 # PreToolUse hook: blocks Edit/Write tool calls from the Orchestrator (main
 # thread) targeting Agent OS execution files. Tool-layer enforcement of the
-# AGENTIC.md §3 EM-no-execution rule (codified in S18.4).
+# CLAUDE.md §3 EM-no-execution rule (codified in S18.4).
 #
 # Behavior:
 #   - Reads PreToolUse stdin JSON.
@@ -20,7 +20,7 @@
 #     Homebrew if not: `brew install jq`).
 #
 # Blocked path coverage:
-#   AGENTIC.md, CLAUDE.md, claude/**, .claude/agents/**, .claude/skills/**,
+#   CLAUDE.md, claude/**, .claude/agents/**, .claude/skills/**,
 #   docs/tasks.json,
 #   docs/context/product.md, docs/context/io-contracts.md,
 #   docs/context/CONVENTIONS.md, docs/context/tasks-schema.md,
@@ -59,9 +59,9 @@ Tool:  $TOOL_NAME
 Path:  $FILE_PATH
 
 The Orchestrator (main thread) is forbidden from editing Agent OS execution
-files (AGENTIC.md, CLAUDE.md, claude/**, .claude/agents/**, .claude/skills/**,
+files (CLAUDE.md, claude/**, .claude/agents/**, .claude/skills/**,
 docs/tasks.json, docs/context/{product,io-contracts,CONVENTIONS,tasks-schema,bridges}/**)
-— see AGENTIC.md §3 Orchestrator Constraints. Note: docs/context/tracks.md and
+— see CLAUDE.md §3 Orchestrator Constraints. Note: docs/context/tracks.md and
 docs/context/plan.md are excluded from this block (coordination-tier state,
 S29 T29.A and S31 T31.D).
 

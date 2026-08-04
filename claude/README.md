@@ -42,7 +42,6 @@ claude/
 │   │   └── SKILL.md              ← Compresses verbose active context files
 │   └── [other skills: check-agent-os, update-agent-os, onboard-existing-project, ...]
 └── templates/
-    ├── AGENTIC.md                ← Fill-in-the-blanks Static DNA starter
     └── CLAUDE.md                 ← Fill-in-the-blanks orchestrator config (includes auto-trigger rules)
 ```
 
@@ -54,9 +53,8 @@ claude/
 Copy `skills/install-agent-scaffold/SKILL.md` to `.claude/skills/install-agent-scaffold/SKILL.md` in your project, then run `/install-agent-scaffold`. The skill will ask for your project details and generate everything.
 
 **Option B — Manual:**
-1. Copy `templates/AGENTIC.md` → `AGENTIC.md` at your project root. Fill in placeholders.
-2. Copy `templates/CLAUDE.md` → `CLAUDE.md` at your project root. Fill in placeholders.
-3. Create `docs/context/plan.md`, `docs/context/tracks.md`, `docs/context/product.md`.
+1. Copy `templates/CLAUDE.md` → `CLAUDE.md` at your project root. Fill in placeholders.
+2. Create `docs/context/plan.md`, `docs/context/tracks.md`, `docs/context/product.md`, `docs/backlog.md`.
 4. Copy `agents/architect.md`, `agents/specialist.md`, `agents/qa.md` → `.claude/agents/`. Rename and customize each.
 5. Create `.claude/settings.json` with a pre-push build hook.
 

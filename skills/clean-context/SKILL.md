@@ -58,10 +58,10 @@ For each file in the memory directory (excluding `MEMORY.md` itself), classify b
 
 **`reference_*` — never auto-flag for prune.** Only flag as `RETIRE candidate` if the concrete artifact referenced in the body (script path, repo path, file path) no longer exists at that path.
 
-**`feedback_*` — never auto-flag for prune.** Only flag as `RETIRE candidate` if the behavioral rule has been codified verbatim into `AGENTIC.md`, any `claude/agents/*.md`, or any `claude/skills/**/SKILL.md` (i.e. the rule is now enforced as a system constraint and the memory file is redundant).
+**`feedback_*` — never auto-flag for prune.** Only flag as `RETIRE candidate` if the behavioral rule has been codified verbatim into `CLAUDE.md`, any `claude/agents/*.md`, or any `claude/skills/**/SKILL.md` (i.e. the rule is now enforced as a system constraint and the memory file is redundant).
 
 **`project_*` — flag as `RETIRE candidate` only if BOTH of the following signals are present (two-signal rule):**
-1. The `Created:` field (per AGENTIC.md Memory Authoring Convention) is older than 90 days, OR the file's mtime is older than 90 days.
+1. The `Created:` field (per CLAUDE.md Memory Authoring Convention) is older than 90 days, OR the file's mtime is older than 90 days.
 2. The referenced sprint is archived (appears in `docs/context/plan.md` Completed Sprint sections OR in `docs/archive/plan-docs/`), OR the file contains no sprint reference AND is not referenced in `MEMORY.md`'s index.
 
 A single signal alone (e.g. mtime > 90 days by itself) is **not sufficient** to flag a `project_*` file. Both signals must be independently satisfied.

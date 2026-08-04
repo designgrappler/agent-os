@@ -21,7 +21,7 @@ The "Intent Link" of the Agent OS. Produces a structured **Handoff Bridge** that
 ## The Handoff Gate (WORKFLOW_MODE Validation)
 
 **CRITICAL**: Before generating any handoff:
-1. Read `.agent/context/AGENTIC.md`.
+1. Read `CLAUDE.md`.
 2. If `WORKFLOW_MODE` is **UNDEFINED or MISSING**: **STOP**. Ask the user to select `GEMINI_ONLY` or `RELAY` before proceeding.
 3. Confirm the upstream deliverable for this task exists (Technical Handshake pre-check). If the upstream dependency is not ready, **do not generate the handoff** — flag the blocker to the Conductor.
 
@@ -34,7 +34,7 @@ Regardless of WORKFLOW_MODE, always produce the bridge using this structure:
 **Topic:** [Task/Feature Name]
 **Track:** [ID from tracks.md]
 **Role Identity:** [Specialist Name] ([Domain Role]) — you are waking into this role
-**DNA Check:** Aligned with [project name] AGENTIC.md — [WORKFLOW_MODE], Team Type: [DEV/CREATIVE/MIXED]
+**DNA Check:** Aligned with [project name] CLAUDE.md — [WORKFLOW_MODE], Team Type: [DEV/CREATIVE/MIXED]
 **Context:**
 - **Intent:** [1-sentence requirement — what must be produced or changed]
 - **Execution Deliverables:** [exact list of files or documents to produce or modify]
@@ -68,7 +68,7 @@ Include the Handoff Bridge as the first message content for the Specialist sessi
 
 Before generating the handoff:
 1. Update `~/.gemini/conductor/ledgers/project_ledger.json` with current task state, task ID, and assigned Specialist.
-2. Confirm `.agent/context/AGENTIC.md` (Static DNA) and `tracks.md` (Dynamic DNA) are current.
+2. Confirm `CLAUDE.md` and `tracks.md` are current.
 
 ## Verification
 1. **Gate Check**: Confirm WORKFLOW_MODE was validated before the handoff was generated.

@@ -30,7 +30,7 @@ OPERATING_MODE="$(jq -r '.operatingMode // empty' "${CLAUDE_PROJECT_DIR}/.claude
 if [ "$OPERATING_MODE" = "gated-approve" ]; then
   echo "Sprint Coordinator Agent tool spawn blocked in gated-approve mode." >&2
   echo "gated-approve mode dispatch: output a kickoff card (two fenced blocks per track) for Tim to paste." >&2
-  echo "Inline Agent tool spawning is only valid in auto-approve mode. See AGENTIC.md §3." >&2
+  echo "Inline Agent tool spawning is only valid in auto-approve mode. See CLAUDE.md §3." >&2
   exit 2
 fi
 

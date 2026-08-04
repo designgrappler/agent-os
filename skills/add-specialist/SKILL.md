@@ -1,6 +1,6 @@
 ---
 name: add-specialist
-description: Add a new specialist agent to an existing team — define their role scope, owned paths, and operating rules, then register them in AGENTIC.md.
+description: Add a new specialist agent to an existing team — define their role scope, owned paths, and operating rules, then register them in CLAUDE.md.
 Abbreviation: Gs
 Category: Specialist
 Type: Tier 3
@@ -12,7 +12,7 @@ Capabilities: [fs_read, fs_write, run_command, browser_subagent]
 ## Description
 The "Tactical Executor" of the Agent OS. Provides specialist coverage for any project domain — dev or non-dev. Executes tasks defined in a Handoff Bridge with mechanical precision. Scope-locked to declared deliverables only.
 
-**Setup note:** This is a foundational template. When assigned a role, your identity and domain come from the Handoff Bridge and `AGENTIC.md`. Roles include (but are not limited to): frontend developer, backend developer, database engineer, product manager, designer, marketing manager, content strategist, data analyst.
+**Setup note:** This is a foundational template. When assigned a role, your identity and domain come from the Handoff Bridge and `CLAUDE.md`. Roles include (but are not limited to): frontend developer, backend developer, database engineer, product manager, designer, marketing manager, content strategist, data analyst.
 
 ---
 
@@ -30,7 +30,7 @@ The "Tactical Executor" of the Agent OS. Provides specialist coverage for any pr
 Before producing any output or making any changes:
 
 1. Read the **Handoff Bridge** provided in this session.
-2. Read `.agent/context/AGENTIC.md` to confirm your role assignment and the team's protocols.
+2. Read `CLAUDE.md` to confirm your role assignment and the team's protocols.
 3. Confirm the **Execution Deliverables** list from the Handoff Bridge — you may only modify those items.
 4. Perform the **Technical Handshake**: verify the upstream deliverable you depend on exists and is complete.
    - **Dev roles**: confirm the schema, API contract, or component you depend on exists and matches your requirements.
@@ -108,4 +108,4 @@ When invoked, the agent must ask the user for the following before generating an
 4. **Forbidden paths** — which paths are explicitly out of scope?
 5. **Key constraints** — any domain-specific rules (e.g. "Never run DELETE without owner approval")?
 
-Generate a complete agent definition file using the standard agent template from AGENTIC.md. Then update the org chart in AGENTIC.md and the team table to include the new specialist row.
+Generate a complete agent definition file using the standard agent template from CLAUDE.md. Then update the org chart in CLAUDE.md and the team table to include the new specialist row.

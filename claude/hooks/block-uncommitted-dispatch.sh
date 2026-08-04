@@ -2,7 +2,7 @@
 # .claude/hooks/block-uncommitted-dispatch.sh
 #
 # PreToolUse hook: blocks Specialist dispatch when main has tracked-file
-# changes (staged or unstaged). Tool-layer enforcement of the AGENTIC.md §5
+# changes (staged or unstaged). Tool-layer enforcement of the CLAUDE.md §5
 # "Commit-before-dispatch" rule (codified in S29 T29.C).
 #
 # Behavior:
@@ -18,7 +18,7 @@
 #   - Untracked files are intentionally ignored — only tracked-file changes
 #     are in scope for the commit-before-dispatch rule.
 #   - If tracked-file changes are found: emit a remediation message on stderr
-#     referencing AGENTIC.md §5 and exit 2 (blocking error).
+#     referencing CLAUDE.md §5 and exit 2 (blocking error).
 #
 # Notes:
 #   - Requires `jq` (assumed present; install via Homebrew: `brew install jq`).
@@ -53,7 +53,7 @@ fi
 cat >&2 <<'EOF'
 Specialist dispatch blocked by commit-before-dispatch hook.
 
-RULE: AGENTIC.md §5 "Commit-before-dispatch (binding)"
+RULE: CLAUDE.md §5 "Commit-before-dispatch (binding)"
   Before dispatching a Specialist, the Conductor must commit all staged
   changes on main. Uncommitted working-tree changes do not reach Specialist
   worktrees — dispatching with uncommitted state silently strands the

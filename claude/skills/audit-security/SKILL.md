@@ -16,7 +16,7 @@ Scans a project for security vulnerabilities, hardcoded secrets, insecure patter
 - **Read-only by default**: Do not modify source files. Report findings only — remediation is the developer's job.
 - **Zero-pause**: When you announce a scan step (e.g., "Running secrets sweep now"), trigger the tool call in the same turn.
 - **Severity discipline**: Every finding must carry a severity level. Do not pad with Low findings to appear thorough.
-- **Agent OS aware**: If `AGENTIC.md` exists, cross-reference findings against the project's declared security constraints. If it does not exist, skip that step.
+- **Agent OS aware**: If `CLAUDE.md` exists, cross-reference findings against the project's declared security constraints. If it does not exist, skip that step.
 
 ---
 
@@ -70,7 +70,7 @@ Scan for common vulnerability patterns:
 | Unvalidated redirect URLs | Open redirect |
 
 ### Step 5 — Agent OS Gate (skip if Agent OS not installed)
-If `AGENTIC.md` exists:
+If `CLAUDE.md` exists:
 - Read the security constraints declared there
 - Flag any findings that violate those constraints as **Critical** regardless of generic severity
 - If any Critical findings exist, write a blocked status to `tracks.md` before reporting

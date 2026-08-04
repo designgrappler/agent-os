@@ -36,7 +36,7 @@ Read the following files and paths. Do not ask any questions. Extract as much as
 | `supabase/` / `prisma/` / `db/` | Database |
 | `.env.example` | Services and integrations in use |
 | `docs/` or `context/` | Any existing planning or context docs |
-| `AGENTIC.md` | Whether Agent OS is already initialized |
+| `CLAUDE.md` | Whether Agent OS is already initialized |
 | `CLAUDE.md` | Existing Claude Code configuration |
 | `.claude/agents/` | Existing agent definitions |
 | `.claude/settings.json` | Existing hooks |
@@ -50,7 +50,7 @@ Assemble a Discovery Report internally — do not display it yet.
 
 Before asking any questions, evaluate:
 
-1. **Already initialized?** If `AGENTIC.md` exists at root and contains "Static DNA" → warn: "This project already has Agent OS initialized. Do you want to re-initialize, or just add missing pieces?"
+1. **Already initialized?** If `CLAUDE.md` exists at root and contains `## Team` and `## Orchestrator Behavior` → warn: "This project already has Agent OS initialized. Do you want to re-initialize, or just add missing pieces?"
 2. **Partial setup?** If some files exist but others are missing (e.g., no `.claude/agents/`) → note which files will be created vs. which already exist.
 3. **Existing docs to migrate?** If `docs/` or a `context/` folder exists → identify files that could serve as `plan.md`, `tracks.md`, or `product.md` and propose the mapping.
 
@@ -58,15 +58,15 @@ Before asking any questions, evaluate:
 
 ## Phase 3: Focused Interview
 
-**Rule: Only ask about what is genuinely missing or ambiguous.** For each value below, if it was found in an existing file (`AGENTIC.md`, `CLAUDE.md`, `README.md`, `package.json`, `.claude/agents/`), mark it ✓ CONFIRMED — do not ask again. Only present questions where the answer was not found or is incomplete.
+**Rule: Only ask about what is genuinely missing or ambiguous.** For each value below, if it was found in an existing file (`CLAUDE.md`, `README.md`, `package.json`, `.claude/agents/`), mark it ✓ CONFIRMED — do not ask again. Only present questions where the answer was not found or is incomplete.
 
 Present confirmed values as a silent summary block first:
 
 > **Already established (no changes needed):**
-> - Project name: [value from AGENTIC.md or README]
-> - Tech stack: [value from AGENTIC.md]
-> - Build command: [value from AGENTIC.md or package.json]
-> - Conductor: [value from AGENTIC.md]
+> - Project name: [value from CLAUDE.md or README]
+> - Tech stack: [value from CLAUDE.md]
+> - Build command: [value from CLAUDE.md or package.json]
+> - Conductor: [value from CLAUDE.md]
 > - Architect: [name from .claude/agents/]
 > - QA: [name from .claude/agents/]
 
@@ -77,7 +77,7 @@ Then present **only the gaps** as a numbered list. **Wait for all answers before
 > [Only include items below that were not found. If all are found, skip this block entirely and proceed to Phase 4.]
 >
 > - **Specialist roles** — What specialist agent(s) should be added? What are their names and domains? *(Proposed: [inferred from folder structure, or "Not found — please provide"])*
-> - **One-sentence description** — *(Only if not found in README or AGENTIC.md)*
+> - **One-sentence description** — *(Only if not found in README or CLAUDE.md)*
 > - **Team type** — Dev team, creative/business team, or mixed? *(Only if genuinely ambiguous)*
 >
 > **Existing docs** (if found and not yet mapped): I'll list any docs found and propose how they map to `docs/context/`. Confirm or reject each mapping. *(Skip if docs/context/ already has plan.md, tracks.md, product.md.)*
@@ -90,7 +90,7 @@ After all answers are confirmed, create or update the following. For each file:
 - **Does not exist** → create it.
 - **Already exists** → show what would change and ask: merge, replace, or skip.
 
-### 4a. `AGENTIC.md` (root)
+### 4a. `CLAUDE.md` (root)
 
 Use the same template as `install-agent-scaffold`. Replace all placeholders with confirmed values. No `[PLACEHOLDER]` may remain.
 
@@ -162,7 +162,7 @@ After all files are generated, output:
 - [QA NAME] — invoke with @[qa-name]
 
 **Next steps:**
-1. Review AGENTIC.md — confirm the protocols match your project's conventions.
+1. Review CLAUDE.md — confirm the protocols match your project's conventions.
 2. Update docs/context/plan.md with your current sprint objective.
 3. Review any migrated docs and remove stale content.
 4. Call @[architect-name] to open your first sprint.

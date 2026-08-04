@@ -44,7 +44,7 @@ Confirm every deliverable declared in the Execution Deliverables list was actual
 
 **For dev roles:**
 ```
-Run the build/verification command defined in AGENTIC.md Definition of Done.
+Run the build/verification command defined in CLAUDE.md Definition of Done.
 e.g.: bunx tsc --noEmit && bun run build
 e.g.: npm run typecheck && npm run build
 ```
@@ -55,8 +55,8 @@ Review the Acceptance Criteria defined in the Handoff Bridge. Verify each criter
 
 ### 4. Quality Gate (Universal)
 Scan deliverables for:
-- **Dev**: `console.log`, `debugger`, hardcoded secrets, banned libraries or patterns (per AGENTIC.md)
-- **Non-dev**: missing required sections, placeholder text left unfilled, content that contradicts the brief or brand guidelines (per AGENTIC.md)
+- **Dev**: `console.log`, `debugger`, hardcoded secrets, banned libraries or patterns (per CLAUDE.md)
+- **Non-dev**: missing required sections, placeholder text left unfilled, content that contradicts the brief or brand guidelines (per CLAUDE.md)
 
 ### 5. Context Gate (Universal)
 Verify `.agent/context/tracks.md` has been updated to reflect the completed task. Not updated = **BLOCKED**.

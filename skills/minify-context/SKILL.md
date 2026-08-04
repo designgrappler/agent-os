@@ -35,7 +35,7 @@ Do NOT touch `docs/archive/` or `.claude/` files (except `.claude/projects/<sani
 
 ## PROTOCOL_CANON Hard Exclusion
 
-**PROTOCOL_CANON path exclusion: AGENTIC.md, claude/agents/architect.md, and claude/templates/AGENTIC.md are excluded from minification regardless of section content. The skill MUST skip these files entirely.**
+**PROTOCOL_CANON path exclusion: CLAUDE.md, claude/agents/architect.md, and claude/templates/CLAUDE.md are excluded from minification regardless of section content. The skill MUST skip these files entirely.**
 
 When any of these files is explicitly named as a minification target, respond with exactly:
 > `PROTOCOL_CANON exclusion — <filename> is not eligible for minification.`
@@ -119,13 +119,13 @@ Reference documentation, how-to sections, external resource pointers.
 **If compression would force a choice between brevity and a concrete file path, keep the path.**
 
 ### PROTOCOL_CANON — 1:1
-Protocol rules, agent definitions, AGENTIC.md content, architecture invariants.
+Protocol rules, agent definitions, CLAUDE.md content, architecture invariants.
 
 **Compress:** remove redundancy only per the "one rule, one place" discipline.
 
 **Everything else is preserved verbatim.** Compression ratio target is 1:1 (no change).
 
-**Path exclusion:** AGENTIC.md, claude/agents/architect.md, and claude/templates/AGENTIC.md are excluded from minification entirely — see PROTOCOL_CANON Hard Exclusion above.
+**Path exclusion:** CLAUDE.md, claude/agents/architect.md, and claude/templates/CLAUDE.md are excluded from minification entirely — see PROTOCOL_CANON Hard Exclusion above.
 
 ### NARRATIVE_CONTEXT — 8:1 to ∞
 Historical narrative, sprint retrospectives, meeting notes, contextual background that is not actively referenced.
@@ -166,7 +166,7 @@ and continue cleanly.
 
 ## Verification Checklist
 
-- [ ] PROTOCOL_CANON path exclusion enforced: AGENTIC.md, claude/agents/architect.md, claude/templates/AGENTIC.md were not modified (skip message shown if targeted).
+- [ ] PROTOCOL_CANON path exclusion enforced: CLAUDE.md, claude/agents/architect.md, claude/templates/CLAUDE.md were not modified (skip message shown if targeted).
 - [ ] plan.md Active Sprint section preserved verbatim; only Completed Sprint sections compressed.
 - [ ] Section-level R3 category classifications shown in preview before user confirmation.
 - [ ] User confirmed before any rewrite was applied.

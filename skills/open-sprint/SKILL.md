@@ -68,7 +68,7 @@ Ask the following as a single message. Wait for all answers before proceeding.
 - **Opened:** [DATE]
 ```
 
-**Confirm `AGENTIC.md`** is current — read it and flag any stale fields (e.g., team members that have changed, outdated toolset entries). Do not modify without Conductor confirmation.
+**Confirm `CLAUDE.md`** is current — read it and flag any stale fields (e.g., team members that have changed, outdated toolset entries). Do not modify without Conductor confirmation.
 
 ### Step 5 — Sprint Summary
 
@@ -79,7 +79,7 @@ Produce a clean orientation summary:
 
 **Objective:** [Sprint objective]
 **First Track:** Track [N] — [Task name] → [Owner]
-**Team:** [List from AGENTIC.md org chart]
+**Team:** [List from CLAUDE.md org chart]
 **Context Health:** [Clean / N archived tracks / N stale fields flagged]
 
 Ready. Call optimize-handoff when you're ready to brief [Owner].
