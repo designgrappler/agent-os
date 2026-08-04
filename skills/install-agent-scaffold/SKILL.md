@@ -40,6 +40,21 @@ Uses a form-fill pattern — no Q&A interview. The user fills in the form at the
   - For each tech stack field (`**Runtime:**`, `**Framework:**`, etc.): take value between `:` and `<!--`, trim whitespace; if blank use the default shown in the comment
   - `MIGRATIONS` = rows in doc migration table where Current file is not a placeholder
 - **Generation sequence**: `CLAUDE.md` (or tool-equivalent) → `docs/context/` stubs → `docs/backlog.md` stub → agent definitions (architect, QA, each specialist) → settings/hook config → `INSTALL_CHECKLIST.md` → `.gitignore` additions → delete `AgentOS-Setup.md`.
+- **`docs/backlog.md` stub content**: write exactly:
+  ```markdown
+  # [NAME] — Backlog
+
+  **Owner:** Orchestrator
+  **Usage:** Items are trimmed on promotion into a sprint or explicit drop. Each item has an ID (B<n>). When pulled into a sprint track, reference the ID in the track and remove the item from this file.
+
+  ---
+
+  ## Ideas
+
+  ---
+
+  ## Deferred
+  ```
 - **INSTALL_CHECKLIST.md**: written to project root after all other files. Required section: verify build command works, review CLAUDE.md. Optional section: product focus, team conventions. Pre-check the scaffold item.
 - **Agent definitions**: generate using the standard domain-specific template for each selected role. Dev specialists (fullstack, frontend, backend, database): `tools: Read, Write, Edit, Bash`. Non-dev specialists (designer, pm, marketing): `tools: Read, Write, Edit`. Architect: `model: claude-opus-4-7`, initialization reads 5 files (4 DNA files + INSTALL_CHECKLIST.md) and surfaces unchecked required items to the Conductor before proceeding. All others: `model: claude-sonnet-4-6`.
 - **Sign-off**: After all files are written, output a summary listing every file created, the team roster with @mention names, and next steps. Confirm: "Agent OS is live. Call @[ARCHITECT] to open your first sprint."
