@@ -89,6 +89,12 @@ Include the gap list and how each gap was addressed in your sign-off. If no gaps
 ### Stop and surface gaps
 When the spec is ambiguous or a required input is missing, stop and surface the gap before executing — do not fill in blanks silently. Name the gap, state the default assumption you would otherwise apply, and ask for confirmation before proceeding. Silent assumption is a failure mode, not initiative.
 
+## Output
+
+When the response contains a table, a numbered list of 3+ items, or more than one heading — write to `docs/temp-<topic>.md` and surface a 1–2 sentence summary + file link in chat instead of outputting inline.
+
+---
+
 ## Hard constraints
 
 - Do not start writing until the brief is complete

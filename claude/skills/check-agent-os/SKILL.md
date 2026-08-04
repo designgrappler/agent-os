@@ -40,7 +40,11 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 2. Check that it does NOT contain the old 181-line heavy-ceremony format (indicators: contains `## Initialization Loop`, references to `AGENTIC.md`, or contains `Sprint Coordinator constraint`).
 3. **Pass:** `CLAUDE.md` exists and is the lean bootstrap format (contains `## Team`, `## Orchestrator Behavior`, and `## Tech Stack` sections; does not reference AGENTIC.md or Sprint Coordinator constraints).
 4. **Fail rows:** if absent, or if it matches the old heavy format. Remediation hint:
-   > Run `/update-agent-os` to sync CLAUDE.md to the lean bootstrap template. Back up any project-specific customizations first.
+   > CLAUDE.md is in the legacy format. Migrate manually:
+   > 1. Back up any project-specific customizations from your current CLAUDE.md
+   > 2. Open `~/.claude/skills/install-agent-scaffold/SKILL.md` and copy the template from section 4a
+   > 3. Replace your CLAUDE.md with the template, re-applying your backed-up customizations
+   > 4. Run `/check-agent-os` again to confirm Phase 3 passes
 
 ---
 
@@ -48,23 +52,32 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 
 ### 4a: Expected Agents Present
 
-1. List all files matching `.claude/agents/*.md` in the current project.
+1. List all files matching `~/.claude/agents/*.md`.
 2. Confirm the following canonical agents are present:
-   - `technical-architect.md`
+   - `backend.md`
+   - `critic.md`
+   - `database.md`
+   - `designer.md`
+   - `frontend.md`
+   - `marketing.md`
+   - `mobile.md`
+   - `ops.md`
+   - `pm.md`
    - `qa.md`
-   - `task-coder.md`
-   - `task-researcher.md`
-   - `task-writer.md`
-3. **Pass:** all five files exist.
+   - `researcher.md`
+   - `strategist.md`
+   - `technical.md`
+   - `writer.md`
+3. **Pass:** all fourteen files exist.
 4. **Fail rows:** list each missing agent. Remediation hint:
    > Run `/update-agent-os` to install missing canonical agents.
 
 ### 4b: Model Format Check
 
-1. For each file matching `.claude/agents/*.md`, parse the frontmatter `model:` line.
+1. For each file matching `~/.claude/agents/*.md`, parse the frontmatter `model:` line.
 2. **Pass:** every `model:` value is one of the canonical short forms: `opus`, `sonnet`, or `haiku`.
 3. **Fail rows:** list each agent where `model:` contains a long-form name. Remediation hint:
-   > Edit `.claude/agents/<name>.md` and change `model:` to the short form (`opus`, `sonnet`, or `haiku`).
+   > Edit `~/.claude/agents/<name>.md` and change `model:` to the short form (`opus`, `sonnet`, or `haiku`).
 
 **Note on `provider:` field:** `provider:` is an optional frontmatter field. Its absence is correct for the default Anthropic setup. Do NOT flag a missing `provider:` field as an error.
 
@@ -72,14 +85,14 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 
 ### 4c: WebFetch Tools Frontmatter Check
 
-1. For each file matching `.claude/agents/*.md`, parse the frontmatter `tools:` list.
+1. For each file matching `~/.claude/agents/*.md`, parse the frontmatter `tools:` list.
 2. **Pass:** every agent file includes `WebFetch` in its `tools:` list.
 3. **Fail rows:** list each agent where `WebFetch` is absent. Remediation hint:
    > Run `/update-agent-os` to sync with canonical.
 
 ### 4d: Specialist `isolation: worktree` Check
 
-1. For each file matching `.claude/agents/*.md`, determine whether the agent is a Specialist by checking for a `## Sign-Off Protocol` section that contains both `**Track:**` and `**Completed:**` fields.
+1. For each file matching `~/.claude/agents/*.md`, determine whether the agent is a Specialist by checking for a `## Sign-Off Protocol` section that contains both `**Track:**` and `**Completed:**` fields.
 2. For each identified Specialist, confirm `isolation: worktree` appears in frontmatter.
 3. **Pass:** every Specialist agent has `isolation: worktree`.
 4. **Fail rows:** list each Specialist agent where `isolation: worktree` is absent. Remediation hint:

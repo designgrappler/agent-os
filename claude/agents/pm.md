@@ -11,6 +11,7 @@ tools:
   - Write
   - Edit
   - WebFetch
+isolation: worktree
 ---
 
 # Identity: PM — Product Manager (Tier 2)

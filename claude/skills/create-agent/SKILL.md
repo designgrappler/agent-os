@@ -1,97 +1,51 @@
 ---
 name: create-agent
-description: Interactively scaffolds a new agent definition file at .claude/agents/<name>.md
-whenToUse: When the user wants to create a new agent, add a new specialist, or set up a custom agent for their project.
+description: Adds a new agent persona to ~/.claude/user-prefs.md — no agent file is created.
+whenToUse: When the user wants to customize an agent name, personality, or context, or add a new specialist persona to their user preferences.
 ---
 
 ## Instructions
 
-### Step 1 — Gather agent details
+### Step 1 — Ask which canonical role to customize
 
-Ask the user for the following. Wait for all answers before continuing.
+Present the following 14 options and ask the user to choose one:
 
-1. **Agent name** — a short, lowercase, hyphen-separated identifier (e.g. `data-analyst`, `mobile-specialist`)
-2. **Role description** — one sentence describing what this agent does
-3. **Domain** — what area is this agent expert in? (e.g. "iOS native development", "data pipelines", "frontend React")
-4. **Tools needed** — which tools should this agent have access to? (defaults: Read, Write, Edit, Bash, WebFetch — ask if they want to add or remove any)
-5. **Worktree isolation** — should this agent get an isolated copy of the repo when it runs? (yes / no — default: yes for Specialists that write files, no for read-only agents like QA or researchers)
+```
+backend, critic, database, designer, frontend, marketing, mobile, ops, pm, qa, researcher, strategist, technical, writer
+```
 
----
-
-### Step 2 — Derive frontmatter values
-
-From the user's answers, derive:
-
-- `name:` → the agent name as given (lowercase, hyphen-separated)
-- `description:` → the role description (one sentence, present tense, concise)
-- `provider: claude`
-- `model: sonnet`
-- `tools:` → the tools list the user confirmed
-- `isolation: worktree` → include this line only if the user said yes to worktree isolation
+Wait for their selection before continuing.
 
 ---
 
-### Step 3 — Generate the agent file
+### Step 2 — Gather persona details
 
-Write the following to `.claude/agents/<name>.md` (where `<name>` is the agent name from Step 1):
+Ask the user for:
+
+1. **Name** — what should this agent be called? (e.g. "Bandit", "Suzy", "Max")
+2. **Personality** — one sentence describing tone, disposition, or behavioral emphasis
+3. **Context** — one sentence scoping where this agent operates (project or team name)
+
+Wait for all three answers before continuing.
+
+---
+
+### Step 3 — Append to ~/.claude/user-prefs.md
+
+1. Check whether `~/.claude/user-prefs.md` exists.
+   - If **absent**: create the file with a `# User Preferences` heading.
+   - If **present**: read the file. If a `## <role-key>` section for the chosen role already exists, overwrite its three fields in place. Otherwise append a new section at the end.
+
+2. Write or append the following section:
 
 ```markdown
----
-name: <name>
-description: <description>
-provider: claude
-model: sonnet
-tools:
-  - Read
-  - Write
-  - Edit
-  - Bash
-  - WebFetch
-[  - isolation: worktree   ← include only if user said yes]
----
-
-# <Role Title>
-
-<One paragraph: what this agent does, what domain it operates in, and what it does NOT do. Be concrete — name the files, systems, or areas it owns.>
-
-## What the agent does
-
-- <Capability 1>
-- <Capability 2>
-- <Capability 3>
-
-## What the agent does NOT do
-
-- Does not touch files outside its declared scope
-- Does not make planning or architecture decisions
-- <Any other specific exclusions based on the domain>
-
-## Hard constraints
-
-- Scope-locked to the files declared in the task context
-- Never commits unless explicitly directed
-- 3 consecutive failures with the same root cause → stop and report to the orchestrator
+## <role-key>
+**Name:** <Name>
+**Personality:** <Personality>
+**Context:** <Context>
 ```
 
-Substitute all placeholder values with the user's actual answers. Do not leave any `<brackets>` or placeholder text in the output file.
-
-**Tool list:** use only the tools the user confirmed. If the user wants `isolation: worktree`, that line belongs in the frontmatter `tools:` block's sibling position — not inside the `tools:` list itself. Correct frontmatter shape when isolation is included:
-
-```yaml
----
-name: <name>
-description: <description>
-provider: claude
-model: sonnet
-isolation: worktree
-tools:
-  - Read
-  - Write
-  - Edit
-  - Bash
-  - WebFetch
----
-```
+Substitute the user's answers. Do not leave any `<brackets>` or placeholder text.
 
 ---
 
@@ -100,12 +54,12 @@ tools:
 Tell the user:
 
 ```
-Agent created: .claude/agents/<name>.md
+Persona saved: ~/.claude/user-prefs.md
 
-Role: <description>
-Tools: <comma-separated list>
-Isolation: <yes / no>
+Role key: <role-key>
+Name: <Name>
+Personality: <Personality>
+Context: <Context>
 
-You can invoke this agent with @<name> in Claude Code.
-To edit: open .claude/agents/<name>.md directly or ask your orchestrator.
+The orchestrator will prepend this persona to briefs when invoking the <role-key> agent.
 ```

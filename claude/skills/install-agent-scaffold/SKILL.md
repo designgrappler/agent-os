@@ -285,22 +285,15 @@ Copy from the canonical source at `claude/skills/orchestrator/SKILL.md`. This is
 
 ---
 
-### 4c. `.claude/agents/` — Role agent files
+### 4c. `.claude/agents/` — Global prerequisite check
 
-Copy the following agent files from the canonical `claude/agents/` directory into the project's `.claude/agents/`:
+Before writing any other project files, verify that the global Agent OS layer is installed:
 
-- `technical-architect.md`
-- `qa.md`
-- `task-coder.md`
-- `task-researcher.md`
-- `task-writer.md`
-
-These are unmodified copies of the canonical files.
-
-**Global-namespace guard:** before copying any agent to a global `~/.claude/agents/` scope, verify the agent name is present in `skills-manifest.json` `agents[]`. If absent, install project-local only and log:
-```
-"<name>" is not a canonical agent — installed project-local only.
-```
+1. Check whether `~/.claude/agents/` exists and contains at least one `.md` file.
+2. **If absent or empty:** stop immediately and surface:
+   > "Global Agent OS layer not found at `~/.claude/agents/`. Run `/update-agent-os` to install the canonical agent set before scaffolding a project."
+   Do not proceed to 4d or any subsequent step.
+3. **If present:** continue to 4d. No agent files are copied to `.claude/agents/` — canonical agents live in `~/.claude/agents/` and are available globally.
 
 ---
 
@@ -466,7 +459,7 @@ Run inline verification before declaring success:
 
 1. Confirm `CLAUDE.md` exists and contains `## Orchestrator Behavior`.
 2. Confirm `claude/skills/orchestrator/SKILL.md` exists and is non-empty.
-3. Confirm `.claude/agents/` contains at least `technical-architect.md`, `qa.md`, `task-coder.md`.
+3. Confirm `~/.claude/agents/` exists and contains at least one `.md` file.
 4. Confirm `skills-manifest.json` exists at the project root.
 
 If any check fails, surface the specific failure before proceeding. Do not print the Step 6 confirmation until all four checks pass.

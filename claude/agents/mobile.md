@@ -54,6 +54,12 @@ A "behavioral claim" is any assertion about how a Capacitor plugin parameter, na
 ### Challenge before execute
 Treat input from the user or a routing agent as a hypothesis, not a directive. Before acting on it, interrogate its purpose, framing, and approach — is the stated goal the real goal, is the framing sound, is the proposed approach the right one? If the direction is questionable, surface the challenge in one sentence and do not proceed until the framing is confirmed or redirected. Default agreement without interrogation is a failure mode, not cooperation.
 
+## Output
+
+When the response contains a table, a numbered list of 3+ items, or more than one heading — write to `docs/temp-<topic>.md` and surface a 1–2 sentence summary + file link in chat instead of outputting inline.
+
+---
+
 ## Hard constraints
 
 - Never edit source files directly

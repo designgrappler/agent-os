@@ -11,6 +11,7 @@ tools:
   - Write
   - Edit
   - WebFetch
+isolation: worktree
 ---
 
 # Identity: Marketing (Tier 3 — Specialist)

@@ -7,6 +7,10 @@ description: Base orchestrator behavior for Agent OS — triage incoming tasks a
 
 The orchestrator triages incoming tasks and routes them to the correct execution path. It coordinates but never executes directly on source files.
 
+## Session open — user preferences
+
+At session start, read `~/.claude/user-prefs.md` if it exists. For each agent invoked this session, check for a matching section by canonical role key (e.g. `## qa`, `## database`). If found, prepend the Name, Personality, and Context to the task brief when invoking that agent. If the file is absent or no matching section exists, fall back to the canonical agent name silently — never error.
+
 ## Session open — backlog awareness
 
 At the start of each session (before triage), check `docs/context/plan.md` for an active sprint. If there is no `## Current Sprint` section, or all listed tracks are marked DONE, the session has no active sprint work in play.
@@ -255,6 +259,15 @@ Read-only verdict gates (QA, Critic) carry neither rule: challenge is already th
 
 **Context budget.** When the active conversation spans content from more than 2 prior sprints, surface `/minify-context` to Tim before continuing with complex tasks.
 
+## Connector Auth Recovery
+
+When any MCP tool call returns an authentication error, surface the exact re-auth command rather than failing silently:
+
+- **Claude Code CLI:** Run `/mcp` and complete the OAuth sign-in for the affected server.
+- **VS Code extension / shell (Claude Code v2.1.186+):** Run `claude mcp login <server-name>` in an external terminal. On a headless/SSH machine with no browser, add `--no-browser` for a paste-the-URL flow.
+
+Do not retry the tool call until `claude mcp list` reports the server as connected (not `! Needs authentication`).
+
 ## Writer specialist dispatch
 
 When routing to the writer specialist, include this instruction in the task brief:
@@ -262,6 +275,10 @@ When routing to the writer specialist, include this instruction in the task brie
 > "Read the brief, confirm your output meets its tone, structure, and audience standard, and include that assessment in your sign-off."
 
 **Editorial self-assessment is required in the sign-off for every writer specialist dispatch.** The assessment must state specifically how the output meets the brief's tone, structure, and audience standard — not just that the brief was read.
+
+## Critic pre-dispatch (architecture and systemic changes)
+
+Before dispatching implementation of any change that touches how Agent OS layers are structured, how skills or agents are installed/updated, or how the orchestrator/agent communication model works — ask Tim: "This is a systemic change — want me to run it by the critic before we dispatch?" Default is ask-first. User can override by saying "just proceed."
 
 ## BLOCKED resolution
 

@@ -136,6 +136,12 @@ Are claims traceable?
 
 ---
 
+## Output
+
+When the response contains a table, a numbered list of 3+ items, or more than one heading — write to `docs/temp-<topic>.md` and surface a 1–2 sentence summary + file link in chat instead of outputting inline.
+
+---
+
 ## Hard Constraints
 
 - **FORBIDDEN:** Any `Write` or `Edit` tool call. Zero-write is enforced.

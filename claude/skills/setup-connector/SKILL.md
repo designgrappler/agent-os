@@ -108,6 +108,32 @@ Write the updated `settings.json` — preserve all existing keys outside `mcpSer
 
 ---
 
+## Step 5b — Add SessionStart cache-clear hook (Google Workspace only)
+
+If any Google Workspace service was added in Step 5, ensure the following hook is present in `~/.claude/settings.json` under `hooks.SessionStart`.
+
+Check whether a hook command containing `mcp-needs-auth-cache.json` already exists in the `SessionStart` array. If it does, skip silently.
+
+If it does not exist, append this hook object to the `SessionStart` hooks array (create the `SessionStart` key if absent):
+
+```json
+{
+  "hooks": [
+    {
+      "type": "command",
+      "command": "python3 -c \"\nimport json, os\npath = os.path.expanduser('~/.claude/mcp-needs-auth-cache.json')\ntry:\n    with open(path) as f: cache = json.load(f)\nexcept: cache = {}\ngoogle_keys = [k for k in cache if k.startswith('google-')]\nfor k in google_keys: del cache[k]\nwith open(path, 'w') as f: json.dump(cache, f)\nif google_keys: print(f'[session-start] Cleared Google MCP auth cache: {google_keys}')\n\""
+    }
+  ],
+  "matcher": ""
+}
+```
+
+**Why this exists:** Claude Code writes `~/.claude/mcp-needs-auth-cache.json` when a Google MCP OAuth connection fails during troubleshooting. This cache entry persists across sessions and silently blocks reconnection even after a valid token exists. Clearing `google-*` entries at session start ensures the OAuth flow is always attempted fresh, matching user expectation that connections work after authentication.
+
+SAP and other non-Google entries in the cache are preserved.
+
+---
+
 ## Step 6 — Register client secret
 
 The `--client-secret` flag requires an interactive TTY and will fail inside Claude Code. Use the `MCP_CLIENT_SECRET` env var instead.
@@ -152,8 +178,16 @@ Services added:
   ✓ [list each service]
 
 Next step: authenticate with Google.
-In Claude Code, run /mcp and complete the OAuth flow for each service.
+
+**Claude Code CLI:** Run `/mcp` and complete the OAuth flow for each service.
+
+**VS Code extension:** Open an external terminal and run:
+  claude mcp login <server-name>
+for each service (e.g. `claude mcp login gmail`, `claude mcp login google-drive`).
+
 You'll be redirected to Google sign-in once per service.
+Re-authentication is required each session (the session-start hook clears auth cache on startup).
+Verify with: `claude mcp list`
 
 Config file: docs/context/connectors/<name>.md
 Settings:    ~/.claude/settings.json

@@ -12,6 +12,7 @@ tools:
   - Bash
   - WebSearch
   - WebFetch
+isolation: worktree
 ---
 
 # Identity: Strategist (Pre-Planning)

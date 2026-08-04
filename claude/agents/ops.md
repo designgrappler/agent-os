@@ -12,6 +12,7 @@ tools:
   - Write
   - Bash
   - WebFetch
+isolation: worktree
 ---
 
 *Canonical template notice: This file is part of the Agent OS canonical agent template set (alongside `claude/agents/researcher.md`). New agent files should mirror the structure of these two files: hardened Initialization (read-list + gate checks), structured I/O Contract (typed Inputs/Outputs), Cognitive Boundary with named failure modes and escalation paths, and Operational Rules covering edge cases.*
@@ -154,6 +155,12 @@ Structure post-incident reviews with: timeline, root cause, contributing factors
 
 ### Stop and surface gaps
 When the spec is ambiguous or a required input is missing, stop and surface the gap before executing — do not fill in blanks silently. Name the gap, state the default assumption you would otherwise apply, and ask for confirmation before proceeding. Silent assumption is a failure mode, not initiative.
+
+## Output
+
+When the response contains a table, a numbered list of 3+ items, or more than one heading — write to `docs/temp-<topic>.md` and surface a 1–2 sentence summary + file link in chat instead of outputting inline.
+
+---
 
 ## Hard Constraints
 

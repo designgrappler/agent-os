@@ -77,6 +77,29 @@ Display neither list yet — hold all data for Phase 3.
 
 **c. Removed-from-canonical** — filenames in `.claude/hooks/` but absent from canonical. **Default: Keep local hook (no canonical match).** Never auto-removed.
 
+**Retired-artifacts detection (fires every run):**
+
+Check `~/.claude/agents/` and `.claude/agents/` for the following retired filenames (the unified retired-artifacts registry):
+
+- `bandit.md`
+- `suzy.md`
+- `peaches.md`
+- `skylar.md`
+- `mario.md`
+
+Also check the working directory (project root) and `claude/skills/` for these retired path artifacts:
+
+- `AGENTIC.md` (project root) → proposed `rm` command: `rm AGENTIC.md`
+- `claude/skills/report-track-status/` (directory) → proposed `rm` command: `rm -rf claude/skills/report-track-status/`
+
+For each filename or path found, add a `[retired]` row to the diff table (Phase 4). The row shows the exact `rm` command and requires the user to type `yes` before deletion executes. Non-canonical files NOT in the registry above: skip silently — no Removed row, no prompt.
+
+**CLAUDE.md legacy format check (always runs):** If a `CLAUDE.md` exists in the working directory, check whether it contains `## Initialization Loop` or references to `AGENTIC.md`. If either marker is present, add an `[outdated]` row to the diff table:
+
+| CLAUDE.md | [claude.md] | Outdated — manual only | Legacy format detected. Back up customizations, then replace with the lean bootstrap template at `~/.claude/skills/install-agent-scaffold/SKILL.md` (section 4a). |
+
+**CRITICAL: this row is manual-migration only.** It must NOT appear in the approval tiers as an overwrite candidate. In Phase 4, explicitly exclude `[claude.md]` rows from all approval tiers (New, Outdated, Hook). In Phase 5 Apply, `[claude.md]` rows are informational only — never write, overwrite, or modify `CLAUDE.md`. The block-orchestrator-execution hook already prevents this, but the skill must encode it explicitly so no future implementor creates an auto-overwrite path.
+
 **CLAUDE.md reference scan (fires on rename or removal only):**
 If the diff contains at least one rename or removal: scan `CLAUDE.md` for references to renamed/removed skill names (auto-trigger rows, inline `/skill-name` mentions, path literals). Collect hits as `CLAUDE.md reference list`. Hold for Phase 4.
 
@@ -111,6 +134,7 @@ Then show the diff between the local file and the canonical file for that row be
 - **New rows** (no local file exists) — eligible for "Approve all". No overwrite risk.
 - **Outdated rows** (local file differs from canonical) — require individual per-file confirmation. Cannot be included in "Approve all".
 - **Hook rows** — require individual per-hook confirmation (unchanged).
+- **`[claude.md]` rows** — explicitly excluded from all approval tiers. These are informational only. Never include `[claude.md]` rows in New, Outdated, or Hook tier prompts. Display them in the table for visibility, but do not ask for approval — no action will be taken on them.
 
 Ask: "Approve all NEW actions (no overwrite risk), a subset, or decline? Outdated rows each require individual confirmation — they will be listed separately."
 
@@ -137,7 +161,8 @@ For each action the user approved, execute one at a time:
 - **Skip:** print: `skipped <name>`
 
 **CLAUDE.md references** (applied after all skill and agent changes):
-- For each approved `[claude.md]` row, apply the edit to `CLAUDE.md`. Print: `updated CLAUDE.md line <N>: <old-ref> → <new-ref>`
+- For each approved `[claude.md]` row from the **rename reference scan** (Phase 3 CLAUDE.md reference scan), apply the edit to `CLAUDE.md`. Print: `updated CLAUDE.md line <N>: <old-ref> → <new-ref>`
+- **`[claude.md]` rows from the CLAUDE.md legacy format check are NEVER acted on here.** These rows are informational only — never write, overwrite, or modify `CLAUDE.md` based on a legacy format detection row. No action, no prompt, no write.
 
 **Hooks:**
 - **Install (confirmed):** copy canonical hook to `.claude/hooks/<E>`. Print: `installed .claude/hooks/<E>`
@@ -147,32 +172,6 @@ For each action the user approved, execute one at a time:
 - **Do NOT edit user-owned `.claude/settings.json` fields** (`permissions`, allow/deny lists, `mcpServers`, custom hooks). Canonical fields are patched if-absent by Phase 5.7 only. If a new hook was installed, print advisory: `note: verify .claude/settings.json PreToolUse wiring references .claude/hooks/<E>`
 
 Never apply an action the user did not explicitly approve.
-
----
-
-## Phase 5.5: Post-Deploy Project-Local Sync
-
-**Condition:** Runs automatically after Phase 5 whenever at least one action was applied.
-
-Re-syncs `.claude/skills/` and `.claude/agents/` against `~/.claude/` equivalents. Applies the same two-tier rule as Phase 4/5:
-
-- **Files absent locally (New):** copy from global automatically — no overwrite risk.
-- **Files present locally but diverged (Outdated):** require the same individual per-file confirmation that was required in Phase 5 before they can be overwritten. Display the diff and prompt: `This project-local file diverges from the global copy. Overwrite with global version?` Wait for per-file confirmation. Do not batch-approve Outdated project-local files.
-
-**Skills** (`~/.claude/skills/<name>/SKILL.md` vs `.claude/skills/<name>/SKILL.md`): apply two-tier rule.
-
-**Agents** (`~/.claude/agents/<name>.md` vs `.claude/agents/<name>.md`): apply two-tier rule.
-
-**Absent-path (§9.7.1):** if a project-local target directory is absent, create it silently. Never crash; never prompt.
-
-Print a status block:
-```
-Post-deploy project-local sync:
-  skills/update-agent-os    synced
-  agents/technical-architect synced
-```
-
-Status tokens: `synced` / `already-in-sync` / `warning — sync failed: <reason>`
 
 ---
 
@@ -216,6 +215,22 @@ If `CLAUDE.md` is absent: print `No CLAUDE.md in working directory — skipping 
 
 ---
 
+## Phase 5.6: Connectors symlink
+
+**Condition:** Runs automatically on every update run (unconditional — not gated on actions applied).
+
+Ensures the project has a local pointer to the global connectors registry.
+
+1. Check whether `~/.claude/connectors.md` exists.
+   - If **absent**: skip this phase silently. Print: `Phase 5.6 skipped — ~/.claude/connectors.md not found.`
+2. Check whether `docs/context/connectors.md` already exists (as a symlink or file).
+   - If **present**: skip silently. Print: `connectors symlink   already present`
+3. If `~/.claude/connectors.md` exists and `docs/context/connectors.md` is absent:
+   - Create `docs/context/` if it does not exist.
+   - Run: `ln -sf ~/.claude/connectors.md docs/context/connectors.md`
+   - Add `docs/context/connectors.md` to `.gitignore` if not already present (only when a `.gitignore` file exists — do not create one).
+   - Print: `connectors symlink   created → docs/context/connectors.md`
+
 ---
 
 ## Phase 5.7: Canonical settings.json patch-if-absent
@@ -256,13 +271,13 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 - **Write targets are enumerated.** This skill writes only to:
   1. `~/.claude/skills/<name>/SKILL.md`
   2. `~/.claude/agents/<name>.md`
-  3. `.claude/skills/<name>/SKILL.md` (Phase 5.5 only)
-  4. `.claude/agents/<name>.md` (Phase 5.5 only)
-  5. `.claude/hooks/<name>.sh` (confirm-required per-hook)
-  6. `CLAUDE.md` — reference updates only (Phase 5 and Phase 7, user-approved)
-  7. `.claude/settings.json` — Phase 5.7 patch-if-absent of canonical fields only (`worktree.baseRef`, standard `Stop` hook); never overwrites an existing value, never touches user-owned fields.
+  3. `docs/context/connectors.md` — Phase 5.6 symlink only; never created as a regular file
+  4. `.claude/hooks/<name>.sh` (confirm-required per-hook)
+  5. `CLAUDE.md` — reference updates only (Phase 5 and Phase 7, user-approved)
+  6. `.claude/settings.json` — Phase 5.7 patch-if-absent of canonical fields only (`worktree.baseRef`, standard `Stop` hook); never overwrites an existing value, never touches user-owned fields.
 - **Never overwrite user-owned `.claude/settings.json` fields** (`permissions`, allow/deny lists, `mcpServers`, custom hooks). The only permitted `.claude/settings.json` write is Phase 5.7 patch-if-absent of canonical fields (`worktree.baseRef`, standard `Stop` hook). Never write any path not in the enumerated list above.
 - **Never delete a file the user has not explicitly approved for removal.**
+- **`CLAUDE.md` is never written by this skill** except for approved rename-reference patches (Phase 5 and Phase 7). The legacy-format `[claude.md]` row is informational only — it never triggers a write, overwrite, or modification of `CLAUDE.md`.
 - **Phase 3 Diff must prefer the manifest's `renames` array** over any name-similarity heuristic. Heuristic is suggestion-only.
 - **Surface release notes before presenting the action table.**
 - **Compatibility window:** never treat a missing-but-defaultable frontmatter field as a hard error.
@@ -282,15 +297,16 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 - [ ] Manifest invariant violations surfaced as diagnostics
 - [ ] Compatibility-window check applied; missing-but-defaultable fields surfaced as drift, not errors
 - [ ] CLAUDE.md scanned only when diff contains at least one rename or removal
+- [ ] CLAUDE.md legacy format check ran (always fires); if `## Initialization Loop` or `AGENTIC.md` reference found, `[claude.md]` informational row added to table
+- [ ] `[claude.md]` legacy format row NOT included in any approval tier; no action taken on it in Phase 5
+- [ ] Retired-artifacts registry checked for AGENTIC.md (project root) and claude/skills/report-track-status/ in addition to agent md files
 - [ ] Phase 4 table shown and user confirmed before any file was modified
 - [ ] No file modified without explicit confirmation
 - [ ] Outdated rows were NOT covered by "Approve all" — each required individual confirmation
 - [ ] Diff shown for each Outdated row before the user confirmed
 - [ ] Phase 6 summary printed with per-type counts
 - [ ] Phase 7 ran (if diff changes occurred); CLAUDE.md checked against every renames[].from
-- [ ] Phase 5.5 ran (if at least one action applied); project-local New files synced automatically; project-local Outdated files required per-file confirmation before overwrite; status lines printed
-- [ ] Phase 5.5 did NOT overwrite diverged project-local files without per-file confirmation
-- [ ] Phase 5.5 did NOT modify `.claude/hooks/` or any file outside write targets
+- [ ] Phase 5.6 ran; connectors symlink created if ~/.claude/connectors.md present and docs/context/connectors.md absent; skipped silently otherwise
 - [ ] Hooks phase: per-hook explicit confirmation required for each Outdated/New hook; no blanket "approve all" for hooks
 - [ ] Hooks phase: no hook with Removed-from-canonical status auto-removed; default was Keep
 - [ ] Hooks phase: no user-owned `.claude/settings.json` field (`permissions`, `mcpServers`, custom hooks) overwritten; any settings.json write was Phase 5.7 canonical patch-if-absent only

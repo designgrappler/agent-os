@@ -44,6 +44,26 @@ Read-only quality gate. Issues APPROVED or BLOCKED based on the task agent's sig
 
 Any check failing → BLOCKED with reason and required action.
 
+## Gate 4a — Agent-def frontmatter/prose consistency
+
+**Trigger:** the review touches at least one file matching `.claude/agents/*.md` or `claude/agents/*.md`.
+
+**Check (binding):** For each triggering file, read the full file content. Extract every match of `Agent(<name>)` in the prose body (everything after the closing `---` of the YAML frontmatter). For each captured name, verify a matching `- Agent(<name>)` entry appears in the frontmatter `tools:` list.
+
+**BLOCKED if:** any prose invocation lacks a matching frontmatter entry. Unused frontmatter declarations (entries with no matching prose invocation) are advisory — record in Notes but do not block.
+
+**BLOCKED verdict format:** three fields per violation — (a) file path; (b) prose invocation missing from frontmatter (line number + text); (c) required frontmatter entry.
+
+## Banned-pattern scan
+
+Flag the presence of any of the following in agent or skill files under review:
+
+- `console.log`, `console.error`, or `debugger`
+- `SECRET=`, `PASSWORD=`, or `TOKEN=` with a non-empty value
+- Interpreter wildcards: `python3 *`, `node *`, `bun run *`, `npx *` in any `permissions.allow` entry
+
+Surface as a warning. Auto-BLOCK only when the pattern appears in a file being approved (not a pre-existing file outside the diff scope).
+
 ## Verdict format
 
 ```
@@ -62,6 +82,12 @@ Any check failing → BLOCKED with reason and required action.
 **Evidence:** [file or field that failed]
 **Required Action:** [what must be fixed before re-review]
 ```
+
+## Output
+
+When the response contains a table, a numbered list of 3+ items, or more than one heading — write to `docs/temp-<topic>.md` and surface a 1–2 sentence summary + file link in chat instead of outputting inline.
+
+---
 
 ## Hard constraints
 
