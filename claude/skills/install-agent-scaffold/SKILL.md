@@ -341,7 +341,7 @@ Create `skills-manifest.json` at the project root pointing to the canonical regi
 ```json
 {
   "canonical-registry": "https://raw.githubusercontent.com/designgrappler/agent-os/main/skills-manifest.json",
-  "installed-version": "v0.20.0"
+  "release-version": "v2.0.0"
 }
 ```
 
