@@ -51,9 +51,13 @@ Uses a form-fill pattern — no Q&A interview. The user fills in the form at the
 
   ## Ideas
 
+  <!-- - **B1 — Item title:** Description of the idea and why it matters. -->
+
   ---
 
   ## Deferred
+
+  <!-- - **B2 — Item title:** Description and reason for deferral. -->
   ```
 - **INSTALL_CHECKLIST.md**: written to project root after all other files. Required section: verify build command works, review CLAUDE.md. Optional section: product focus, team conventions. Pre-check the scaffold item.
 - **Agent definitions**: generate using the standard domain-specific template for each selected role. Dev specialists (fullstack, frontend, backend, database): `tools: Read, Write, Edit, Bash`. Non-dev specialists (designer, pm, marketing): `tools: Read, Write, Edit`. Architect: `model: claude-opus-4-7`, initialization reads 5 files (4 DNA files + INSTALL_CHECKLIST.md) and surfaces unchecked required items to the Conductor before proceeding. All others: `model: claude-sonnet-4-6`.
