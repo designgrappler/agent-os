@@ -79,20 +79,22 @@ Display neither list yet — hold all data for Phase 3.
 
 **Retired-artifacts detection (fires every run):**
 
-Check `~/.claude/agents/` and `.claude/agents/` for the following retired filenames (the unified retired-artifacts registry):
+Run these exact bash commands and capture the output — do not infer, skip, or summarize:
 
-- `bandit.md`
-- `suzy.md`
-- `peaches.md`
-- `skylar.md`
-- `mario.md`
+```bash
+for f in bandit.md suzy.md peaches.md skylar.md mario.md task-coder.md task-researcher.md task-writer.md technical-architect.md; do
+  [ -f "$HOME/.claude/agents/$f" ] && echo "RETIRED:global:$HOME/.claude/agents/$f"
+  [ -f ".claude/agents/$f" ]       && echo "RETIRED:project:.claude/agents/$f"
+done
+[ -f "AGENTIC.md" ]                        && echo "RETIRED:path:AGENTIC.md"
+[ -d "claude/skills/report-track-status" ] && echo "RETIRED:path:claude/skills/report-track-status/"
+```
 
-Also check the working directory (project root) and `claude/skills/` for these retired path artifacts:
+For every line beginning with `RETIRED:` in the output, add a `[retired]` row to the diff table (Phase 4). The row shows the exact `rm` or `rm -rf` command and requires the user to type `yes` before deletion executes.
 
-- `AGENTIC.md` (project root) → proposed `rm` command: `rm AGENTIC.md`
-- `claude/skills/report-track-status/` (directory) → proposed `rm` command: `rm -rf claude/skills/report-track-status/`
+If the commands produce no `RETIRED:` lines, print: `Retired artifacts: None found.`
 
-For each filename or path found, add a `[retired]` row to the diff table (Phase 4). The row shows the exact `rm` command and requires the user to type `yes` before deletion executes. Non-canonical files NOT in the registry above: skip silently — no Removed row, no prompt.
+Non-canonical files NOT in the registry above: skip silently — no Removed row, no prompt.
 
 **CLAUDE.md legacy format check (always runs):** If a `CLAUDE.md` exists in the working directory, check whether it contains `## Initialization Loop` or references to `AGENTIC.md`. If either marker is present, add an `[outdated]` row to the diff table:
 
@@ -299,7 +301,7 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 - [ ] CLAUDE.md scanned only when diff contains at least one rename or removal
 - [ ] CLAUDE.md legacy format check ran (always fires); if `## Initialization Loop` or `AGENTIC.md` reference found, `[claude.md]` informational row added to table
 - [ ] `[claude.md]` legacy format row NOT included in any approval tier; no action taken on it in Phase 5
-- [ ] Retired-artifacts registry checked for AGENTIC.md (project root) and claude/skills/report-track-status/ in addition to agent md files
+- [ ] Retired-artifacts bash scan executed; output checked for RETIRED: lines in both ~/.claude/agents/ and .claude/agents/; all hits surfaced in diff table
 - [ ] Phase 4 table shown and user confirmed before any file was modified
 - [ ] No file modified without explicit confirmation
 - [ ] Outdated rows were NOT covered by "Approve all" — each required individual confirmation

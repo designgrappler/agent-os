@@ -14,6 +14,28 @@ When the user runs `/install-agent-scaffold`.
 
 ## Step 1: Pre-flight
 
+**Working directory check (runs before anything else).** Run:
+
+```bash
+pwd
+```
+
+Validate the result. Stop immediately if cwd matches any of these:
+- `/`
+- `/Users` or `/home`
+- The user's home directory exactly (matches `$HOME`)
+
+If cwd is on that list:
+> **Install location looks wrong.**
+>
+> Agent OS is about to install into `[cwd]`, which is not a project folder.
+>
+> To fix: open a specific project folder in VS Code (File → Open Folder), then re-run `/install-agent-scaffold`. Or tell me the path you want to install into and I'll use that instead.
+
+Stop. Do not proceed until the user either opens a project folder or confirms a target path.
+
+If cwd is NOT on the blocklist, proceed.
+
 **Git detection (always run first).** Check whether the current folder is inside a git repository:
 
 ```bash
@@ -30,10 +52,18 @@ git rev-parse --git-dir 2>/dev/null
   - In Step 4h (`.gitignore` additions): skip this step — no git repo means no `.gitignore` to update.
   - In Step 6 (Confirm output): add a notice line: `**Git repo:** Not detected — sprint workflow and Beads unavailable. Run \`git init\` to enable the full feature set on next session start.`
 
-1. If `CLAUDE.md` exists and contains `## Orchestrator Behavior` → stop. Tell the user this project is already initialized. Suggest `/onboard-existing-project` to update an existing setup.
-2. If `AgentOS-Setup.md` does **not** exist → go to Step 2.
-3. If `AgentOS-Setup.md` exists but `agent-setup.yml` does **not** exist → go to Step 2b.
-4. If both `AgentOS-Setup.md` and `agent-setup.yml` exist → go to Step 3.
+Run these checks in order — stop at the first match:
+
+```bash
+[ -f CLAUDE.md ] && grep -q "## Orchestrator Behavior" CLAUDE.md && echo "INITIALIZED"
+[ -f AgentOS-Setup.md ] && echo "SETUP_EXISTS"
+[ -f agent-setup.yml ]  && echo "YML_EXISTS"
+```
+
+- If output contains `INITIALIZED` → stop. Tell the user this project is already initialized. Suggest `/onboard-existing-project`.
+- If output contains neither `SETUP_EXISTS` nor `YML_EXISTS` → go to Step 2.
+- If output contains `SETUP_EXISTS` but not `YML_EXISTS` → go to Step 2b.
+- If output contains both `SETUP_EXISTS` and `YML_EXISTS` → go to Step 3.
 
 ---
 
@@ -194,7 +224,7 @@ If all required values are present → proceed to Step 4.
 
 ## Step 4: Generate Files
 
-Create all files below. For each file that already exists, show the diff and ask: merge, replace, or skip.
+Create all files below. Before writing each file, run `[ -f <path> ] && echo "EXISTS"`. If output is `EXISTS`, show the diff between the existing file and the new content and ask: merge, replace, or skip.
 
 > **Note:** `task.md` is NOT created during scaffold. It is created by the orchestrator at session start when ephemeral mode is detected. Scaffold creates `product.md` for new project initialization only.
 
@@ -289,11 +319,16 @@ Copy from the canonical source at `claude/skills/orchestrator/SKILL.md`. This is
 
 Before writing any other project files, verify that the global Agent OS layer is installed:
 
-1. Check whether `~/.claude/agents/` exists and contains at least one `.md` file.
-2. **If absent or empty:** stop immediately and surface:
-   > "Global Agent OS layer not found at `~/.claude/agents/`. Run `/update-agent-os` to install the canonical agent set before scaffolding a project."
-   Do not proceed to 4d or any subsequent step.
-3. **If present:** continue to 4d. No agent files are copied to `.claude/agents/` — canonical agents live in `~/.claude/agents/` and are available globally.
+Run:
+
+```bash
+ls ~/.claude/agents/*.md 2>/dev/null | head -1
+```
+
+- **If output is empty:** stop immediately and surface:
+  > "Global Agent OS layer not found at `~/.claude/agents/`. Run `/update-agent-os` to install the canonical agent set before scaffolding a project."
+  Do not proceed to 4d or any subsequent step.
+- **If output shows a file:** continue to 4d. No agent files are copied to `.claude/agents/` — canonical agents live in `~/.claude/agents/` and are available globally.
 
 ---
 
@@ -349,7 +384,7 @@ Create `skills-manifest.json` at the project root pointing to the canonical regi
 
 ### 4g. `.claude/settings.json`
 
-If `.claude/settings.json` already exists, merge — do not remove existing entries. If it does not exist, create:
+Run `[ -f .claude/settings.json ] && echo "EXISTS"`. If output is `EXISTS`, merge the canonical fields below into the existing file — do not remove existing entries. Otherwise create:
 
 ```json
 {
@@ -393,7 +428,12 @@ This scaffold supplies the canonical tier once, at install. `/update-agent-os` p
 
 ### 4h. `.gitignore` additions
 
-Append to `.gitignore` if not already present:
+Run:
+```bash
+grep -q "\.worktrees/" .gitignore 2>/dev/null && echo "HAVE_WORKTREES"
+grep -q "settings\.local\.json" .gitignore 2>/dev/null && echo "HAVE_LOCAL"
+```
+Append only the lines whose marker is absent from the output:
 ```
 .worktrees/
 .claude/settings.local.json
@@ -405,7 +445,7 @@ Append to `.gitignore` if not already present:
 
 Check whether the connectors table in `AgentOS-Setup.md` has any filled rows (rows where the `Name` cell is not blank):
 
-- **If rows are filled:** create `~/.claude/connectors.md` with the following structure, using the entries from the filled table rows. Set `Status` to `active` for each entry. Only write this file if it does not already exist — if `~/.claude/connectors.md` already exists, skip silently and log: `~/.claude/connectors.md already exists — skipped.`
+- **If rows are filled:** create `~/.claude/connectors.md` with the following structure, using the entries from the filled table rows. Set `Status` to `active` for each entry. Before writing, run `[ -f ~/.claude/connectors.md ] && echo "EXISTS"`. If output is `EXISTS`, skip silently and log: `~/.claude/connectors.md already exists — skipped.`
 
   ```markdown
   # Connectors
@@ -430,8 +470,8 @@ After writing (or skipping) `~/.claude/connectors.md`:
    ```bash
    ln -sf ~/.claude/connectors.md docs/context/connectors.md
    ```
-   If `docs/context/connectors.md` already exists as a symlink, skip silently.
-2. Append to `.gitignore` if not already present:
+   Run `[ -L docs/context/connectors.md ] && echo "EXISTS"`. If output is `EXISTS`, skip silently.
+2. Run `grep -q "docs/context/connectors.md" .gitignore 2>/dev/null && echo "HAVE_CONNECTORS"`. If output is absent, append:
    ```
    docs/context/connectors.md
    ```
@@ -455,14 +495,16 @@ After all files are created successfully, delete both `AgentOS-Setup.md` and `ag
 
 ## Step 5: Verify Installation
 
-Run inline verification before declaring success:
+Run these exact commands and capture all output:
 
-1. Confirm `CLAUDE.md` exists and contains `## Orchestrator Behavior`.
-2. Confirm `claude/skills/orchestrator/SKILL.md` exists and is non-empty.
-3. Confirm `~/.claude/agents/` exists and contains at least one `.md` file.
-4. Confirm `skills-manifest.json` exists at the project root.
+```bash
+[ -f CLAUDE.md ] && grep -q "## Orchestrator Behavior" CLAUDE.md && echo "CHECK:claude_md:PASS"     || echo "CHECK:claude_md:FAIL"
+[ -s claude/skills/orchestrator/SKILL.md ]                        && echo "CHECK:orchestrator:PASS" || echo "CHECK:orchestrator:FAIL"
+ls ~/.claude/agents/*.md 2>/dev/null | head -1 | grep -q .        && echo "CHECK:agents:PASS"       || echo "CHECK:agents:FAIL"
+[ -f skills-manifest.json ]                                        && echo "CHECK:manifest:PASS"     || echo "CHECK:manifest:FAIL"
+```
 
-If any check fails, surface the specific failure before proceeding. Do not print the Step 6 confirmation until all four checks pass.
+For every line containing `FAIL`, surface the specific check that failed. Do not print the Step 6 confirmation until all four lines contain `PASS`.
 
 ---
 
