@@ -12,6 +12,30 @@ When the user runs `/install-agent-scaffold`.
 
 ---
 
+## Step 0 — Choose Project Folder
+
+Runs before ALL pre-flight checks, git detection, and file creation.
+
+**If `agent-setup.yml` already exists in the current folder**, setup is mid-flight — do not re-prompt. Read `project_root:` from it, set `PROJECT_ROOT` to that value, and skip to Step 1.
+
+Otherwise, ask the user:
+
+> **Where would you like to set up your project?** Enter a folder path, or press Enter to use the current folder. Example: `~/Projects/my-project`
+>
+> **VS Code users:** if you opened your target folder in VS Code before running this skill, just press Enter — that folder is already the working directory.
+
+Resolve the answer into `PROJECT_ROOT` (always an absolute path) and `FOLDER_CREATED`:
+
+- **Empty / Enter pressed:** run `pwd`; set `PROJECT_ROOT` to its output, `FOLDER_CREATED=false`.
+- **A path is provided:** expand a leading `~` to `$HOME`, resolve to absolute, then check whether it exists and is empty/non-empty/missing:
+  - **Missing** → confirm: "`[TARGET]` doesn't exist. Create it and install there? (yes/no)". On **yes**: `mkdir -p "$TARGET"`, set `PROJECT_ROOT="$TARGET"`, `FOLDER_CREATED=true`. On **no**: stop.
+  - **Exists, non-empty** → warn: "`[TARGET]` already exists and is not empty — installing here mixes Agent OS files with existing content. Continue? (yes/no)". On **yes**: `PROJECT_ROOT="$TARGET"`, `FOLDER_CREATED=false`. On **no**: stop.
+  - **Exists, empty** → `PROJECT_ROOT="$TARGET"`, `FOLDER_CREATED=false`.
+
+`PROJECT_ROOT` is the root for every subsequent step. Every bash block in subsequent steps must begin with `cd "$PROJECT_ROOT"`. Every Write/Edit must target an absolute path under `$PROJECT_ROOT`.
+
+---
+
 ## Step 1: Pre-flight
 
 **Working directory check (runs before anything else).** Run:
@@ -149,6 +173,9 @@ model_tier: balanced
 # Options: anthropic (default) | google | openai | other
 # If "other", replace with your provider's identifier string
 provider: anthropic
+
+# project root: absolute path where this project is installed (recorded at install time)
+project_root: "$PROJECT_ROOT"
 ```
 
 Stop here. Do not generate any other files.
@@ -174,6 +201,9 @@ model_tier: balanced
 # Options: anthropic (default) | google | openai | other
 # If "other", replace with your provider's identifier string
 provider: anthropic
+
+# project root: absolute path where this project is installed (recorded at install time)
+project_root: "$PROJECT_ROOT"
 ```
 
 Then stop and tell the user:
@@ -515,6 +545,7 @@ For every line containing `FAIL`, surface the specific check that failed. Do not
 
 **Project:** [NAME]
 **Files created:** [count]
+**Project folder:** $PROJECT_ROOT[  ← created new folder (first-time install)]
 
 **Next steps:**
 1. Review CLAUDE.md — confirm tech stack is correct.
