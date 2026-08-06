@@ -13,9 +13,22 @@ When the user runs `/update-agent-os`, execute the following phases in order.
 ## Phase 1: Resolve Canonical Source
 
 1. Attempt to fetch the canonical manifest directly from GitHub:
-   - URL: `https://raw.githubusercontent.com/designgrappler/agent-os/main/skills-manifest.json`
-   - If a `skills-manifest.json` exists in the project root with a `canonical-registry` URL, that URL overrides the default GitHub URL above.
-2. **If the fetch fails** (network unavailable, 404, or any HTTP error): stop immediately and surface a clear error:
+   - Default URL: `https://raw.githubusercontent.com/designgrappler/agent-os/main/skills-manifest.json`
+   - If a `skills-manifest.json` exists in the project root with a `canonical-registry` URL, that URL overrides the default above.
+
+2. **Stale registry detection (runs before fetch).** If a `skills-manifest.json` exists in the project root, run:
+
+   ```bash
+   grep "canonical-registry" skills-manifest.json
+   ```
+
+   If the output contains `gastownhall` (the retired org):
+   - Print: `Stale registry detected: gastownhall/agent-os is retired. Updating skills-manifest.json to designgrappler/agent-os.`
+   - Rewrite `skills-manifest.json` in the project root, replacing the `canonical-registry` value with `https://raw.githubusercontent.com/designgrappler/agent-os/main/skills-manifest.json`. Preserve all other fields.
+   - Also update `release-version` to use the key name `release-version` if the file uses the old key `installed-version`.
+   - Continue using the corrected URL for the rest of this run.
+
+3. **If the fetch fails** (network unavailable, 404, or any HTTP error): stop immediately and surface a clear error:
    > "Cannot reach the canonical source at `<URL>`. Check your network connection and try again."
    Do not proceed to Phase 2.
 
@@ -292,6 +305,7 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 
 ## Verification Checklist (Internal — Run Before Reporting Complete)
 - [ ] Canonical source (GitHub) resolved before any prompt was shown; clear error surfaced if unreachable
+- [ ] Stale registry check ran; `gastownhall` URL detected and rewritten to `designgrappler` if present
 - [ ] `~/.claude/skills/` and `~/.claude/agents/` existence checked; absent directories created silently
 - [ ] Release version read from manifest; release notes surfaced before action table
 - [ ] Phase 3 Diff run for skills and agents
