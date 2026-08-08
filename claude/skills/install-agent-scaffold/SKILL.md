@@ -248,7 +248,46 @@ Read `agent-setup.yml`. Extract provider and tier as follows.
 
 Store the resolved alias as `MODEL_ALIAS`.
 
-If all required values are present → proceed to Step 4.
+If all required values are present → proceed to Step 3b.
+
+---
+
+## Step 3b: Pre-Generation Roster Validation
+
+Run this step using the values extracted in Step 3 (`NAME`, `DESCRIPTION`, `RUNTIME`, `FRONTEND`, `DATABASE`, `BUILD_CMD`). This step fires after parsing and before any file is written.
+
+Evaluate each check below. A check triggers when its condition is true.
+
+**Check 1 — Frontend specialist missing for UI project**
+Condition: `DESCRIPTION` contains any of `web app`, `SaaS`, `website`, `frontend`, `UI`, `dashboard`, `interface`, `portal` (case-insensitive) AND `FRONTEND` is blank.
+Flag: "Web/UI project description but no frontend framework configured — a frontend specialist may have nothing to own."
+
+**Check 2 — Database specialist missing for data-heavy project**
+Condition: `DESCRIPTION` contains any of `API`, `data pipeline`, `database`, `backend`, `data store`, `persistence`, `storage` (case-insensitive) AND `DATABASE` is blank.
+Flag: "Data/API project description but no database configured — a database specialist may have nothing to own."
+
+**Check 3 — Lean roster for single-responsibility repo**
+Condition: `FRONTEND` is blank AND `DATABASE` is blank AND `DESCRIPTION` contains any of `tool`, `CLI`, `library`, `protocol`, `utility`, `script`, `plugin` (case-insensitive).
+Flag: "Single-responsibility repo detected (no frontend, no database). The full specialist roster will be installed but specialists may have limited scope — confirm the lean setup is intentional."
+
+**Check 4 — Runtime / build command mismatch**
+Condition: (`RUNTIME` contains `Python` AND `BUILD_CMD` contains `npm`, `npx`, or `node`) OR (`RUNTIME` contains `Node`, `Bun`, `JavaScript`, or `TypeScript` AND `BUILD_CMD` contains `python` or `pip`).
+Flag: "Runtime is `[RUNTIME]` but build command is `[BUILD_CMD]` — this combination looks unusual."
+
+**If one or more checks triggered:**
+
+Surface all triggered flags as a bulleted list, then ask:
+
+> **Roster check — [count] item(s) to confirm:**
+>
+> - [triggered flag 1]
+> - [triggered flag 2 if applicable]
+>
+> These role/stack combinations look unusual — confirm they're intentional or amend the roster before generation proceeds. Reply `confirm` to proceed as-is, or update `AgentOS-Setup.md` and re-run `/install-agent-scaffold`.
+
+Stop. Do not proceed to Step 4 until the user replies `confirm` or re-runs the skill with an amended setup file.
+
+**If no checks triggered:** proceed to Step 4 silently — no output, no prompt.
 
 ---
 

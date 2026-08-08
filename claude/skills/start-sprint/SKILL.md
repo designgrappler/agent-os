@@ -16,6 +16,12 @@ whenToUse: When the user wants to start a new sprint or begin a structured work 
 - **Stop-and-fix** — the issue causes active drift on every sprint that runs. It heads the current sprint.
 - **Queue** — a missing improvement that does not get worse with time. It stays in the backlog.
 
+**GitHub feedback check (non-blocking):** Invoke `/triage-feedback` to fetch open feedback issues from `designgrappler/agent-os`. Surface the triage clusters alongside the backlog summary so the user has both when deciding the sprint goal. Show the triage output immediately before asking "What's the goal for this sprint?"
+
+- If `gh` is unavailable, skip with: "GitHub feedback check skipped — gh not available."
+- If the command fails for any reason (auth, network, no issues), surface a one-line note and continue sprint open.
+- Never block or halt sprint open due to a feedback check failure.
+
 Check whether a temp plan doc already exists at `docs/temp-sprint*.md` (glob pattern). If one is found, read it and extract the sprint goal and track list from it — skip to Step 2. (A temp plan doc takes precedence over the backlog prompt; if a temp plan doc exists, surface it rather than the raw backlog.)
 
 If no temp plan doc exists and no backlog file exists, ask the user:

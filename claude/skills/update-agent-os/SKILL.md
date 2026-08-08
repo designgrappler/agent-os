@@ -92,22 +92,29 @@ Display neither list yet — hold all data for Phase 3.
 
 **Retired-artifacts detection (fires every run):**
 
-Run these exact bash commands and capture the output — do not infer, skip, or summarize:
+Using the canonical `agents[]` and `skills[]` arrays already resolved in Phase 2, perform a canonical diff against local agent and skill directories. Do not use a hardcoded filename list.
+
+**Agent canonical diff — global (`~/.claude/agents/`):**
+For each `.md` file in `~/.claude/agents/`: extract the basename without `.md`. If that name is NOT in the canonical `agents[]` array, emit: `RETIRED:global:~/.claude/agents/<filename>.md`
+
+**Agent canonical diff — project-local (`.claude/agents/`):**
+For each `.md` file in `.claude/agents/`: extract the basename without `.md`. If that name is NOT in the canonical `agents[]` array, emit: `RETIRED:project:.claude/agents/<filename>.md`
+
+**Project-local skill canonical diff (`.claude/skills/`):**
+For each subdirectory in `.claude/skills/` that contains a `SKILL.md` file: if the subdirectory name is NOT in the canonical `skills[]` array AND NOT in any `renames[].from` entry, emit: `RETIRED:project:.claude/skills/<name>/`
+
+Note: `~/.claude/skills/` stale entries are already covered by the Removed list in the main Phase 3 diff above. This step is scoped to `.claude/skills/` (project-local) only.
+
+**Path-structure artifacts (explicit path checks — unchanged):**
 
 ```bash
-for f in bandit.md suzy.md peaches.md skylar.md mario.md task-coder.md task-researcher.md task-writer.md technical-architect.md; do
-  [ -f "$HOME/.claude/agents/$f" ] && echo "RETIRED:global:$HOME/.claude/agents/$f"
-  [ -f ".claude/agents/$f" ]       && echo "RETIRED:project:.claude/agents/$f"
-done
 [ -f "AGENTIC.md" ]                        && echo "RETIRED:path:AGENTIC.md"
 [ -d "claude/skills/report-track-status" ] && echo "RETIRED:path:claude/skills/report-track-status/"
 ```
 
-For every line beginning with `RETIRED:` in the output, add a `[retired]` row to the diff table (Phase 4). The row shows the exact `rm` or `rm -rf` command and requires the user to type `yes` before deletion executes.
+For every `RETIRED:` line produced above, add a `[retired]` row to the diff table (Phase 4). The row shows the exact `rm` or `rm -rf` command and requires the user to type `yes` before deletion executes.
 
-If the commands produce no `RETIRED:` lines, print: `Retired artifacts: None found.`
-
-Non-canonical files NOT in the registry above: skip silently — no Removed row, no prompt.
+If the above produces no `RETIRED:` lines, print: `Retired artifacts: None found.`
 
 **CLAUDE.md legacy format check (always runs):** If a `CLAUDE.md` exists in the working directory, check whether it contains `## Initialization Loop` or references to `AGENTIC.md`. If either marker is present, add an `[outdated]` row to the diff table:
 
@@ -117,6 +124,15 @@ Non-canonical files NOT in the registry above: skip silently — no Removed row,
 
 **CLAUDE.md reference scan (fires on rename or removal only):**
 If the diff contains at least one rename or removal: scan `CLAUDE.md` for references to renamed/removed skill names (auto-trigger rows, inline `/skill-name` mentions, path literals). Collect hits as `CLAUDE.md reference list`. Hold for Phase 4.
+
+**CLAUDE.md Team table reconciliation (runs unconditionally when CLAUDE.md exists):**
+If `CLAUDE.md` is present in the working directory, scan it for a Team Architecture table — any markdown table containing columns named `Role`, `Function`, or `Agent` with agent name rows. For each agent name found in the table body rows:
+1. Check whether that name is present in the canonical `agents[]` array.
+2. If the name is **not** in `agents[]`, add a `[claude.md]` row to the diff table:
+
+| CLAUDE.md — Team table | [claude.md] | Stale agent reference | Remove or replace with canonical agent name |
+
+Each such row requires explicit user approval before any edit is made to `CLAUDE.md`. Same hard constraint as all `[claude.md]` rows: never auto-applied, never included in any approval tier. Display in the table for visibility only; the user must explicitly instruct the edit.
 
 ---
 
@@ -196,6 +212,22 @@ Never apply an action the user did not explicitly approve.
 Refresh complete: N installed, N renamed, N removed, N updated, N skipped.
 Skills: <counts>. Agents: <counts>. Hooks: <counts>. CLAUDE.md: <N> reference(s) updated.
 ```
+
+**Post-apply commit advisory (fires when at least one file was changed):**
+
+If any file was written, overwritten, renamed, or removed during Phase 5, surface:
+
+```
+Post-apply: N file(s) changed. Commit these changes now?
+
+  git add -A
+  git commit -m "chore: update-agent-os — sync to v<canonical-version>"
+
+Reply `yes` to run this automatically, or run it manually.
+```
+
+If the user replies `yes`: run both git commands and print the resulting commit SHA.
+If no files were changed during Phase 5: skip this block silently.
 
 ---
 
@@ -293,6 +325,7 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 - **Never overwrite user-owned `.claude/settings.json` fields** (`permissions`, allow/deny lists, `mcpServers`, custom hooks). The only permitted `.claude/settings.json` write is Phase 5.7 patch-if-absent of canonical fields (`worktree.baseRef`, standard `Stop` hook). Never write any path not in the enumerated list above.
 - **Never delete a file the user has not explicitly approved for removal.**
 - **`CLAUDE.md` is never written by this skill** except for approved rename-reference patches (Phase 5 and Phase 7). The legacy-format `[claude.md]` row is informational only — it never triggers a write, overwrite, or modification of `CLAUDE.md`.
+- **CLAUDE.md team table reconciliation rows require explicit user approval before edit. Never auto-update the team table.**
 - **Phase 3 Diff must prefer the manifest's `renames` array** over any name-similarity heuristic. Heuristic is suggestion-only.
 - **Surface release notes before presenting the action table.**
 - **Compatibility window:** never treat a missing-but-defaultable frontmatter field as a hard error.
@@ -315,7 +348,7 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 - [ ] CLAUDE.md scanned only when diff contains at least one rename or removal
 - [ ] CLAUDE.md legacy format check ran (always fires); if `## Initialization Loop` or `AGENTIC.md` reference found, `[claude.md]` informational row added to table
 - [ ] `[claude.md]` legacy format row NOT included in any approval tier; no action taken on it in Phase 5
-- [ ] Retired-artifacts bash scan executed; output checked for RETIRED: lines in both ~/.claude/agents/ and .claude/agents/; all hits surfaced in diff table
+- [ ] Retired-artifacts canonical diff executed: ~/.claude/agents/ and .claude/agents/ diffed against canonical agents[] array; .claude/skills/ diffed against canonical skills[] array (excluding renames[].from); path-structure artifacts checked via explicit bash; all RETIRED: lines surfaced in diff table
 - [ ] Phase 4 table shown and user confirmed before any file was modified
 - [ ] No file modified without explicit confirmation
 - [ ] Outdated rows were NOT covered by "Approve all" — each required individual confirmation
@@ -326,3 +359,5 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 - [ ] Hooks phase: per-hook explicit confirmation required for each Outdated/New hook; no blanket "approve all" for hooks
 - [ ] Hooks phase: no hook with Removed-from-canonical status auto-removed; default was Keep
 - [ ] Hooks phase: no user-owned `.claude/settings.json` field (`permissions`, `mcpServers`, custom hooks) overwritten; any settings.json write was Phase 5.7 canonical patch-if-absent only
+- [ ] CLAUDE.md team table reconciliation ran when CLAUDE.md present; stale agent names surfaced as [claude.md] rows; user approval required before edit
+- [ ] Post-apply commit advisory shown when at least one file was changed; git commands surfaced or executed on user approval
