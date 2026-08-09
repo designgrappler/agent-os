@@ -27,7 +27,8 @@
 #   docs/context/temp-architectural-assessment.md, docs/context/bridges/**
 #
 #   Intentionally OUTSIDE the blocked path (coordination-tier state):
-#     docs/backlog.md — Sprint Coordinator can write directly (S23 T23.B).
+#     docs/backlog.md — now separately protected by block-backlog-write.sh
+#       (all callers blocked). See backlog.md write policy in orchestrator skill.
 #     docs/context/tracks.md — Sprint Coordinator can write status updates
 #       directly without Skylar routing. See S29 T29.A for rationale.
 #     docs/context/plan.md — coordination-tier (pointers + sprint objective,
