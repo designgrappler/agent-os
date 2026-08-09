@@ -200,7 +200,7 @@ For each file in the memory directory (excluding `MEMORY.md` itself), classify b
 **`feedback_*` — never auto-flag for prune.** Only flag as `RETIRE candidate` if the behavioral rule has been codified verbatim into any `claude/agents/*.md` or any `claude/skills/**/SKILL.md` (i.e. the rule is now enforced as a system constraint and the memory file is redundant).
 
 **`project_*` — flag as `RETIRE candidate` only if BOTH of the following signals are present (two-signal rule):**
-1. The sprint referenced in the file (extracted from the `Created:` field or body content) closed more than **3 sprints ago**, relative to the most recently closed sprint. Determine the most recently closed sprint by reading the first `## Completed Sprint: S<N> ✓` line from `docs/context/plan.md`. Count backwards 3 sprints from that number — any `project_*` file referencing a sprint ≤ (N-3) is a stale candidate. Files with no sprint reference fall through to Signal 2.
+1. The `Created:` field is older than 90 days, OR the file's mtime is older than 90 days.
 2. The referenced sprint is archived (appears in `docs/context/plan.md` Completed Sprint sections OR in `docs/archive/plan-docs/`), OR the file contains no sprint reference AND is not referenced in `MEMORY.md`'s index.
 
 A single signal alone is **not sufficient** to flag a `project_*` file. Both signals must be independently satisfied.

@@ -85,10 +85,6 @@ REQUIRED before any work in either phase.
 2. Read `docs/context/product.md` — Product principles and user context.
 3. Read the track's plan doc (path in the Bridge's `Current Plan:` field) — requirements, Design Brief sub-section (if present), phase-specific scope, and verification criteria.
 4. Read any design system or token files referenced in `CLAUDE.md` — this is the encoded taste that governs all output. If no design system is defined, continue with step 4 incomplete, document all token references as `[TOKEN: description]` placeholders, and flag to the Conductor before finalizing specs.
-4b. Read `DESIGN.md` and `PRODUCT.md` from the project root if they exist:
-   - `DESIGN.md` — brand tokens, component library references, project-specific design anti-patterns. Rules here stack on top of the impeccable.style checklist — they do not replace it.
-   - `PRODUCT.md` — product principles, user context, persona definitions; informs tone and hierarchy decisions.
-   - Both files are **optional**. If absent, continue without them — no error, no mention.
 5. Confirm the **design_tool** value from step 1:
    - `design_tool: pencil` or `design_tool: figma` → proceed to Phase 1 with MCP prerequisite check (see Phase 1 Protocol below).
    - `design_tool: none` → proceed directly to **Single-Phase Fallback** (see Input / Output Contract below).
@@ -169,19 +165,6 @@ Reference design tokens from the shared design system — never invent values:
 - Spacing: reference spacing scale
 - Typography: reference type styles
 - Never hardcode hex values, pixel values, or font sizes — use tokens
-
-## Design Reference Resources
-
-**getdesign.md** — https://getdesign.md
-
-A catalog of 300+ real-website design analyses in AI-readable format. Each analysis captures the visual language, typography, color system, spacing, and component patterns of a real product or site.
-
-Use this resource:
-- When the user asks for styling options, theme inspiration, or real-world design direction
-- When a project has no `DESIGN.md` and needs a reference starting point
-- When the user asks "make it look like X" or "find something similar to Y"
-
-When a specific style is requested, fetch the relevant analysis via WebFetch and use it as a direct design reference for the current deliverable.
 
 ---
 
@@ -288,71 +271,6 @@ When the response contains a table, a numbered list of 3+ items, or more than on
 - Single-phase fallback is the only path when `design_tool: none` is configured — do not invoke MCP tools, do not attempt to write `.pen` or `.fig` files.
 
 ---
-
-## Anti-Pattern Enforcement (impeccable.style)
-
-Source: https://impeccable.style/slop — refresh this list when the canonical source updates.
-
-Before finalizing any Phase 1 or Phase 2 deliverable, scan output against every rule below. Any violation must be corrected before sign-off. These are hard constraints, not guidelines.
-
-1. Don't use a decorative grid-line background without supporting a canvas, map, or measurement task
-2. Avoid thick accent borders on rounded cards where the border clashes with radius
-3. Don't use blur effects and glass cards as decoration rather than solving layering problems
-4. Avoid thick colored borders on one side of a card
-5. Don't pair a hairline border with a wide, diffuse shadow simultaneously
-6. Avoid repeating-gradient stripes as surface decoration
-7. Don't over-round cards and sections (24px+ on small cards)
-8. Avoid hand-coded SVG illustrations that read as amateur doodles
-9. Don't use tracked uppercase labels above headings without editorial substance
-10. Avoid font sizes under 11px for functional text
-11. Don't create flat type hierarchies with sizes too close together
-12. Avoid stacking small rounded-square icon containers above headings
-13. Don't use oversized italic serif as primary hero headlines
-14. Avoid tiny uppercase letter-spaced labels immediately above hero headlines
-15. Don't set full-sentence headlines at display size
-16. Avoid crushing letter spacing destructively
-17. Don't use only one font family for entire pages
-18. Avoid long passages in all-caps for body text
-19. Don't use saturated radial glows on dark pages decoratively
-20. Avoid faint accent hazes as spotlights behind sections
-21. Don't rely on purple/violet gradients and cyan-on-dark combinations
-22. Avoid dark backgrounds with colored box-shadow glows
-23. Don't apply gradient text to headings and metrics
-24. Avoid gray text on colored backgrounds
-25. Don't use cream/beige page backgrounds reached for by reflex
-26. Avoid tiny numbered section labels beside headings
-27. Don't flush scroller cards against panel edges without matching insets
-28. Avoid opaque layers covering readable text
-29. Don't let one column stretch far past its neighbor
-30. Avoid crowding headings against previous blocks
-31. Don't use monotonous spacing throughout designs
-32. Avoid nesting cards excessively
-33. Don't create text lines wider than approximately 80 characters
-34. Avoid content overflowing its container
-35. Don't clip positioned children with overflow containers
-36. Avoid decorative pulsing on static status indicators
-37. Don't use fake blinking cursors on non-editable hero copy
-38. Avoid continuous auto-scrolling marquees
-39. Don't use bounce or elastic easing on interface elements
-40. Avoid animating width, height, padding, or margin properties
-41. Don't scale or rotate images on hover
-42. Avoid repeating the same label in several slots of one card
-43. Don't overuse em-dashes in body copy
-44. Avoid generic SaaS marketing buzzwords
-45. Don't use aphoristic-cadence copy patterns repeatedly
-46. Avoid dismissing things as 'theater' in copy
-47. Don't use generic shape-assembled illustrations as hero art
-48. Avoid broken or placeholder images in img tags
-49. Don't ship uncaught script errors on load
-50. Avoid leaving content invisible at rest
-51. Don't use cramped padding in containers
-52. Avoid body text touching viewport edges
-53. Don't justify text without hyphenation support
-54. Avoid low-contrast text that fails WCAG AA requirements
-55. Don't skip heading levels in document structure
-56. Avoid tight line height below 1.3x font size
-57. Don't use body text below 12px
-58. Avoid wide letter spacing above 0.05em on body text
 
 ## Sign-Off Protocol
 

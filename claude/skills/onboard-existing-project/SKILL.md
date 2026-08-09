@@ -52,8 +52,6 @@ Read the following files and paths. Do not ask any questions. Extract as much as
 
 **Product vision candidates sweep.** After reading the table above, scan for: `README.md`, `north-star.md`, `vision.md`, `PRODUCT.md`, `docs/product.md`, `docs/vision.md`, `docs/north-star.md`. For each that contains meaningful product prose, capture its path into `PRODUCT_CANDIDATES`. If none exist, set `PRODUCT_CANDIDATES` to empty.
 
-**Optional design context files.** Also check for `DESIGN.md` and `PRODUCT.md` in the project root. If absent, note them as optional files the user can author later — `DESIGN.md` for brand tokens and project-specific design anti-patterns, `PRODUCT.md` for product principles and persona definitions — to give the Designer agent project-specific context beyond the defaults.
-
 Assemble a Discovery Report internally — do not display it yet.
 
 ---
