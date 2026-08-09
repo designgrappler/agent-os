@@ -29,7 +29,7 @@ When the orchestrator hands a task to a specialist, that specialist brings domai
 | Specialist | Domain | Tools they use |
 |---|---|---|
 | **Researcher** | Synthesis and analysis | Web search, document fetch |
-| **Designer** | Visual and UX work | Figma MCP, design export |
+| **Designer** | Visual and UX work | Figma MCP, Pencil MCP, design export |
 | **Frontend** | UI and interaction logic | File read/write, build tools |
 | **Backend** | APIs and server-side logic | File read/write, shell execution |
 | **Ops** | Deployment and infrastructure | Shell, logs, infrastructure APIs |

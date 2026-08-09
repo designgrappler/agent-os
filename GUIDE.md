@@ -74,7 +74,7 @@ Use the sprint workflow when you have multiple tracks of work running in paralle
 1. Invoke `/start-sprint`. The orchestrator asks for the sprint objective and creates the first track.
 2. Each track routes to the appropriate specialist. Specialists update `tracks.md` as work progresses.
 3. Check status at any point: "What is the current status?" — the orchestrator reads `tracks.md` and reports.
-4. When all tracks are approved by QA, close the sprint: `/close-sprint`. The orchestrator archives the plan, bumps the version, and resets for the next sprint.
+4. When all tracks are approved by QA, close the sprint: `/close-sprint`. The orchestrator archives the plan, bumps the version, resets for the next sprint, and automatically runs `/clean-context` to sweep merged worktrees, bridge files, and stale context.
 
 ---
 
@@ -157,7 +157,7 @@ Run and track sprint-based work.
 | Skill | Description |
 |---|---|
 | `start-sprint` | Launch a sprint, set objective, create first track |
-| `close-sprint` | Close a sprint, archive completed work, bump version |
+| `close-sprint` | Close a sprint, archive completed work, bump version, and run `/clean-context` automatically |
 | `track-status` | Quick status summary of open sprint tracks |
 | `track-close` | Close a single track and mark it done |
 
