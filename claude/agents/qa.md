@@ -88,7 +88,7 @@ The installed copy must either:
 - New directories at repo root (any directory not previously present)
 - New `*.json` config files at repo root or in config paths
 - New `*.yaml` or `*.yml` config files at repo root
-- New hidden directories (`.beads/`, `.tool/`, `.anything/`, etc.)
+- New hidden directories (`.tool/`, `.anything/`, or any other hidden directory, etc.)
 - New hook scripts under `claude/hooks/`
 - New entries in `package.json` dependencies or devDependencies
 

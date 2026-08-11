@@ -279,7 +279,7 @@ A FAIL here does not block the summary — it is advisory, prompting the user to
 
 ## Phase 7: CLAUDE.md Stale Reference Patch
 
-**Condition:** Runs only when the diff produced at least one change this run.
+**Condition:** Runs unconditionally on every update run (cheap read-only scan — no diff required).
 
 Search `CLAUDE.md` for every `renames[].from` name. For each hit, show the line and proposed replacement. Apply only user-approved patches.
 
@@ -355,7 +355,7 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 - **Surface release notes before presenting the action table.**
 - **Compatibility window:** never treat a missing-but-defaultable frontmatter field as a hard error.
 - **CLAUDE.md scan is conditional:** fires only when diff contains at least one rename or removal.
-- **Phase 7 is conditional:** runs only when the diff produced at least one change.
+- **Phase 7 is unconditional:** runs on every update run, regardless of whether the diff produced changes.
 - **Absent directories are created silently.** No user message. No prompt. Error only if creation fails.
 - **Manifest cross-array invariant:** if a name appears in both `renames[].from` and the canonical `skills` or `agents` array, canonical membership is authoritative — never propose rename or removal. Surface a one-line diagnostic.
 
@@ -380,7 +380,7 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 - [ ] Outdated rows were NOT covered by "Approve all" — each required individual confirmation
 - [ ] Diff shown for each Outdated row before the user confirmed
 - [ ] Phase 6 summary printed with per-type counts
-- [ ] Phase 7 ran (if diff changes occurred); CLAUDE.md checked against every renames[].from
+- [ ] Phase 7 ran (unconditionally); CLAUDE.md checked against every renames[].from
 - [ ] Phase 5.6 ran; connectors symlink created if ~/.claude/connectors.md present and docs/context/connectors.md absent; skipped silently otherwise
 - [ ] Hooks phase: per-hook explicit confirmation required for each Outdated/New hook; no blanket "approve all" for hooks
 - [ ] Hooks phase: no hook with Removed-from-canonical status auto-removed; default was Keep
