@@ -140,26 +140,51 @@ Each such row requires explicit user approval before any edit is made to `CLAUDE
 
 Surface release information first — display release version and notes before the action table.
 
-Display the diff table. One row per skill, agent, hook, or CLAUDE.md reference affected. Prefix rows with `[skill]`, `[agent]`, `[hook]`, or `[claude.md]`. If no differences, state: "Your installation is up to date — no changes needed." and stop.
+**Enumerated table (always shown in full):** Display one row for every skill, agent, and hook — not just affected items. This gives a complete picture of installation health before any action is taken. Prefix rows with `[skill]`, `[agent]`, or `[hook]`. CLAUDE.md reference rows (`[claude.md]`) are appended after the main table when present.
+
+Status values:
+- **`New`** — present in canonical, not installed locally
+- **`Outdated`** — installed locally, differs from canonical
+- **`Current`** — installed locally, matches canonical
+- **`Local-only`** — installed locally, not in canonical manifest (kept, no action)
+
+Example table:
 
 ```
-| Name                              | Type      | Status                   | Proposed action                                                           |
-|-----------------------------------|-----------|--------------------------|---------------------------------------------------------------------------|
-| update-agent-os                   | skill     | New                      | Install → ~/.claude/skills/update-agent-os/                               |
-| old-skill                         | skill     | Removed                  | Confirmed rename → new-skill (manifest)                                   |
-| onboard-existing-project          | skill     | Outdated                 | Update → overwrite with canonical SKILL.md                                |
-| technical-architect               | agent     | New                      | Install → ~/.claude/agents/technical-architect.md                         |
-| block-orchestrator-execution.sh   | hook      | Outdated                 | Update → overwrite .claude/hooks/block-orchestrator-execution.sh          |
-| CLAUDE.md line 14                 | claude.md | Rename ref               | Update /old-skill → /new-skill                                            |
+Skills
+| Name                              | Type      | Status       | Proposed action                                       |
+|-----------------------------------|-----------|--------------|-------------------------------------------------------|
+| check-agent-os                    | skill     | Current      |                                                       |
+| onboard-existing-project          | skill     | Outdated     | Update → overwrite with canonical SKILL.md            |
+| update-agent-os                   | skill     | New          | Install → ~/.claude/skills/update-agent-os/           |
+| old-skill                         | skill     | Local-only   | (no action — not in canonical)                        |
+
+Agents
+| Name                              | Type      | Status       | Proposed action                                       |
+|-----------------------------------|-----------|--------------|-------------------------------------------------------|
+| backend                           | agent     | Current      |                                                       |
+| technical-architect               | agent     | New          | Install → ~/.claude/agents/technical-architect.md     |
+
+Hooks
+| Name                              | Type      | Status       | Proposed action                                       |
+|-----------------------------------|-----------|--------------|-------------------------------------------------------|
+| block-orchestrator-execution.sh   | hook      | Outdated     | Update → overwrite .claude/hooks/                     |
+| stop-reminder.sh                  | hook      | Current      |                                                       |
 ```
 
-**Safety-control gate for hook rows:** Before presenting any `[hook]` row, display verbatim:
+If the canonical hook set is empty: print `Hooks: none in canonical manifest` and omit the Hooks table entirely.
+
+If there are no New, Outdated, or Removed rows across all three groups, state: "Your installation is up to date — no changes needed." and stop (the enumerated table still appears above this message).
+
+**Safety-control gate for hook rows:** Before presenting any `[hook]` row with Status `Outdated` or `New`, display verbatim:
 > `This is a safety-control hook. Review the diff carefully before approving.`
 
 **Safety-control gate for Outdated rows:** Before presenting any `[skill]` or `[agent]` row with Status `Outdated`, display verbatim:
 > `This file exists locally and will be overwritten. Review before approving.`
 
 Then show the diff between the local file and the canonical file for that row before asking for confirmation.
+
+**CLAUDE.md reference rows** — appended after the main table when the diff produced rename or removal rows. These are informational only; see Phase 3 CLAUDE.md reference scan.
 
 **Approval tiers:**
 - **New rows** (no local file exists) — eligible for "Approve all". No overwrite risk.
@@ -349,8 +374,9 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 - [ ] CLAUDE.md legacy format check ran (always fires); if `## Initialization Loop` or `AGENTIC.md` reference found, `[claude.md]` informational row added to table
 - [ ] `[claude.md]` legacy format row NOT included in any approval tier; no action taken on it in Phase 5
 - [ ] Retired-artifacts canonical diff executed: ~/.claude/agents/ and .claude/agents/ diffed against canonical agents[] array; .claude/skills/ diffed against canonical skills[] array (excluding renames[].from); path-structure artifacts checked via explicit bash; all RETIRED: lines surfaced in diff table
-- [ ] Phase 4 table shown and user confirmed before any file was modified
-- [ ] No file modified without explicit confirmation
+- [ ] Phase 4 enumerated table shown — all skills, agents, and hooks listed (not just affected rows); status values are New / Outdated / Current / Local-only
+- [ ] If canonical hook set is empty, "Hooks: none in canonical manifest" printed; Hooks table omitted
+- [ ] User confirmed before any file was modified
 - [ ] Outdated rows were NOT covered by "Approve all" — each required individual confirmation
 - [ ] Diff shown for each Outdated row before the user confirmed
 - [ ] Phase 6 summary printed with per-type counts

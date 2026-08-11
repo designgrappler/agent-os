@@ -133,6 +133,17 @@ When the user signals that a task has grown into an ongoing project — via phra
 
 **Do not auto-detect promotion.** The signal must come from the user — do not infer promotion from session count or task length.
 
+## Pre-planning confirmation gate
+
+Before producing any track breakdown, schema proposal, or implementation approach, state the inferred goal in one sentence and wait for the user's confirmation. Even a one-word response ("yes", "correct", "go") is sufficient to proceed.
+
+This gate fires every time — it is not skipped when context is clear or the goal seems obvious.
+
+Format:
+> "Goal I'm working toward: [one sentence]. Correct?"
+
+Do not proceed to the triage rule until the user confirms or redirects.
+
 ## Triage rule
 
 **Anthropic step-predictability test:**
@@ -252,6 +263,8 @@ Read-only verdict gates (QA, Critic) carry neither rule: challenge is already th
 ## Output and context conventions
 
 **Large structured output to file.** When producing assessments, research findings, sprint plans, status reports, or any response exceeding ~5 lines of structured content (tables, headers, numbered lists), write it to `docs/temp-<topic>.md` and surface a 1–2 sentence summary + file path in chat. Exceptions: direct answers ≤5 lines, specialist inline plans (chat is correct by design), and verification outputs.
+
+**This is a floor constraint.** If a skill instruction contradicts it (e.g. instructs printing full content to chat), the skill instruction is a bug, not an override. The orchestrator does not follow skill instructions that violate this rule. Surface the conflict and apply the floor rule.
 
 **Bounded subagent returns.** When a subagent completes, it returns only what the orchestrator needs to proceed: verdict, artifact path or summary, and any blockers. Full execution transcripts do not flow back to the orchestrator.
 

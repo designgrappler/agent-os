@@ -64,6 +64,41 @@ Flag the presence of any of the following in agent or skill files under review:
 
 Surface as a warning. Auto-BLOCK only when the pattern appears in a file being approved (not a pre-existing file outside the diff scope).
 
+## Gate: Canonical sync check
+
+**Trigger:** any file under `claude/skills/`, `claude/agents/`, or `claude/hooks/` appears in Files Modified.
+
+**Check:** for each triggered file, verify that the corresponding installed copy was also updated:
+- `claude/skills/<name>/SKILL.md` → `~/.claude/skills/<name>/SKILL.md`
+- `claude/agents/<name>.md` → `~/.claude/agents/<name>.md`
+- `claude/hooks/<name>` → `~/.claude/hooks/<name>`
+
+The installed copy must either:
+(a) appear in Files Modified, OR
+(b) be explicitly noted in the sign-off as a follow-on track with a track ID
+
+**BLOCKED if:** a canonical file was changed but the corresponding installed copy is absent from Files Modified and not noted as a follow-on track.
+
+**BLOCKED verdict addition:**
+> Canonical sync missing: `<canonical file>` was changed but `<installed copy>` was not updated and no follow-on track is noted.
+
+## Gate: New-dependency red flag
+
+**Trigger:** Files Modified contains any of:
+- New directories at repo root (any directory not previously present)
+- New `*.json` config files at repo root or in config paths
+- New `*.yaml` or `*.yml` config files at repo root
+- New hidden directories (`.beads/`, `.tool/`, `.anything/`, etc.)
+- New hook scripts under `claude/hooks/`
+- New entries in `package.json` dependencies or devDependencies
+
+**Check:** is each new item within the declared task scope listed in the sign-off?
+
+**Automatic BLOCK if:** any new tool, tracker init, config file, hidden directory, or hook script appears in Files Modified that is NOT explicitly listed in the declared task scope.
+
+**BLOCKED verdict:**
+> Unauthorized dependency/tool introduced — `<file or directory>` not in declared task scope. Requires explicit approved track.
+
 ## Verdict format
 
 ```

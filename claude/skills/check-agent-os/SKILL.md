@@ -68,15 +68,32 @@ When the user runs `/check-agent-os`, execute the following phases in order.
    - `strategist.md`
    - `technical.md`
    - `writer.md`
-3. **Pass:** all fourteen files exist.
-4. **Fail rows:** list each missing agent. Remediation hint:
+3. **Always enumerate all agents** — one row per agent regardless of pass/fail:
+   ```
+   ✓ present   backend
+   ✓ present   critic
+   ✗ missing   database
+   ✓ present   designer
+   ...
+   ```
+4. **Pass:** all fourteen files exist — no `✗ missing` rows.
+5. **Fail rows:** each `✗ missing` row is a fail row. Remediation hint:
    > Run `/update-agent-os` to install missing canonical agents.
 
 ### 4b: Model Format Check
 
 1. For each file matching `~/.claude/agents/*.md`, parse the frontmatter `model:` line.
 2. **Pass:** every `model:` value is one of the canonical short forms: `opus`, `sonnet`, or `haiku`.
-3. **Fail rows:** list each agent where `model:` contains a long-form name. Remediation hint:
+3. **On full PASS:** emit a compact summary line only:
+   > `4b: Model Format Check — PASSED (all N agents use short-form model values)`
+4. **On any failure:** enumerate all agents — one row per agent showing name, model value, and status:
+   ```
+   ✓ valid    backend      model: sonnet
+   ✓ valid    critic       model: opus
+   ✗ invalid  designer     model: claude-sonnet-4-5 (use short form: sonnet)
+   ...
+   ```
+5. **Fail rows:** each `✗ invalid` row is a fail row. Remediation hint:
    > Edit `~/.claude/agents/<name>.md` and change `model:` to the short form (`opus`, `sonnet`, or `haiku`).
 
 **Note on `provider:` field:** `provider:` is an optional frontmatter field. Its absence is correct for the default Anthropic setup. Do NOT flag a missing `provider:` field as an error.
@@ -87,7 +104,16 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 
 1. For each file matching `~/.claude/agents/*.md`, parse the frontmatter `tools:` list.
 2. **Pass:** every agent file includes `WebFetch` in its `tools:` list.
-3. **Fail rows:** list each agent where `WebFetch` is absent. Remediation hint:
+3. **On full PASS:** emit a compact summary line only:
+   > `4c: WebFetch Tools Check — PASSED (all N agents include WebFetch)`
+4. **On any failure:** enumerate all agents — one row per agent showing name and status:
+   ```
+   ✓ valid    backend     WebFetch present
+   ✓ valid    critic      WebFetch present
+   ✗ invalid  designer    WebFetch absent
+   ...
+   ```
+5. **Fail rows:** each `✗ invalid` row is a fail row. Remediation hint:
    > Run `/update-agent-os` to sync with canonical.
 
 ### 4d: Specialist `isolation: worktree` Check
@@ -95,7 +121,16 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 1. For each file matching `~/.claude/agents/*.md`, determine whether the agent is a Specialist by checking for a `## Sign-Off Protocol` section that contains both `**Track:**` and `**Completed:**` fields.
 2. For each identified Specialist, confirm `isolation: worktree` appears in frontmatter.
 3. **Pass:** every Specialist agent has `isolation: worktree`.
-4. **Fail rows:** list each Specialist agent where `isolation: worktree` is absent. Remediation hint:
+4. **On full PASS:** emit a compact summary line only:
+   > `4d: Specialist isolation Check — PASSED (all N specialists have isolation: worktree)`
+5. **On any failure:** enumerate all Specialist agents — one row per Specialist showing name and status:
+   ```
+   ✓ valid    backend     isolation: worktree present
+   ✓ valid    frontend    isolation: worktree present
+   ✗ invalid  designer    isolation: worktree absent
+   ...
+   ```
+6. **Fail rows:** each `✗ invalid` row is a fail row. Remediation hint:
    > Run `/update-agent-os` to sync with canonical.
 
 ---
@@ -214,6 +249,10 @@ The final line **must** be exactly one of:
 - [ ] On PASS, `.agent-os-checked` written with today's ISO date
 - [ ] On FAIL, `.agent-os-checked` NOT created or modified
 - [ ] Every fail row includes a remediation hint
+- [ ] Phase 4a: all fourteen expected agents enumerated with `✓ present` or `✗ missing` — always, not only on failure
+- [ ] Phase 4b: on full PASS → compact summary line only; on any failure → all agents enumerated with model value and `✓ valid` / `✗ invalid`
+- [ ] Phase 4c: on full PASS → compact summary line only; on any failure → all agents enumerated with `✓ valid` / `✗ invalid`
+- [ ] Phase 4d: on full PASS → compact summary line only; on any failure → all Specialists enumerated with `✓ valid` / `✗ invalid`
 - [ ] Phase 5a: AGENTIC.md existence checked; presence is a FAIL
 - [ ] Phase 5b: report-track-status existence checked; presence is a FAIL
 - [ ] Phase 7: `claude --version` invoked defensively; never contributes fail rows to OVERALL

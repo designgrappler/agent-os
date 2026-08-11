@@ -70,11 +70,11 @@ git rev-parse --git-dir 2>/dev/null
 - **If the command fails (non-zero exit):** set `GIT_PRESENT=false`. Continue installation with the following adjustments active throughout:
   - In Step 4a (`CLAUDE.md`): omit the `## Worktree Protocol` section and `## Sprint Workflow` section. In their place, emit:
     ```
-    > **Note:** No git repo detected — sprint workflow, worktree isolation, and Beads issue tracking are unavailable in this session. Run `git init` to activate the full Agent OS feature set on next session start. No reinstall needed — all `.claude/` files remain valid.
+    > **Note:** No git repo detected — sprint workflow and worktree isolation are unavailable in this session. Run `git init` to activate the full Agent OS feature set on next session start. No reinstall needed — all `.claude/` files remain valid.
     ```
   - In Step 4g (`.claude/settings.json`): omit the `worktree.baseRef` field from the generated JSON.
   - In Step 4h (`.gitignore` additions): skip this step — no git repo means no `.gitignore` to update.
-  - In Step 6 (Confirm output): add a notice line: `**Git repo:** Not detected — sprint workflow and Beads unavailable. Run \`git init\` to enable the full feature set on next session start.`
+  - In Step 6 (Confirm output): add a notice line: `**Git repo:** Not detected — sprint workflow and worktree isolation unavailable. Run \`git init\` to enable the full feature set on next session start.`
 
 Run these checks in order — stop at the first match:
 
