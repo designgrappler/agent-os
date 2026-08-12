@@ -25,46 +25,6 @@ If no temp plan doc exists and no backlog file exists, ask the user:
 
 Wait for the user's response before continuing.
 
-### Step 1b — Identify domains involved
-
-From the sprint goal and proposed tracks surfaced in Step 1, identify which domain agents are relevant. Match tracks to agent roles:
-
-- Design work → `designer`
-- Product requirements / user stories → `pm`
-- Technical architecture / complex decisions → `technical`
-- Research / competitive analysis → `researcher`
-- Strategic direction / opportunity framing → `strategist`
-
-This step repeats if Tim's feedback on sub-plans changes sprint scope — re-identify affected domains and re-spawn those agents before proceeding.
-
-### Step 1c — Spawn domain agents in planning mode (parallel)
-
-For each domain identified in Step 1b, spawn the domain agent with a planning brief:
-
-```
-Sprint goal: [one sentence from Step 1]
-Your domain tracks: [list of tracks for this agent's domain]
-Mode: Planning Mode — write a domain sub-plan. Do not execute any work.
-Output path: docs/temp-sprint<N>-<domain>-subplan.md
-```
-
-Domain agents run in parallel where independent. Run sequentially where one domain's scope depends on another (e.g. strategist or pm before technical or frontend).
-
-**Gap coverage rule (hard):** If a proposed track has no matching domain agent, the sprint always blocks for Tim input — the orchestrator does not fill the gap. Surface explicitly:
-> "Track [X] has no domain agent. Define its scope manually or remove it before proceeding."
-
-### Step 1d — Tim review gate (soft gate)
-
-Once all domain sub-plans are written, surface them to Tim:
-
-> "Domain sub-plans ready for review:
-> - [path to each sub-plan]
-> Review, answer any `tim:` questions embedded in the sub-plans, and confirm to proceed."
-
-If Tim's feedback changes scope for any domain, re-spawn those domain agents with updated context. Repeat until Tim confirms the full set.
-
-**Do not proceed to Step 2 until Tim confirms.**
-
 ### Step 2 — Determine sprint ID
 
 Read `docs/context/plan.md` if it exists. Find the highest sprint number currently referenced (look for `## Current Sprint: S<N>` or `## Completed Sprint: S<N>`). The new sprint ID is that number plus one. If no prior sprint is found, start at S1.
@@ -182,7 +142,7 @@ Next step: review the tracks, then dispatch work.
 
 ### Step 6 — Write sprint plan doc
 
-Assemble the narrative plan doc at `docs/temp-sprint<N>-plan.md` from the domain sub-plans produced in Step 1c. Each track's scope, verification criteria, and key files must come from the corresponding domain sub-plan — the orchestrator does not author track content. Use the following format:
+Produce a narrative plan doc at `docs/temp-sprint<N>-plan.md` using the following format:
 
 - **Title:** `# Sprint <N> Plan — <sprint goal>`
 - **Header:** Sprint ID, Status (DRAFT), Authored by, Date, Prior sprint, Release target

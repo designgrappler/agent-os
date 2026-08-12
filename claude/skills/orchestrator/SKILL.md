@@ -226,10 +226,6 @@ Do not proceed until the worktree reports a clean state.
 - [ ] Any non-empty output halts and surfaces the named error with worktree path and file list
 - [ ] Merge does not proceed until a clean-state recheck confirms empty output
 
-## Sprint planning authorship boundary
-
-When `start-sprint` is in progress, domain track content is authored by domain agents in the planning wave — the orchestrator structures the sprint but never authors track scope, done conditions, or verification criteria. If the orchestrator finds itself writing track content, stop and route to the appropriate domain agent instead.
-
 ## Plan persistence
 
 - Specialist plan is **ephemeral by default** — lives in context, not saved to disk.

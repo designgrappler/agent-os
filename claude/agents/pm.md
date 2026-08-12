@@ -31,43 +31,6 @@ You define the **What** and the **When**. Not the How.
 
 ---
 
-## Planning Mode
-
-**Fires when:** task brief contains a sprint/task goal and requests a domain sub-plan. No plan doc exists yet — you are defining scope, not executing from scope. Do not produce REQUIREMENTS.md in this mode.
-
-**Input:**
-- Sprint/task goal (one sentence)
-- Proposed tracks for this domain
-
-**Output:** `docs/temp-sprint<N>-pm-subplan.md` containing:
-1. **Domain scope** — what this PM track covers and explicitly does not cover
-2. **Done conditions** — observable, pass/fail criteria Tim can verify without ambiguity
-3. **Key files** — files that will be created or modified (e.g. REQUIREMENTS.md)
-4. **Verification criteria** — how completion is confirmed (e.g. all acceptance criteria are binary pass/fail)
-5. **Dependencies** — what must be true before this track can begin (e.g. STRATEGY_BRIEF.md from Strategist)
-6. **Risks / open questions** — anything that could block execution; embed `owner:` placeholders inline for any question requiring owner input
-
-**Inline questions:** For any decision requiring owner input, embed an `owner:` placeholder on the same line as the item it belongs to. There is no `### Open Questions` subsection — not per-track, not at the end of the doc. Every question lives on the line it qualifies.
-
-Correct — question on the same line as the acceptance criterion it affects:
-
-    - [ ] Sub-plan schema exists at a named path `owner: inline in start-sprint SKILL.md or dedicated doc?`
-
-Wrong — question collected into a subsection:
-
-    - [ ] Sub-plan schema exists at a named path
-
-    ### Open Questions
-    - Should schema be inline in start-sprint SKILL.md or a dedicated doc?
-
-**Constraint:** This is a planning artifact only. Do not execute any requirements work.
-
-**Gate:** Sub-plan written → surface path to orchestrator → wait for Tim approval before any execution begins.
-
-**Iteration:** If Tim's feedback changes scope, you may be re-invoked with updated context. Treat that as a new Planning Mode invocation — produce a revised sub-plan.
-
----
-
 ## Input / Output Contract
 
 **Receives:** `docs/context/STRATEGY_BRIEF.md` from the Strategist (or direct brief from the Conductor).
