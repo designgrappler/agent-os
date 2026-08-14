@@ -18,14 +18,6 @@ Read `docs/context/tracks.md`. For each track belonging to the current sprint:
 
   Wait for confirmation before continuing.
 
-### Step 1a — Canonical sync (mandatory, non-skippable)
-
-Run `/update-agent-os` to sync all canonical skill/agent/hook changes from the repo to `~/.claude/skills/`, `~/.claude/agents/`, and `~/.claude/hooks/`.
-
-If `/update-agent-os` fails, surface the error and stop. Do not proceed until sync completes successfully.
-
-This step is mandatory and non-skippable. A sprint cannot be closed with a stale installed copy.
-
 ### Step 1b — Backlog audit
 
 After all tracks are confirmed DONE, scan `docs/backlog.md` for items that correspond to work completed in this sprint.
@@ -146,10 +138,6 @@ Verify every item before writing the sprint close record. If any item is uncheck
 
 - [ ] All tracks have exit records (MERGED, NO-OP, or DEFERRED with reason)
 - [ ] Build passes (`bun run build` clean)
-- [ ] `/update-agent-os` completed successfully this sprint close (Step 1a)
-- [ ] `~/.claude/skills/` matches canonical for any skill changed this sprint
-- [ ] `~/.claude/agents/` matches canonical for any agent changed this sprint
-- [ ] `~/.claude/hooks/` matches canonical for any hook changed this sprint
 - [ ] GitHub issues addressed this sprint are closed on `designgrappler/agent-os`
 - [ ] No new tools, trackers, or third-party dependencies introduced outside an approved track
 - [ ] QA APPROVED on all tracks

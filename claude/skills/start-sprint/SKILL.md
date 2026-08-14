@@ -25,6 +25,23 @@ If no temp plan doc exists and no backlog file exists, ask the user:
 
 Wait for the user's response before continuing.
 
+### Step 1a — Write alignment-phase plan doc
+
+After confirming the sprint goal with the user, create `docs/temp-sprint<N>-plan.md` before spawning any domain agents.
+
+Use the format defined in the **Alignment-phase plan doc format (Step 1a reference)** section below.
+
+Rules:
+- Every proposed track must have an `owner:` tag (agent role or `null` if orchestrator-only)
+- Embed `tim:` questions inline in each track section for anything ambiguous about scope or approach
+- Consolidate all `tim:` items in the Open Questions section at the bottom
+- Set Status to DRAFT — do not change to CONFIRMED until Tim explicitly confirms
+
+After writing the doc, output the path:
+> Sprint plan doc: `docs/temp-sprint<N>-plan.md`
+
+Wait for Tim's confirmation before proceeding to Step 1b (domain identification). If Tim requests changes, update the doc and wait again.
+
 ### Step 1b — Identify domains involved
 
 From the sprint goal and proposed tracks surfaced in Step 1, identify which domain agents are relevant. Match tracks to agent roles:
@@ -179,6 +196,31 @@ Sprint plan: [docs/temp-sprint<N>-plan.md](docs/temp-sprint<N>-plan.md)
 
 Next step: review the tracks, then dispatch work.
 ```
+
+### Alignment-phase plan doc format (Step 1a reference)
+
+The alignment-phase temp plan doc is written by the orchestrator before domain agents are spawned. It is the review surface for goal and track alignment — Tim reads it, answers `tim:` questions, and confirms before Step 1b runs.
+
+**Required sections, in order:**
+
+1. **Header block** — Sprint ID, Status (DRAFT), Authored by, Date, Prior sprint, Release target
+2. **Sprint Objective** — 1–2 paragraphs: what this sprint clears and why
+3. **Proposed Tracks** — one subsection per track:
+   - `### TN.X — <Track name>`
+   - `**Description:**` — what the track does; bullet sub-items for known sub-tasks
+   - `` `owner: <agent role or null>` ``
+   - `> **tim:**` inline question if scope or approach is unclear
+4. **Deferred** — items staying in backlog with reason
+5. **Open Questions** — consolidated list of all `tim:` items from track sections, numbered
+6. **Release Target** — version + one-line description
+7. **Sprint Close Conditions** — numbered checklist
+8. **Sequencing** — code block showing track order and dependencies
+
+**Rules:**
+- Every track must have an `owner:` tag (agent role or `null` for orchestrator-only)
+- `tim:` questions appear inline in the track AND in the consolidated Open Questions section
+- No scope/verification/key files in tracks yet — those come from domain agents in Step 1c
+- Status stays DRAFT until Tim confirms and domain agents fill their sections
 
 ### Step 6 — Write sprint plan doc
 

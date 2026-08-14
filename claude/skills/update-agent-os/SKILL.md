@@ -3,7 +3,7 @@ name: update-agent-os
 description: Synchronizes your local `~/.claude/skills/`, `~/.claude/agents/` installation against the canonical Agent OS library.
 ---
 # Update Agent OS
-Synchronizes your local `~/.claude/skills/` and `~/.claude/agents/` installations against the canonical Agent OS library. Reads the canonical manifest from GitHub, diffs your installed skills and agents against the canonical set, surfaces the current release version and release notes, and presents a per-row action table for you to approve before anything is changed. Nothing is written, renamed, or removed without your explicit confirmation.
+Synchronizes your local `~/.claude/skills/` and `~/.claude/agents/` installations against the canonical Agent OS library. Reads the canonical manifest from GitHub, diffs your installed skills and agents against the canonical set, surfaces the current release version, and presents a per-row action table for you to approve before anything is changed. Nothing is written, renamed, or removed without your explicit confirmation.
 
 ## Trigger
 When the user runs `/update-agent-os`, execute the following phases in order.
@@ -62,7 +62,6 @@ Note: Hooks are **project-scoped** (`.claude/hooks/`). Do NOT inventory or modif
 
 **Release info:**
 - Read `release-version` from the manifest. This is the **canonical release version**.
-- Attempt to read the corresponding release note from `docs/releases/<release-version>.md` in the canonical source.
 
 Display neither list yet — hold all data for Phase 3.
 
@@ -122,6 +121,12 @@ If the above produces no `RETIRED:` lines, print: `Retired artifacts: None found
 
 **CRITICAL: this row is manual-migration only.** It must NOT appear in the approval tiers as an overwrite candidate. In Phase 4, explicitly exclude `[claude.md]` rows from all approval tiers (New, Outdated, Hook). In Phase 5 Apply, `[claude.md]` rows are informational only — never write, overwrite, or modify `CLAUDE.md`. The block-orchestrator-execution hook already prevents this, but the skill must encode it explicitly so no future implementor creates an auto-overwrite path.
 
+**CLAUDE.md bridge-doc convention check (always runs):** If a `CLAUDE.md` exists in the working directory, scan it for the deprecated disk-write bridge-doc convention — markers: any of `handoff-t`, `docs/context/handoff`, or `Handoff Bridge` co-located with a `write` or `docs/context` instruction. If any marker is present, add an informational `[claude.md]` row to the diff table:
+
+| CLAUDE.md | [claude.md] | Outdated — manual only | Deprecated bridge-doc convention detected. Migrate to the dynamic agent-spawn bridge convention — bridge docs are now created at agent-spawn time, not written to disk. |
+
+**CRITICAL: this row is manual-migration only.** It must NOT appear in any approval tier and must never trigger a `CLAUDE.md` write, overwrite, or edit. In Phase 4, explicitly exclude this row from all approval tiers (New, Outdated, Hook). In Phase 5 Apply, this row is informational only — no action. Same hard constraint as the legacy-format row.
+
 **CLAUDE.md reference scan (fires on rename or removal only):**
 If the diff contains at least one rename or removal: scan `CLAUDE.md` for references to renamed/removed skill names (auto-trigger rows, inline `/skill-name` mentions, path literals). Collect hits as `CLAUDE.md reference list`. Hold for Phase 4.
 
@@ -138,7 +143,7 @@ Each such row requires explicit user approval before any edit is made to `CLAUDE
 
 ## Phase 4: Present Report
 
-Surface release information first — display release version and notes before the action table.
+Surface release information first — display release version before the action table.
 
 **Enumerated table (always shown in full):** Display one row for every skill, agent, and hook — not just affected items. This gives a complete picture of installation health before any action is taken. Prefix rows with `[skill]`, `[agent]`, or `[hook]`. CLAUDE.md reference rows (`[claude.md]`) are appended after the main table when present.
 
@@ -352,7 +357,6 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 - **`CLAUDE.md` is never written by this skill** except for approved rename-reference patches (Phase 5 and Phase 7). The legacy-format `[claude.md]` row is informational only — it never triggers a write, overwrite, or modification of `CLAUDE.md`.
 - **CLAUDE.md team table reconciliation rows require explicit user approval before edit. Never auto-update the team table.**
 - **Phase 3 Diff must prefer the manifest's `renames` array** over any name-similarity heuristic. Heuristic is suggestion-only.
-- **Surface release notes before presenting the action table.**
 - **Compatibility window:** never treat a missing-but-defaultable frontmatter field as a hard error.
 - **CLAUDE.md scan is conditional:** fires only when diff contains at least one rename or removal.
 - **Phase 7 is unconditional:** runs on every update run, regardless of whether the diff produced changes.
@@ -365,13 +369,14 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 - [ ] Canonical source (GitHub) resolved before any prompt was shown; clear error surfaced if unreachable
 - [ ] Stale registry check ran; `gastownhall` URL detected and rewritten to `designgrappler` if present
 - [ ] `~/.claude/skills/` and `~/.claude/agents/` existence checked; absent directories created silently
-- [ ] Release version read from manifest; release notes surfaced before action table
+- [ ] Release version read from manifest and surfaced before action table
 - [ ] Phase 3 Diff run for skills and agents
 - [ ] Cross-array invariant guard applied before each `renames` lookup
 - [ ] Manifest invariant violations surfaced as diagnostics
 - [ ] Compatibility-window check applied; missing-but-defaultable fields surfaced as drift, not errors
 - [ ] CLAUDE.md scanned only when diff contains at least one rename or removal
 - [ ] CLAUDE.md legacy format check ran (always fires); if `## Initialization Loop` or `AGENTIC.md` reference found, `[claude.md]` informational row added to table
+- [ ] CLAUDE.md bridge-doc convention check ran (always fires); if `handoff-t`, `docs/context/handoff`, or `Handoff Bridge` markers found, `[claude.md]` informational row added to table; row NOT included in any approval tier; no action taken in Phase 5
 - [ ] `[claude.md]` legacy format row NOT included in any approval tier; no action taken on it in Phase 5
 - [ ] Retired-artifacts canonical diff executed: ~/.claude/agents/ and .claude/agents/ diffed against canonical agents[] array; .claude/skills/ diffed against canonical skills[] array (excluding renames[].from); path-structure artifacts checked via explicit bash; all RETIRED: lines surfaced in diff table
 - [ ] Phase 4 enumerated table shown — all skills, agents, and hooks listed (not just affected rows); status values are New / Outdated / Current / Local-only
