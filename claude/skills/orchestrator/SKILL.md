@@ -197,6 +197,21 @@ When QA (Bandit) issues APPROVED on a track, the Conductor surfaces the followin
 
 **Merge-timing guard:** If `/track-close` is not resolvable in the loaded skill scope, report: "`/track-close` not yet available in this scope — track is ready to close but cannot be written; please ensure T49.1 is merged to main and reload." Do not fire a phantom invocation.
 
+## Worktree task brief — mandatory commit step
+
+Every task brief dispatched to an agent running in worktree isolation (`isolation: worktree`) must include a final step requiring the agent to commit all changes before signing off.
+
+Required closing step — include verbatim in every worktree brief:
+
+```
+Final step: stage and commit all changes before signing off.
+  git add <list each file changed>
+  git commit -m "<conventional-type>(T<N.N>): <description>"
+Do not sign off until the commit completes successfully.
+```
+
+An agent that edits files without committing leaves the worktree dirty. The pre-merge gate will catch it, but the result is a blocked merge requiring manual repair. The commit step in the brief prevents this at the source.
+
 ## Pre-merge gate
 
 **Before any worktree merge or worktree removal**, run a dirty-state check:
