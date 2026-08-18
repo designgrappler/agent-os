@@ -135,7 +135,7 @@ When the user signals that a task has grown into an ongoing project — via phra
 
 ## Pre-planning confirmation gate
 
-Before producing any track breakdown, schema proposal, or implementation approach, state the inferred goal in one sentence and wait for the user's confirmation. Even a one-word response ("yes", "correct", "go") is sufficient to proceed.
+Before producing any track breakdown (the Tracks table — not per-track scope, which domain agents own), schema proposal, or implementation approach, state the inferred goal in one sentence and wait for the user's confirmation. Even a one-word response ("yes", "correct", "go") is sufficient to proceed.
 
 This gate fires every time — it is not skipped when context is clear or the goal seems obvious.
 
@@ -241,9 +241,15 @@ Do not proceed until the worktree reports a clean state.
 - [ ] Any non-empty output halts and surfaces the named error with worktree path and file list
 - [ ] Merge does not proceed until a clean-state recheck confirms empty output
 
-## Sprint planning authorship boundary
+## Plan doc authorship boundary
 
-When `start-sprint` is in progress, domain track content is authored by domain agents in the planning wave — the orchestrator structures the sprint but never authors track scope, done conditions, or verification criteria. If the orchestrator finds itself writing track content, stop and route to the appropriate domain agent instead.
+NEVER author domain track scope, done conditions, or verification criteria in any plan doc.
+
+ALWAYS author only the orchestrator-owned top section — the header, Sprint Objective, Tracks table, Constraints, Sequencing, and Sprint Close Conditions — then emit one STUB section per track row for the owning domain agent to fill.
+
+Format defined in `docs/context/plan-doc-format.md`.
+
+If the orchestrator finds itself writing track content, stop and route to the appropriate domain agent instead.
 
 ## Plan persistence
 

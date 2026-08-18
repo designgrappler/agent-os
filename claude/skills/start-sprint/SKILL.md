@@ -25,22 +25,39 @@ If no temp plan doc exists and no backlog file exists, ask the user:
 
 Wait for the user's response before continuing.
 
-### Step 1a — Write alignment-phase plan doc
+### Step 1a — Write orchestrator-owned plan doc
 
-After confirming the sprint goal with the user, create `docs/temp-sprint<N>-plan.md` before spawning any domain agents.
+Write `docs/temp-sprint<N>-plan.md` with the orchestrator-owned top section:
+- Header block: Sprint ID, Status: OPEN, Authored-by: Orchestrator, Date, Release target
+- Sprint Objective
+- Tracks table (one row per track: Track ID | Description | Owner | Status)
+- Constraints — include explicit exclusions/non-goals
+- Sequencing — dependency order across tracks
+- Sprint Close Conditions
+- Sentinel: `<!-- ORCHESTRATOR SECTION END — do not edit above this line -->`
 
-Use the format defined in the **Alignment-phase plan doc format (Step 1a reference)** section below.
+Immediately after the sentinel, append one Element (c) stub per Tracks table row:
 
-Rules:
-- Every proposed track must have an `owner:` tag (agent role or `null` if orchestrator-only)
-- Embed `tim:` questions inline in each track section for anything ambiguous about scope or approach
-- Consolidate all `tim:` items in the Open Questions section at the bottom
-- Set Status to DRAFT — do not change to CONFIRMED until Tim explicitly confirms
+```
+## T<N> — <Track Description>
 
-After writing the doc, output the path:
-> Sprint plan doc: `docs/temp-sprint<N>-plan.md`
+**Owner:** <role-key>
+**Status:** STUB
 
-Wait for Tim's confirmation before proceeding to Step 1b (domain identification). If Tim requests changes, update the doc and wait again.
+<!-- <role-key>: fill this section before executing -->
+
+**Description:**
+
+**Scope:**
+
+**Key files:**
+
+**Verification criteria:**
+```
+
+Do not write any track content. The stub is the full orchestrator contribution below the sentinel.
+
+Format defined in `docs/context/plan-doc-format.md`.
 
 ### Step 1b — Identify domains involved
 
@@ -56,14 +73,7 @@ This step repeats if Tim's feedback on sub-plans changes sprint scope — re-ide
 
 ### Step 1c — Spawn domain agents in planning mode (parallel)
 
-For each domain identified in Step 1b, spawn the domain agent with a planning brief:
-
-```
-Sprint goal: [one sentence from Step 1]
-Your domain tracks: [list of tracks for this agent's domain]
-Mode: Planning Mode — write a domain sub-plan. Do not execute any work.
-Output path: docs/temp-sprint<N>-<domain>-subplan.md
-```
+Instruct each domain agent to fill their assigned stub section in-place in `docs/temp-sprint<N>-plan.md` before executing. Each agent reads the full top section (above the sentinel), fills only their own stub (Description, Scope, Key files, Verification criteria), and flips Status from STUB to FILLED. No separate per-domain files.
 
 Domain agents run in parallel where independent. Run sequentially where one domain's scope depends on another (e.g. strategist or pm before technical or frontend).
 
@@ -72,13 +82,13 @@ Domain agents run in parallel where independent. Run sequentially where one doma
 
 ### Step 1d — Tim review gate (soft gate)
 
-Once all domain sub-plans are written, surface them to Tim:
+Once all domain agents have filled their assigned stubs, surface the plan doc to Tim:
 
-> "Domain sub-plans ready for review:
-> - [path to each sub-plan]
-> Review, answer any `tim:` questions embedded in the sub-plans, and confirm to proceed."
+> "Domain agent stubs filled. Plan doc ready for review:
+> - [docs/temp-sprint\<N>-plan.md](docs/temp-sprint\<N>-plan.md)
+> Review each track's filled section, confirm scope and verification criteria, then confirm to proceed."
 
-If Tim's feedback changes scope for any domain, re-spawn those domain agents with updated context. Repeat until Tim confirms the full set.
+If Tim's feedback changes scope for any domain, re-spawn those domain agents with updated context to re-fill their stubs. Repeat until Tim confirms the full set.
 
 **Do not proceed to Step 2 until Tim confirms.**
 
@@ -182,7 +192,7 @@ Read `docs/backlog.md`. For every item in the file, ask: *"Is this work being do
 
 ### Step 5 — Confirm
 
-Output a short confirmation after Step 6 completes (so the plan doc link is accurate).
+Output a short confirmation when all steps complete.
 
 **The "Sprint plan:" line must use markdown link syntax — `[path](path)` — not plain text.**
 
@@ -197,41 +207,4 @@ Sprint plan: [docs/temp-sprint<N>-plan.md](docs/temp-sprint<N>-plan.md)
 Next step: review the tracks, then dispatch work.
 ```
 
-### Alignment-phase plan doc format (Step 1a reference)
-
-The alignment-phase temp plan doc is written by the orchestrator before domain agents are spawned. It is the review surface for goal and track alignment — Tim reads it, answers `tim:` questions, and confirms before Step 1b runs.
-
-**Required sections, in order:**
-
-1. **Header block** — Sprint ID, Status (DRAFT), Authored by, Date, Prior sprint, Release target
-2. **Sprint Objective** — 1–2 paragraphs: what this sprint clears and why
-3. **Proposed Tracks** — one subsection per track:
-   - `### TN.X — <Track name>`
-   - `**Description:**` — what the track does; bullet sub-items for known sub-tasks
-   - `` `owner: <agent role or null>` ``
-   - `> **tim:**` inline question if scope or approach is unclear
-4. **Deferred** — items staying in backlog with reason
-5. **Open Questions** — consolidated list of all `tim:` items from track sections, numbered
-6. **Release Target** — version + one-line description
-7. **Sprint Close Conditions** — numbered checklist
-8. **Sequencing** — code block showing track order and dependencies
-
-**Rules:**
-- Every track must have an `owner:` tag (agent role or `null` for orchestrator-only)
-- `tim:` questions appear inline in the track AND in the consolidated Open Questions section
-- No scope/verification/key files in tracks yet — those come from domain agents in Step 1c
-- Status stays DRAFT until Tim confirms and domain agents fill their sections
-
-### Step 6 — Write sprint plan doc
-
-Assemble the narrative plan doc at `docs/temp-sprint<N>-plan.md` from the domain sub-plans produced in Step 1c. Each track's scope, verification criteria, and key files must come from the corresponding domain sub-plan — the orchestrator does not author track content. Use the following format:
-
-- **Title:** `# Sprint <N> Plan — <sprint goal>`
-- **Header:** Sprint ID, Status (DRAFT), Authored by, Date, Prior sprint, Release target
-- **Section 1 — Sprint Objective:** 1–2 paragraph summary of what this sprint clears and why
-- **Section 2 — Tracks:** One subsection per track with: Description, Scope (numbered steps), Key files, Verification criteria
-- **Section 3 — Release Target:** version + one-line description
-- **Section 4 — Sprint Close Conditions:** numbered checklist
-- **Section 5 — Sequencing:** code block showing track order and dependencies
-
-See `docs/temp-sprint48-plan.md` for a reference example of this format.
+Format defined in `docs/context/plan-doc-format.md`.

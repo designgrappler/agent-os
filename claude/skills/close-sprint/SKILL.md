@@ -37,7 +37,9 @@ Match on: items explicitly tagged with the track ID (e.g. `(T53.1)`), or items w
 
 Run `bun run build`. If it fails, surface the error and stop. Do not continue until the build passes.
 
-### Step 3 — Bump version in `skills-manifest.json`
+### Step 3 — Bump version in `skills-manifest.json` (agent-os only)
+
+**If `skills-manifest.json` does not exist in the project root, skip this step silently.**
 
 Read `skills-manifest.json` and determine the appropriate version bump:
 - **Patch** — bug fixes, copy corrections, non-behavioral edits only
@@ -92,7 +94,9 @@ Preserve any tracks from other sprints.
 Stage and commit the version bump, archive file, and context reset:
 
 ```bash
-git add skills-manifest.json docs/archive/plan-docs/S<N>.md docs/context/plan.md docs/context/tracks.md
+git add docs/archive/plan-docs/S<N>.md docs/context/plan.md docs/context/tracks.md
+# If skills-manifest.json was updated in Step 3, stage it too:
+# git add skills-manifest.json
 git commit -m "chore(S<N>): sprint close — <new-version>, archive plan, reset context"
 ```
 
@@ -110,13 +114,19 @@ After the sprint close commit, sweep merged worktrees:
 
 Note: use `git -C <repo-root>` form for all git commands in this step, where `<repo-root>` is the project root directory. This avoids the shell loop git-not-in-PATH issue that affects subshell environments.
 
-### Step 8 — Create GitHub release and push
+### Step 8 — Create GitHub release and push (agent-os only)
+
+**If `skills-manifest.json` does not exist in the project root, skip the release creation: run `git push` only and continue.**
 
 Before creating the release, derive the release notes from the sprint archive doc at `docs/archive/plan-docs/S<N>.md`. Use the "What changed" section (or equivalent) as the release body. Do not use a fallback string — if the archive doc is missing or has no substantive content, stop and ask the user for release notes before proceeding.
 
+Derive the GitHub repo from the git remote — do not hardcode it:
+
 ```bash
+REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+
 gh release create <new-version> \
-  --repo designgrappler/agent-os-private \
+  --repo "$REPO" \
   --title "<new-version>" \
   --notes "<release notes from archive doc>"
 
@@ -138,7 +148,7 @@ Verify every item before writing the sprint close record. If any item is uncheck
 
 - [ ] All tracks have exit records (MERGED, NO-OP, or DEFERRED with reason)
 - [ ] Build passes (`bun run build` clean)
-- [ ] GitHub issues addressed this sprint are closed on `designgrappler/agent-os`
+- [ ] (agent-os only) GitHub issues addressed this sprint are closed on the public mirror — skip if `skills-manifest.json` does not exist
 - [ ] No new tools, trackers, or third-party dependencies introduced outside an approved track
 - [ ] QA APPROVED on all tracks
 
@@ -152,7 +162,7 @@ Sprint S<N> closed.
 Version bumped to: <new-version>
 Archive: docs/archive/plan-docs/S<N>.md
 plan.md and tracks.md reset.
-GitHub release: https://github.com/designgrappler/agent-os-private/releases/tag/<new-version>
+GitHub release: https://github.com/<repo>/releases/tag/<new-version>  (skipped if not an agent-os project)
 /clean-context: complete
 ```
 
@@ -160,7 +170,7 @@ GitHub release: https://github.com/designgrappler/agent-os-private/releases/tag/
 
 - All tracks for the closed sprint have DONE or DEFERRED exit records before Step 2 ran.
 - `bun run build` passed.
-- `skills-manifest.json` version bumped to the correct next version.
+- `skills-manifest.json` version bumped to the correct next version (agent-os only — skip if file does not exist).
 - Sprint plan doc archived to `docs/archive/plan-docs/S<N>.md`.
 - `docs/context/plan.md` current sprint block collapsed to a single pointer line.
 - `docs/context/tracks.md` sprint block collapsed to a single pointer line.

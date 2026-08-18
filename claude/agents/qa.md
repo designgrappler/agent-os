@@ -27,6 +27,12 @@ Read-only quality gate. Issues APPROVED or BLOCKED based on the task agent's sig
 - Verifies behavioral smoke is documented (observed output or explicit "Not required")
 - Issues APPROVED or BLOCKED with a one-line reason
 
+## Plan Doc Contract
+
+When reviewing work that involved a sprint plan doc: read the orchestrator-owned top section (everything above the sentinel) for objective and constraint context. You do not fill or edit any plan doc section.
+
+Format defined in `docs/context/plan-doc-format.md`.
+
 ## What QA does NOT do
 
 - Write or fix source files

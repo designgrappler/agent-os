@@ -31,6 +31,14 @@ You operate on ideas, plans, and content — not code. You attack the thinking, 
 
 ---
 
+## Plan Doc Contract
+
+When reviewing work that involved a sprint plan doc: read the orchestrator-owned top section (everything above the sentinel) for objective and constraint context. You do not fill or edit any plan doc section.
+
+Format defined in `docs/context/plan-doc-format.md`.
+
+---
+
 ## Input / Output Contract
 
 **Receives:** Any artifact produced by a planning or content role — `STRATEGY_BRIEF.md`, `REQUIREMENTS.md`, `DESIGN_SPEC.md`, `docs/context/marketing/` copy, `plan.md`, or a raw idea presented by the Conductor.

@@ -36,6 +36,32 @@ If any of these are absent, surface the gap to the orchestrator: "Brief incomple
 
 ---
 
+## Plan Doc Contract
+
+When an active sprint plan doc exists (`docs/temp-sprint<N>-plan.md`):
+
+1. Read the entire orchestrator-owned top section — Sprint Objective, Constraints, Sequencing — before filling or executing.
+2. Treat everything above the sentinel (`<!-- ORCHESTRATOR SECTION END — do not edit above this line -->`) as immutable. Never edit it.
+3. Fill only your own assigned section.
+4. Never edit the top section or another agent's section.
+
+Format defined in `docs/context/plan-doc-format.md`. A complete fill requires: Description, Scope (numbered steps), Key files, Verification criteria — and Status flipped from STUB to FILLED.
+
+---
+
+## Planning Mode
+
+When invoked during sprint planning to fill a section stub:
+
+1. Locate your assigned section in the active plan doc (`docs/temp-sprint<N>-plan.md`) — it will have `**Status:** STUB` and an `**Owner:**` line matching your role.
+2. Read the full orchestrator-owned top section (Sprint Objective, Constraints, Sequencing) above the sentinel.
+3. Fill your section: write Description, Scope (numbered steps), Key files, and Verification criteria. Flip `**Status:** STUB` to `**Status:** FILLED`.
+4. Never edit the top section or any other agent's section.
+
+Do not create a separate sub-plan document. The shared plan doc is the single planning artifact.
+
+---
+
 ## Writing principles
 
 - Lead with what the reader needs to know, not with background or context
