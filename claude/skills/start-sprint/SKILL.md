@@ -129,6 +129,27 @@ blocks sprint open, and it degrades silently when GitHub CLI is unavailable.
    <captured lines>
    ```
 
+### Step 2c — Backlog promotion (mandatory move operation)
+
+This step is **mandatory and non-skippable.** When a backlog item enters a sprint, it is moved — not copied. The backlog must reflect only work that has not yet been pulled into a sprint. This step is the mechanism for that move.
+
+Run this step BEFORE writing plan.md or tracks.md — the sprint is not yet marked OPEN, so the backlog write is not blocked by the active-sprint hook.
+
+Read `docs/backlog.md`. For every item in the file, ask: *"Is this work being done in this sprint?"* Match on ANY of the following signals — be liberal, not conservative:
+- Item is explicitly tagged with the track ID (e.g. `(T54.1)`)
+- Item title closely matches a track description or sprint goal keyword
+- Item describes a feature, bug, or capability that the sprint tracks are implementing — **same domain and intent counts, even if the exact wording differs**
+- Item is in a backlog section whose heading corresponds to this sprint's domain
+
+**When in doubt, surface the item.** A false positive costs one confirmation. A missed item leaves completed work in the backlog indefinitely — that is the failure mode to avoid.
+
+**If matches found**, surface them:
+> "These backlog items correspond to work in this sprint and should be removed from the backlog. Confirm?
+> - [B<n>] [item title]"
+> Wait for confirmation, then remove the matched line(s). Do not remove section headers or surrounding items.
+
+**If no matches found**, state explicitly: "Backlog scan complete — no items match the tracks in this sprint." Do not skip silently. The confirmation that the scan ran is part of the sprint open record.
+
 ### Step 3 — Write `docs/context/plan.md`
 
 Create or overwrite the Current Sprint section at the top of `docs/context/plan.md`:
@@ -170,25 +191,6 @@ Resolve `<OWNER_VALUE>` by mode:
 - **`multi-user`:** before writing each track entry, prompt the user: `Owner for Track <ID> — GitHub handle, or leave blank to claim later:`. If a handle is given, use it verbatim as `<OWNER_VALUE>`. If the user leaves it blank, use `null` (claim-later is valid).
 
 If the file already has entries from a prior sprint, append the new entries below them.
-
-### Step 4b — Backlog promotion (mandatory move operation)
-
-This step is **mandatory and non-skippable.** When a backlog item enters a sprint, it is moved — not copied. The backlog must reflect only work that has not yet been pulled into a sprint. This step is the mechanism for that move.
-
-Read `docs/backlog.md`. For every item in the file, ask: *"Is this work being done in this sprint?"* Match on ANY of the following signals — be liberal, not conservative:
-- Item is explicitly tagged with the track ID (e.g. `(T54.1)`)
-- Item title closely matches a track description or sprint goal keyword
-- Item describes a feature, bug, or capability that the sprint tracks are implementing — **same domain and intent counts, even if the exact wording differs**
-- Item is in a backlog section whose heading corresponds to this sprint's domain
-
-**When in doubt, surface the item.** A false positive costs one confirmation. A missed item leaves completed work in the backlog indefinitely — that is the failure mode to avoid.
-
-**If matches found**, surface them:
-> "These backlog items correspond to work in this sprint and should be removed from the backlog. Confirm?
-> - [B<n>] [item title]"
-> Wait for confirmation, then remove the matched line(s). Do not remove section headers or surrounding items.
-
-**If no matches found**, state explicitly: "Backlog scan complete — no items match the tracks in this sprint." Do not skip silently. The confirmation that the scan ran is part of the sprint open record.
 
 ### Step 5 — Confirm
 

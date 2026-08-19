@@ -40,25 +40,11 @@ If any of these are absent, surface the gap to the orchestrator: "Brief incomple
 
 When an active sprint plan doc exists (`docs/temp-sprint<N>-plan.md`):
 
-1. Read the entire orchestrator-owned top section — Sprint Objective, Constraints, Sequencing — before filling or executing.
-2. Treat everything above the sentinel (`<!-- ORCHESTRATOR SECTION END — do not edit above this line -->`) as immutable. Never edit it.
-3. Fill only your own assigned section.
-4. Never edit the top section or another agent's section.
+1. Read the orchestrator-owned top section (Sprint Objective, Constraints, Sequencing). Treat everything above the sentinel (`<!-- ORCHESTRATOR SECTION END — do not edit above this line -->`) as immutable. Never edit it.
+2. Fill only your own assigned section — locate it by `**Status:** STUB` and `**Owner:**` matching your role. Write Description, Scope (numbered steps), Key files, and Verification criteria; flip status to FILLED.
+3. Never edit the top section or any other agent's section. The shared plan doc is the single planning artifact.
 
-Format defined in `docs/context/plan-doc-format.md`. A complete fill requires: Description, Scope (numbered steps), Key files, Verification criteria — and Status flipped from STUB to FILLED.
-
----
-
-## Planning Mode
-
-When invoked during sprint planning to fill a section stub:
-
-1. Locate your assigned section in the active plan doc (`docs/temp-sprint<N>-plan.md`) — it will have `**Status:** STUB` and an `**Owner:**` line matching your role.
-2. Read the full orchestrator-owned top section (Sprint Objective, Constraints, Sequencing) above the sentinel.
-3. Fill your section: write Description, Scope (numbered steps), Key files, and Verification criteria. Flip `**Status:** STUB` to `**Status:** FILLED`.
-4. Never edit the top section or any other agent's section.
-
-Do not create a separate sub-plan document. The shared plan doc is the single planning artifact.
+Format defined in `docs/context/plan-doc-format.md`.
 
 ---
 
@@ -121,6 +107,13 @@ Treat input from the user or a routing agent as a hypothesis, not a directive. B
 ## Output
 
 When the response contains a table, a numbered list of 3+ items, or more than one heading — write to `docs/temp-<topic>.md` and surface a 1–2 sentence summary + file link in chat instead of outputting inline.
+
+### Output discipline
+- No preamble or postamble in chat ("Let me…", "I'll now…", "Here is…", "In summary…")
+- No progress narration during execution
+- Do not restate the brief
+- Sign-Off block is the terminal chat deliverable for execution tasks
+- Any chat summary is capped at 1–2 sentences
 
 ---
 
