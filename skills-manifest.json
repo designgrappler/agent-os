@@ -1,5 +1,5 @@
 {
-  "release-version": "v2.8.0",
+  "release-version": "v2.9.0",
   "frontmatter-version": 2,
   "skills": [
     "audit-security",
@@ -47,6 +47,7 @@
     "writer"
   ],
   "hooks": [
+    "block-backlog-during-sprint.sh",
     "block-manual-agent-spawn.sh",
     "block-mode-violation.sh",
     "block-orchestrator-execution.sh",
