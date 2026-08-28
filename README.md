@@ -24,6 +24,9 @@ No task is complete until a dedicated QA specialist reviews it and issues a bina
 **4. External tools via connectors**
 Skills declare what external tools they need. The orchestrator checks your connector registry at `~/.claude/connectors.md` and prompts to connect any missing tools before the skill runs.
 
+**5. Install once, scaffold per project**
+Agent OS has two layers. The global layer (`~/.claude/agents/`, `~/.claude/skills/`) installs once on your machine and is available to every project. The per-project scaffold — context files and an orchestrator config — tells your agents what this specific project is. Adding Agent OS to a second project takes one command: `/install-agent-scaffold`. Run `/update-agent-os` from any project to update the global layer for all projects on your machine at once.
+
 For a full explanation of each part, see [CONCEPTS.md](./CONCEPTS.md).
 
 ---
@@ -34,7 +37,9 @@ Tell your AI:
 
 > "Install Agent OS on this project: https://github.com/designgrappler/agent-os"
 
-Your AI fetches the install skill from the repo and runs it. For new projects it scaffolds everything from scratch; for existing projects it reads what you already have and won't overwrite files without your approval. After install completes, your project has context files in place and agent definitions ready — open a new conversation and tell your orchestrator what you want to work on.
+Your AI fetches the install skill from the repo and runs it. For new projects it scaffolds everything from scratch; for existing projects it reads what you already have and won't overwrite files without your approval. After install completes, your project has context files in place and agent definitions ready — open a new conversation and tell your orchestrator what you want to work on. For day-to-day tasks, the orchestrator routes work to the right specialist and a QA gate reviews output before it ships. For longer efforts, `/start-sprint` opens a structured sprint with a backlog, multi-track planning, and QA gates at each track close.
+
+**Already using Agent OS on another project?** Skip the full install — just run `/install-agent-scaffold` in the new project. The global agent and skill definitions are already on your machine.
 
 For setup details and IDE-specific paths, see the [Implementation Guide](./GUIDE.md).
 

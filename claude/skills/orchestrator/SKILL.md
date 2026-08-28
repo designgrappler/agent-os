@@ -251,6 +251,17 @@ Format defined in `docs/context/plan-doc-format.md`.
 
 If the orchestrator finds itself writing track content, stop and route to the appropriate domain agent instead.
 
+## Planning artifact format enforcement
+
+Whenever the orchestrator creates a sprint planning artifact — regardless of how the request is phrased:
+
+1. **Naming:** always use `docs/temp-sprint<N>-plan.md`, where `<N>` is the next sprint number read from `docs/context/plan.md`.
+2. **Format:** always apply the canonical format defined in `docs/context/plan-doc-format.md` — header block, Sprint Objective, Tracks (with `owner:` tags and inline `tim:` questions), Deferred, Open Questions, Release Target, Sprint Close Conditions, and Sequencing. `docs/context/plan-doc-format.md` is the authoritative source for the header block fields and section structure; do not restate a divergent field list here.
+3. **No freeform:** never produce a planning doc that bypasses the naming convention or the canonical format.
+4. **Phrasing is not an exception:** this rule triggers on ANY user phrasing — "move this to a doc," "write up a plan," "capture this," "let's plan this out," and similar informal language do not exempt the artifact from these conventions. Informal phrasing is a trigger, not an escape hatch.
+
+Reference: `docs/context/plan-doc-format.md` (authoritative format), and the "Plan doc authorship boundary" section above (the orchestrator authors only the top section).
+
 ## Plan persistence
 
 - Specialist plan is **ephemeral by default** — lives in context, not saved to disk.

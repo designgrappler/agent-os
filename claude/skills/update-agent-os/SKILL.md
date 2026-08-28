@@ -241,6 +241,8 @@ Never apply an action the user did not explicitly approve.
 ```
 Refresh complete: N installed, N renamed, N removed, N updated, N skipped.
 Skills: <counts>. Agents: <counts>. Hooks: <counts>. CLAUDE.md: <N> reference(s) updated.
+
+Agent OS updated. These changes apply globally — all projects on this machine now use the latest agents and skills.
 ```
 
 **Post-apply commit advisory (fires when at least one file was changed):**
@@ -333,6 +335,45 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 
 ---
 
+## Phase 5.8: Global scaffold-check hook
+
+**Condition:** Runs unconditionally on every update run.
+
+Installs the Agent OS new-project detection hook globally so it fires in every project session.
+
+1. Check whether `~/.claude/hooks/` exists. If not, create it silently.
+2. Copy `claude/hooks/agent-os-scaffold-check.sh` from the canonical source to `~/.claude/hooks/agent-os-scaffold-check.sh`.
+3. Make the installed copy executable: `chmod +x ~/.claude/hooks/agent-os-scaffold-check.sh`.
+4. Patch `~/.claude/settings.json` **patch-if-absent**: add the `UserPromptSubmit` hook entry **only if `hooks.UserPromptSubmit` is absent**.
+   - Read `~/.claude/settings.json`. If it does not exist or is not valid JSON, skip the settings patch and print: `Phase 5.8 settings patch skipped — ~/.claude/settings.json absent or invalid JSON; not modified.`
+   - If `hooks.UserPromptSubmit` already exists (any value), do not touch it.
+   - If absent, add:
+     ```json
+     "UserPromptSubmit": [
+       {
+         "matcher": "",
+         "hooks": [
+           {
+             "type": "command",
+             "command": "~/.claude/hooks/agent-os-scaffold-check.sh"
+           }
+         ]
+       }
+     ]
+     ```
+     under the existing `hooks` object (or create `hooks` if absent). **Never overwrite any other hooks key.**
+   - **Security constraint:** `~/.claude/settings.json` may contain live secrets (`ANTHROPIC_AUTH_TOKEN`, API keys). Read, parse, patch one absent field, write back. Never log or surface secret values.
+5. Print a status block:
+   ```
+   Phase 5.8: Global scaffold-check hook
+     hook installed         ~/.claude/hooks/agent-os-scaffold-check.sh
+     UserPromptSubmit       added  |  already present (unchanged)  |  skipped — settings.json absent or invalid
+   ```
+
+> **Decision (T78.1b, S78):** `~/.claude/hooks/` is an authorized write target for this skill. The scaffold-check hook is the only file this skill writes there. The "Do NOT modify `~/.claude/hooks/`" constraint below carries an explicit exception for this file.
+
+---
+
 ## Coupled-file contract
 
 `update-agent-os` (update path) and `install-agent-scaffold` (install path) govern the same distributed system from two directions. They are a **coupled pair**:
@@ -352,7 +393,9 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
   4. `.claude/hooks/<name>.sh` (confirm-required per-hook)
   5. `CLAUDE.md` — reference updates only (Phase 5 and Phase 7, user-approved)
   6. `.claude/settings.json` — Phase 5.7 patch-if-absent of canonical fields only (`worktree.baseRef`, standard `Stop` hook); never overwrites an existing value, never touches user-owned fields.
-- **Never overwrite user-owned `.claude/settings.json` fields** (`permissions`, allow/deny lists, `mcpServers`, custom hooks). The only permitted `.claude/settings.json` write is Phase 5.7 patch-if-absent of canonical fields (`worktree.baseRef`, standard `Stop` hook). Never write any path not in the enumerated list above.
+  7. `~/.claude/hooks/agent-os-scaffold-check.sh` — Phase 5.8 only; **exception to the general `~/.claude/hooks/` prohibition.** This is the single authorized global hook write. Decision recorded in T78.1b (S78).
+  8. `~/.claude/settings.json` `hooks.UserPromptSubmit` — Phase 5.8 patch-if-absent only; adds the scaffold-check hook entry when absent; never overwrites if present.
+- **Never overwrite user-owned `.claude/settings.json` fields** (`permissions`, allow/deny lists, `mcpServers`, custom hooks). The only permitted `.claude/settings.json` writes are Phase 5.7 patch-if-absent of canonical fields (`worktree.baseRef`, standard `Stop` hook) and Phase 5.8 patch-if-absent of `hooks.UserPromptSubmit`. Never write any path not in the enumerated list above.
 - **Never delete a file the user has not explicitly approved for removal.**
 - **`CLAUDE.md` is never written by this skill** except for approved rename-reference patches (Phase 5 and Phase 7). The legacy-format `[claude.md]` row is informational only — it never triggers a write, overwrite, or modification of `CLAUDE.md`.
 - **CLAUDE.md team table reconciliation rows require explicit user approval before edit. Never auto-update the team table.**

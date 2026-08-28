@@ -8,6 +8,10 @@ whenToUse: When the user wants to start a new sprint or begin a structured work 
 
 ### Step 1 — Gather sprint context
 
+**Scaffold pre-flight (run before everything else):** Check whether `CLAUDE.md` exists in the current directory. If it does not exist, stop immediately and surface:
+> "This project has no Agent OS local scaffold. Run `/install-agent-scaffold` (new project) or `/onboard-existing-project` (existing project with code) first, then re-run `/start-sprint`."
+Do not proceed with any further steps. If `CLAUDE.md` is present, continue normally.
+
 **Infrastructure check (run first):** Review the proposed sprint tracks. If any track touches `claude/skills/`, `claude/agents/`, or lifecycle skills (`/start-sprint`, `/close-sprint`, `/clean-context`), run a lightweight system scan before proceeding: check `docs/` root for temp file accumulation, check `docs/archive/plan-docs/` against the 3-sprint window, and surface any structural issues before asking for the sprint goal.
 
 **Backlog check (always run first):** Check whether `docs/backlog.md` exists. If it does, read it and surface candidate items grouped by section before asking for the sprint goal. Present each section as a brief bullet — section name + top item(s) in one sentence. Frame the output as: "Here's what's in the backlog — what's the goal for this sprint?" This replaces the blank prompt. If `docs/backlog.md` does not exist, proceed as if the file is absent — no error, no mention.

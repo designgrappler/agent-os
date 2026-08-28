@@ -31,6 +31,16 @@ The install skill runs in two steps:
 
 Once installed, start by stating your goal. The orchestrator handles the rest.
 
+### Adding a new project
+
+If you have already installed Agent OS on another project, the global layer — agents in `~/.claude/agents/` and skills in `~/.claude/skills/` — is already in place. You do not need to run `/update-agent-os` again unless you want to pull the latest version.
+
+To set up an additional project:
+- **New project (no code yet):** run `/install-agent-scaffold` in the new project directory.
+- **Existing project (code already in it):** run `/onboard-existing-project` — it reads what you have and generates context files without overwriting anything.
+
+Both commands wire up the per-project layer (`CLAUDE.md`, `docs/context/`, `.claude/settings.json`) without touching your global installation.
+
 ---
 
 ## Part 2: Common Use Cases
@@ -174,7 +184,7 @@ Keep Agent OS healthy and your context files lean.
 | Skill | Description |
 |---|---|
 | `check-agent-os` | Verify Agent OS installation is healthy and up to date |
-| `update-agent-os` | Diff installed skills against canonical manifest; update on confirmation |
+| `update-agent-os` | Updates the **global** layer (`~/.claude/agents/`, `~/.claude/skills/`). Can be run from any project — the update applies to all projects on this machine. Uses patch-if-absent: never overwrites per-project customizations. |
 | `clean-context` | Archive stale and completed context items |
 | `minify-context` | Compress verbose active context files |
 | `streamline-approvals` | Reduce approval prompt volume by building a pre-approved allowlist |
