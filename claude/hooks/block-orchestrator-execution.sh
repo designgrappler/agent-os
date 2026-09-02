@@ -22,9 +22,9 @@
 # Blocked path coverage:
 #   CLAUDE.md, claude/**, .claude/agents/**, .claude/skills/**,
 #   docs/tasks.json,
-#   docs/context/product.md, docs/context/io-contracts.md,
+#   docs/context/product.md,
 #   docs/context/CONVENTIONS.md, docs/context/tasks-schema.md,
-#   docs/context/temp-architectural-assessment.md, docs/context/bridges/**
+#   docs/context/temp-architectural-assessment.md
 #
 #   Intentionally OUTSIDE the blocked path (coordination-tier state):
 #     docs/backlog.md — now separately protected by block-backlog-write.sh
@@ -61,7 +61,7 @@ Path:  $FILE_PATH
 
 The Orchestrator (main thread) is forbidden from editing Agent OS execution
 files (CLAUDE.md, claude/**, .claude/agents/**, .claude/skills/**,
-docs/tasks.json, docs/context/{product,io-contracts,CONVENTIONS,tasks-schema,bridges}/**)
+docs/tasks.json, docs/context/{product,CONVENTIONS,tasks-schema,temp-architectural-assessment}.md)
 — see CLAUDE.md §3 Orchestrator Constraints. Note: docs/context/tracks.md and
 docs/context/plan.md are excluded from this block (coordination-tier state,
 S29 T29.A and S31 T31.D).

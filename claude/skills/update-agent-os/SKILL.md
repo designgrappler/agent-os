@@ -341,6 +341,8 @@ Reads `.claude/settings.json` and adds **canonical** fields **only when they are
 
 Installs the Agent OS new-project detection hook globally so it fires in every project session.
 
+> Note: `agent-os-scaffold-check.sh` is intentionally **not** listed in `skills-manifest.json` `hooks[]`. That array enumerates project-scoped hooks installed to `.claude/hooks/`; scaffold-check is a global hook installed to `~/.claude/hooks/` by this phase alone. Its absence from `hooks[]` is correct — do not add it there.
+
 1. Check whether `~/.claude/hooks/` exists. If not, create it silently.
 2. Copy `claude/hooks/agent-os-scaffold-check.sh` from the canonical source to `~/.claude/hooks/agent-os-scaffold-check.sh`.
 3. Make the installed copy executable: `chmod +x ~/.claude/hooks/agent-os-scaffold-check.sh`.

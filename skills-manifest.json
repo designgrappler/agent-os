@@ -1,5 +1,5 @@
 {
-  "release-version": "v2.9.3",
+  "release-version": "v2.10.0",
   "frontmatter-version": 2,
   "skills": [
     "audit-security",
@@ -51,7 +51,8 @@
     "block-manual-agent-spawn.sh",
     "block-mode-violation.sh",
     "block-orchestrator-execution.sh",
-    "block-uncommitted-dispatch.sh"
+    "block-uncommitted-dispatch.sh",
+    "remind-close-sprint.sh"
   ],
   "renames": [
     {
