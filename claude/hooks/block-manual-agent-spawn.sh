@@ -9,6 +9,8 @@
 
 set -euo pipefail
 
+command -v jq >/dev/null 2>&1 || { echo "[hook] requires jq — install via: brew install jq" >&2; exit 1; }
+
 INPUT="$(cat)"
 
 TOOL_NAME="$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')"

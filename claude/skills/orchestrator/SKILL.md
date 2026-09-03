@@ -27,6 +27,19 @@ Backlog snapshot:
 
 Do not recite the full backlog text. One sentence per section is the limit.
 
+## Session open — session stamp
+
+At session start, write a session stamp so that version-changing operations (e.g. `/update-agent-os`) can detect an active session:
+
+1. Resolve the project root: `git rev-parse --show-toplevel` (run silently; if this fails, skip this step entirely — non-git context).
+2. Check whether `<project-root>/skills-manifest.json` exists.
+   - If **absent**: skip this step silently — this project is not an agent-os repo.
+   - If **present**: read the `release-version` field from the file.
+3. Write the version string to `~/.claude/.session-version` (overwrite if present). Example: `v2.10.0`
+4. This file is deleted by the Stop hook at session end. If the file persists across sessions (Stop hook did not fire), it is treated as a stale stamp and overwritten here.
+
+This step runs silently — no output to the user.
+
 ## Context mode detection
 
 After checking plan.md, determine the context mode for this session:

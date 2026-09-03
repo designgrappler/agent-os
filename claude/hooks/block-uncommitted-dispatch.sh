@@ -28,6 +28,8 @@
 
 set -euo pipefail
 
+command -v jq >/dev/null 2>&1 || { echo "[hook] requires jq — install via: brew install jq" >&2; exit 1; }
+
 # Read all stdin
 INPUT="$(cat)"
 

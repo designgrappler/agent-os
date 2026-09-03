@@ -39,7 +39,7 @@ Run `bun run build`. If it fails, surface the error and stop. Do not continue un
 
 ### Step 3 — Bump version in `skills-manifest.json` (agent-os only)
 
-**If `skills-manifest.json` does not exist in the project root, skip this step silently.**
+**If the `claude/skills/` directory does not exist in the project root, skip this step silently — this project consumes agent-os but is not the agent-os repo.**
 
 Read `skills-manifest.json` and determine the appropriate version bump:
 - **Patch** — bug fixes, copy corrections, non-behavioral edits only
@@ -116,7 +116,7 @@ Note: use `git -C <repo-root>` form for all git commands in this step, where `<r
 
 ### Step 8 — Create GitHub release and push (agent-os only)
 
-**If `skills-manifest.json` does not exist in the project root, skip the release creation: run `git push` only and continue.**
+**If the `claude/skills/` directory does not exist in the project root, skip the release creation: run `git push` only and continue — this project consumes agent-os but is not the agent-os repo.**
 
 Before creating the release, derive the release notes from the sprint archive doc at `docs/archive/plan-docs/S<N>.md`. Use the "What changed" section (or equivalent) as the release body. Do not use a fallback string — if the archive doc is missing or has no substantive content, stop and ask the user for release notes before proceeding.
 
@@ -148,7 +148,7 @@ Verify every item before writing the sprint close record. If any item is uncheck
 
 - [ ] All tracks have exit records (MERGED, NO-OP, or DEFERRED with reason)
 - [ ] Build passes (`bun run build` clean)
-- [ ] (agent-os only) GitHub issues addressed this sprint are closed on the public mirror — skip if `skills-manifest.json` does not exist
+- [ ] (agent-os only) GitHub issues addressed this sprint are closed on the public mirror — skip if the `claude/skills/` directory does not exist in the project root
 - [ ] No new tools, trackers, or third-party dependencies introduced outside an approved track
 - [ ] QA APPROVED on all tracks
 
@@ -166,11 +166,20 @@ GitHub release: https://github.com/<repo>/releases/tag/<new-version>  (skipped i
 /clean-context: complete
 ```
 
+**Execution receipt:** On successful completion of all steps above, append one line to `docs/context/skill-receipts.jsonl` (create the file if absent):
+```json
+{"skill":"close-sprint","timestamp":"<ISO-8601 timestamp>","sprint":"<sprint-id>","version":"<release-version>","flags":[]}
+```
+- `timestamp`: current ISO-8601 datetime (e.g. `2026-09-02T14:30:00Z`)
+- `sprint`: read from `docs/context/plan.md` — match `## Current Sprint: <ID>` or the sprint just closed (e.g. `S81`); if not found use `"unknown"`
+- `version`: read `release-version` from `skills-manifest.json` in the project root (the post-bump value from Step 3); if not found use `"unknown"`
+- Append only — never overwrite. Create the file and any missing parent directories silently if absent.
+
 ## Verification checklist
 
 - All tracks for the closed sprint have DONE or DEFERRED exit records before Step 2 ran.
 - `bun run build` passed.
-- `skills-manifest.json` version bumped to the correct next version (agent-os only — skip if file does not exist).
+- `skills-manifest.json` version bumped to the correct next version (agent-os only — skip if `claude/skills/` directory does not exist in the project root).
 - Sprint plan doc archived to `docs/archive/plan-docs/S<N>.md`.
 - `docs/context/plan.md` current sprint block collapsed to a single pointer line.
 - `docs/context/tracks.md` sprint block collapsed to a single pointer line.

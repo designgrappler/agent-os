@@ -1,19 +1,16 @@
 #!/usr/bin/env bash
 # .claude/hooks/block-mode-violation.sh
 #
-# PreToolUse hook: blocks Edit/Write tool calls if any task in
-# docs/tasks.json is in CLAIMED or IN_PROGRESS state. Standalone
-# tasks-in-flight Edit/Write guard (codified in T17.3, hardened in T19.6).
-# Not tied to the /switch-workflow-mode skill (retired S23 T23.A.2).
+# PreToolUse hook: blocks Edit/Write tool calls if any track in
+# docs/context/tracks.md has Status: OPEN.
 #
 # Behavior:
 #   - Reads PreToolUse stdin JSON.
 #   - If tool_name is not Edit or Write, allow (exit 0).
-#   - If docs/tasks.json does not exist or is empty, allow (no tasks in
-#     flight; no policy to enforce).
-#   - If docs/tasks.json contains any task with status CLAIMED or
-#     IN_PROGRESS, block via exit code 2 with a remediation message on
-#     stderr listing every blocking task.
+#   - If docs/context/tracks.md does not exist, allow (no track state to
+#     enforce against).
+#   - If docs/context/tracks.md contains any line matching '**Status:** OPEN',
+#     block via exit code 2 with a remediation message on stderr.
 #   - Otherwise, allow (exit 0).
 #
 # Coexistence:
@@ -24,10 +21,12 @@
 #
 # Notes:
 #   - Path-pattern matching for file_path is NOT done by this script.
-#     The policy is tasks-state-based, not path-based.
-#   - Requires `jq` (already a dependency of S18.1 hook; assumed present).
+#     The policy is track-state-based, not path-based.
+#   - Requires `jq` (for stdin JSON parsing) and grep (for tracks.md check).
 
 set -euo pipefail
+
+command -v jq >/dev/null 2>&1 || { echo "[hook] requires jq — install via: brew install jq" >&2; exit 1; }
 
 # Read all stdin
 INPUT="$(cat)"
@@ -40,59 +39,42 @@ if [ "$TOOL_NAME" != "Edit" ] && [ "$TOOL_NAME" != "Write" ]; then
   exit 0
 fi
 
-# Resolve tasks.json path. CLAUDE_PROJECT_DIR is provided by the Claude
+# Resolve tracks.md path. CLAUDE_PROJECT_DIR is provided by the Claude
 # Code runtime to hooks; fall back to the current working directory if
 # unset (defensive — hooks should always have it set, but no reason to
 # crash if not).
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-TASKS_FILE="$PROJECT_DIR/docs/tasks.json"
+TRACKS_FILE="$PROJECT_DIR/docs/context/tracks.md"
 
-# Absent or empty file → no tasks in flight → allow.
-if [ ! -f "$TASKS_FILE" ]; then
-  exit 0
-fi
-if [ ! -s "$TASKS_FILE" ]; then
+# Absent file → no track state to enforce → allow.
+if [ ! -f "$TRACKS_FILE" ]; then
   exit 0
 fi
 
-# Parse tasks.json defensively. If the file is not valid JSON, allow
-# (do NOT block on a parse error — that would create a soft-brick if
-# tasks.json gets corrupted). Surface the parse failure on stderr for
-# observability but exit 0.
-if ! BLOCKING_TASKS="$(jq -r '
-  .tasks // []
-  | map(select(.status == "CLAIMED" or .status == "IN_PROGRESS"))
-  | map("\(.id) is \(.status)")
-  | join(", ")
-' "$TASKS_FILE" 2>/dev/null)"; then
-  echo "block-mode-violation.sh: warning — could not parse $TASKS_FILE; allowing." >&2
+# Check for any OPEN tracks. grep exits non-zero if no match → allow.
+if ! grep -q '\*\*Status:\*\* OPEN' "$TRACKS_FILE" 2>/dev/null; then
   exit 0
 fi
 
-# No blocking tasks → allow.
-if [ -z "$BLOCKING_TASKS" ]; then
-  exit 0
-fi
-
-# Blocking tasks present → deny.
+# OPEN tracks detected → deny.
 FILE_PATH="$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // "unknown"')"
 
 cat >&2 <<EOF
-Edit/Write blocked by tool-layer hook: active tasks detected.
+Edit/Write blocked by tool-layer hook: open tracks detected.
 
-Tool:           $TOOL_NAME
-Path:           $FILE_PATH
-Blocking tasks: $BLOCKING_TASKS
+Tool:  $TOOL_NAME
+Path:  $FILE_PATH
 
-The tasks-in-flight guard forbids file modifications while
-any task in docs/tasks.json is in CLAIMED or IN_PROGRESS state. This
-prevents mid-flight mode switches from corrupting active sprint work.
+The open-tracks guard forbids file modifications while any track in
+docs/context/tracks.md has "**Status:** OPEN". Resolve or close all open
+tracks before making changes, or proceed under explicit Conductor override.
 
 To unblock:
-  - Resolve all in-flight tasks (move them to DONE or BLOCKED), OR
-  - Cancel the affected tasks explicitly via /sync-tasks-to-tracks.
+  - Update open tracks to a terminal status (DONE, BLOCKED, or CANCELLED)
+    in docs/context/tracks.md, OR
+  - Get explicit Conductor override to bypass this check.
 
-See CLAUDE.md §3 for the tasks-in-flight Edit/Write guard enforcement model.
+See docs/context/tracks.md for current track status.
 EOF
 
 exit 2

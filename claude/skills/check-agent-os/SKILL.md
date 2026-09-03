@@ -15,13 +15,92 @@ When the user runs `/check-agent-os`, execute the following phases in order.
 1. Resolve the canonical skill names using the same source chain as `/update-agent-os`:
    - Check `skills-manifest.json` in the project root for a `canonical-registry` URL.
    - If present, attempt to fetch the manifest JSON from that URL and read its `skills` array.
-   - **Fallback:** if the URL fetch fails, fall back to the local canonical clone at `~/Developer/agent-os-private/skills-manifest.json`. Notify the user that the fallback was used.
+   - **Fallback:** if the URL fetch fails, fall back to the local canonical clone at `$(git rev-parse --show-toplevel)/skills-manifest.json`. Notify the user that the fallback was used.
    - **If neither resolves:** stop and ask the user to supply a path or URL. Do not proceed to Phase 2.
 2. Use the manifest's `renames` array to recognize legitimate renames: if a skill name in `~/.claude/skills/` matches a `"to"` value in `renames`, it is correctly installed — do not flag it as missing.
 3. Compare the canonical `skills` array against subdirectory names in `~/.claude/skills/` that contain a `SKILL.md` file.
 4. **Pass:** every canonical skill name has a corresponding `~/.claude/skills/<name>/SKILL.md` (accounting for renames).
 5. **Fail rows:** list each canonical skill name that is absent or present only under a stale name. Remediation hint:
    > Run `/update-agent-os` to install missing or stale-named skills.
+
+---
+
+## Phase 1b: Canonical ↔ Installed Drift Detection
+
+1. **Resolve repo root.** Run:
+   ```bash
+   git rev-parse --show-toplevel 2>/dev/null
+   ```
+   If the command fails or returns empty (not a git repo): emit `[check-agent-os] Phase 1b: not a git repository — drift check skipped.` and exit this phase. Phase 1c will see no drift report and will skip silently.
+
+2. **Locate manifest.** Check for `<repo-root>/skills-manifest.json`. If absent: emit `[check-agent-os] Phase 1b: skills-manifest.json not found at repo root — drift check skipped.` and exit this phase.
+
+3. **Read skill list.** Extract the `"skills"` array from `<repo-root>/skills-manifest.json` using python3 (no jq required):
+   ```bash
+   python3 -c "import json; [print(s) for s in json.load(open('<repo-root>/skills-manifest.json'))['skills']]"
+   ```
+
+4. **Compare canonical ↔ installed.** For each skill name in the array:
+   - Canonical path: `<repo-root>/claude/skills/<skill>/SKILL.md`
+   - Installed path: `~/.claude/skills/<skill>/SKILL.md`
+   - If the canonical path does not exist: skip this skill (registry-only entry, not present in this repo).
+   - If the installed path does not exist: record drift — installed copy missing.
+   - If both exist: run `diff <canonical-path> <installed-path>`. If exit code is non-zero, record drift; capture line counts via `wc -l <canonical-path>` and `wc -l <installed-path>`.
+
+5. **Emit result.**
+   - **No drift:** emit `[check-agent-os] Phase 1b: canonical ↔ installed — all N skills match` (N = number of skills compared).
+   - **Drift detected:** for each drifted skill, emit one row:
+     ```
+     DRIFT  <skill>  canonical: <N> lines  installed: <M> lines
+     ```
+     If the installed copy is missing:
+     ```
+     DRIFT  <skill>  canonical: <N> lines  installed: MISSING
+     ```
+     After all drift rows, emit: `[check-agent-os] Phase 1b: <D> of N skills have drift.`
+
+**Phase 1c reads this phase's output.** If this phase emitted one or more `DRIFT` rows, Phase 1c surfaces the stale content sweep prompt. If this phase skipped or reported all-match, Phase 1c exits silently.
+
+---
+
+## Phase 1c: Drift-Triggered Stale Content Sweep
+
+**Trigger condition:** This phase runs ONLY if Phase 1b (dev-to-installed drift detection, T81.3) was executed as part of this check AND detected drift (at least one installed skill file differs from its canonical counterpart).
+
+- If Phase 1b is not present in this skill (T81.3 not yet installed): emit `[check-agent-os] T81.3 drift detection not yet installed — sweep skipped.` and exit this phase.
+- If Phase 1b ran but detected NO drift: exit this phase silently.
+- If Phase 1b ran and detected drift: emit the sweep prompt below and wait for the user's reply.
+
+**Sweep prompt (emit when drift is detected):**
+
+```
+[check-agent-os] Drift detected. Run stale content sweep?
+The installed skills have diverged from canonical. This sometimes leaves stale references in memory files (retired agent names, old skill paths, superseded patterns). A sweep will scan memory files and surface any references to retired or renamed skills/agents.
+Reply "sweep" to run, or continue to skip.
+```
+
+**If user replies "sweep":**
+
+1. Resolve the memory directory for the current project. Check in order:
+   - Project-relative `.claude/memory/` (if this directory exists at the project root).
+   - Global `~/.claude/projects/<project-slug>/memory/` where `<project-slug>` is derived from the project's absolute path (replace `/` with `-`, strip leading `-`).
+   - If neither directory exists: emit `[check-agent-os] No memory directory found — sweep skipped.` and exit.
+2. Build the current canonical reference set from the project root:
+   - **Agent names:** filenames without extension for all files directly under `claude/agents/`.
+   - **Skill names:** subdirectory names directly under `claude/skills/`.
+   - **Hook filenames:** filenames for all files directly under `claude/hooks/`.
+3. Scan every `.md` file in the resolved memory directory. For each file, check whether it contains any of the following that do NOT match the canonical reference set from step 2:
+   - Slash-commands referencing a skill (e.g. `/old-skill-name`).
+   - Bare agent or skill names that match a former directory name pattern.
+   - File paths referencing `claude/agents/`, `claude/skills/`, or `claude/hooks/` entries.
+4. Output: for each memory file with at least one stale reference, emit a row:
+   ```
+   <filename>: stale term "<term>" (not found in current claude/agents/, claude/skills/, or claude/hooks/)
+   ```
+   If no stale references are found across all memory files: emit `[check-agent-os] Stale content sweep: no stale references found.`
+5. **Do NOT auto-edit any memory file.** Surface findings only. Remediation is left to the user.
+
+**If user does not reply "sweep" (or this phase is running non-interactively):** skip silently.
 
 ---
 
@@ -197,10 +276,11 @@ Extract the version string (first whitespace-delimited token). Compare to thresh
 
 ## Phase 8: Report
 
-Emit one clearly-labeled section per phase. Each section states **PASSED** or **FAILED**, with fail rows and remediation hints. Phase 7 and Phase 6b notices are informational — they do NOT affect OVERALL.
+Emit one clearly-labeled section per phase. Each section states **PASSED** or **FAILED**, with fail rows and remediation hints. Phase 7, Phase 6b, and Phase 8b notices are informational — they do NOT affect OVERALL.
 
 ```
 ### Phase 1: Skill Install Check — PASSED
+### Phase 1b: Canonical ↔ Installed Drift Detection — all 20 skills match
 ### Phase 2: Orchestrator Skill Check — PASSED
 ### Phase 3: CLAUDE.md Bootstrap Check — PASSED
 ### Phase 4: Agent Definitions Check
@@ -221,7 +301,38 @@ OVERALL: PASS
 
 The final line **must** be exactly one of:
 - `OVERALL: PASS`
-- `OVERALL: FAIL (N issues)` — where N is the total count of fail rows across Phases 1–6 (Phase 7 and Phase 6b excluded, both informational).
+- `OVERALL: FAIL (N issues)` — where N is the total count of fail rows across Phases 1–6 (Phase 7, Phase 6b, and Phase 8b excluded, all informational).
+
+---
+
+## Phase 8b: Execution Receipt Validation
+
+**Informational only — does not affect OVERALL.**
+
+1. Check whether `docs/context/skill-receipts.jsonl` exists and is non-empty.
+   - **Absent or empty:** emit `[check-agent-os] Execution receipts: file absent — no lifecycle skills have run with receipt logging` and exit this phase. Do not fail.
+
+2. Read `docs/context/plan.md` and extract the current sprint ID: match `## Current Sprint: <ID>` (e.g. `S81`). If not found, use `"unknown"` as the expected sprint.
+
+3. Read `docs/context/skill-receipts.jsonl`. For each of the four lifecycle skills (`start-sprint`, `close-sprint`, `update-agent-os`, `check-agent-os`), find the last receipt line where `"skill"` matches. Parse as JSON.
+
+4. Output a table:
+
+   ```
+   Phase 8b: Execution Receipt Validation
+   
+   Skill            Last Timestamp             Sprint       Match?
+   start-sprint     2026-09-02T14:00:00Z       S81          YES
+   close-sprint     —                          —            NO (absent)
+   update-agent-os  2026-09-01T10:00:00Z       S80          NO (stale)
+   check-agent-os   —                          —            NO (absent)
+   ```
+
+   - **Match:** `sprint` field equals the current sprint ID from `plan.md` → `YES`
+   - **Stale:** `sprint` field differs from current sprint ID → `NO (stale)` — remediation: `Re-run /close-sprint to generate a current receipt` (or appropriate skill name)
+   - **Absent:** no receipt line found for this skill → `NO (absent)` — remediation: `Re-run /<skill> to generate a current receipt`
+
+5. This phase never adds fail rows to OVERALL. Findings are informational.
 
 ---
 
@@ -233,9 +344,22 @@ The final line **must** be exactly one of:
 
 ---
 
+## Phase 10: Execution Receipt
+
+On completion of all phases above (regardless of OVERALL result), append one line to `docs/context/skill-receipts.jsonl` (create the file if absent):
+```json
+{"skill":"check-agent-os","timestamp":"<ISO-8601 timestamp>","sprint":"<sprint-id>","version":"<release-version>","flags":[]}
+```
+- `timestamp`: current ISO-8601 datetime (e.g. `2026-09-02T14:30:00Z`)
+- `sprint`: read from `docs/context/plan.md` — match `## Current Sprint: <ID>` (e.g. `S81`); if not found use `"unknown"`
+- `version`: read `release-version` from `skills-manifest.json` in the project root; if not found use `"unknown"`
+- Append only — never overwrite. Create the file and any missing parent directories silently if absent.
+
+---
+
 ## Hard Constraints
 
-- Read-only **except** for the single `.agent-os-checked` write at project root on PASS.
+- Read-only **except** for the single `.agent-os-checked` write at project root on PASS (Phase 9) and the execution receipt append to `docs/context/skill-receipts.jsonl` (Phase 10).
 - Never auto-fix; only report. Remediation is up to the user.
 - If the canonical source cannot be resolved, stop and ask the user before proceeding.
 - Every fail row surfaces a remediation hint.
@@ -244,10 +368,14 @@ The final line **must** be exactly one of:
 
 ## Verification Checklist (Internal — Run Before Reporting Complete)
 - [ ] Canonical source resolved before Phase 1 ran
-- [ ] All phases (1–8) executed in order; Phase 8 Report and Phase 9 Timestamp run last
+- [ ] All phases (1–8) executed in order; Phase 8 Report, Phase 8b Receipt Validation, Phase 9 Timestamp, and Phase 10 Execution Receipt run last
+- [ ] Phase 1b: repo root resolved via `git rev-parse --show-toplevel`; if not a git repo → skipped with note; if manifest absent → skipped with note; otherwise all skills in manifest compared canonical ↔ installed; drift rows emitted per drifted skill with line counts
+- [ ] Phase 1c: if Phase 1b absent → skip note emitted; if Phase 1b ran with no drift → silent exit; if Phase 1b drift detected → sweep prompt shown; sweep findings not auto-edited
 - [ ] Report ends with explicit `OVERALL: PASS` or `OVERALL: FAIL (N issues)` line
+- [ ] Phase 8b: if skill-receipts.jsonl absent/empty → informational note; if present → table output with one row per lifecycle skill; stale/absent entries flagged with remediation hint
 - [ ] On PASS, `.agent-os-checked` written with today's ISO date
 - [ ] On FAIL, `.agent-os-checked` NOT created or modified
+- [ ] Phase 10: execution receipt appended to `docs/context/skill-receipts.jsonl`
 - [ ] Every fail row includes a remediation hint
 - [ ] Phase 4a: all fourteen expected agents enumerated with `✓ present` or `✗ missing` — always, not only on failure
 - [ ] Phase 4b: on full PASS → compact summary line only; on any failure → all agents enumerated with model value and `✓ valid` / `✗ invalid`

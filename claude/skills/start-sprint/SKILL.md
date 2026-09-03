@@ -14,7 +14,30 @@ Do not proceed with any further steps. If `CLAUDE.md` is present, continue norma
 
 **Infrastructure check (run first):** Review the proposed sprint tracks. If any track touches `claude/skills/`, `claude/agents/`, or lifecycle skills (`/start-sprint`, `/close-sprint`, `/clean-context`), run a lightweight system scan before proceeding: check `docs/` root for temp file accumulation, check `docs/archive/plan-docs/` against the 3-sprint window, and surface any structural issues before asking for the sprint goal.
 
-**Backlog check (always run first):** Check whether `docs/backlog.md` exists. If it does, read it and surface candidate items grouped by section before asking for the sprint goal. Present each section as a brief bullet — section name + top item(s) in one sentence. Frame the output as: "Here's what's in the backlog — what's the goal for this sprint?" This replaces the blank prompt. If `docs/backlog.md` does not exist, proceed as if the file is absent — no error, no mention.
+**GitHub issues check (non-blocking):** Resolve the target repo and list open issues:
+
+1. Read `agent-setup.yml` from the project root. If a top-level `github_repo:` key is present, use its value as the repo (e.g. `owner/repo`).
+2. If no `github_repo:` key is found, run:
+   ```bash
+   git remote get-url origin 2>/dev/null
+   ```
+   Parse the output to extract `owner/repo` — handle both HTTPS (`https://github.com/owner/repo`) and SSH (`git@github.com:owner/repo.git`) formats.
+3. If a repo was resolved and `gh` is available, run:
+   ```bash
+   gh issue list --repo <resolved-repo> --state open 2>/dev/null
+   ```
+   Format the output as:
+   ```
+   Open GitHub issues (<resolved-repo>):
+     #28  [feedback] ...
+     ... (all open issues listed)
+   ```
+   If no issues are open, print: `No open GitHub issues on <resolved-repo>.`
+4. If no repo can be resolved from either source, or if `gh` is not installed, print `GitHub issues check skipped — no repo configured.` and continue.
+5. If the command fails for any reason: print `GitHub issues check failed — continuing.` and continue.
+6. Never block or halt sprint open due to this check.
+
+Run /triage to surface prioritized backlog candidates and open GitHub issues.
 
 **Systemic-drift triage (run right after the backlog check):** Before asking for the sprint goal, scan the backlog items just surfaced and ask: *"Does any open backlog item represent an architectural spec that agents are actively following incorrectly?"* If yes, that item heads the sprint. Distinguish the two cases:
 - **Stop-and-fix** — the issue causes active drift on every sprint that runs. It heads the current sprint.
@@ -30,6 +53,8 @@ If no temp plan doc exists and no backlog file exists, ask the user:
 Wait for the user's response before continuing.
 
 ### Step 1a — Write orchestrator-owned plan doc
+
+Trigger: as soon as the sprint goal and track list are established — whether they arrived as direct structured answers or emerged through conversational back-and-forth — write the plan doc immediately. Do not defer, and do not treat structured input as a precondition.
 
 Write `docs/temp-sprint<N>-plan.md` with the orchestrator-owned top section:
 - Header block: Sprint ID, Status: OPEN, Authored-by: Orchestrator, Date, Release target
@@ -214,3 +239,12 @@ Next step: review the tracks, then dispatch work.
 ```
 
 Format defined in `docs/context/plan-doc-format.md`.
+
+**Execution receipt:** On successful completion of all steps above, append one line to `docs/context/skill-receipts.jsonl` (create the file if absent):
+```json
+{"skill":"start-sprint","timestamp":"<ISO-8601 timestamp>","sprint":"<sprint-id>","version":"<release-version>","flags":[]}
+```
+- `timestamp`: current ISO-8601 datetime (e.g. `2026-09-02T14:30:00Z`)
+- `sprint`: read from `docs/context/plan.md` — match `## Current Sprint: <ID>` (e.g. `S81`); if not found use `"unknown"`
+- `version`: read `release-version` from `skills-manifest.json` in the project root; if not found use `"unknown"`
+- Append only — never overwrite. Create the file and any missing parent directories silently if absent.

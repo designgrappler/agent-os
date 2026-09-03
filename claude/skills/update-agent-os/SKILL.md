@@ -12,6 +12,24 @@ When the user runs `/update-agent-os`, execute the following phases in order.
 
 ## Phase 1: Resolve Canonical Source
 
+**Pre-flight: active session detection (runs before any fetch).**
+
+1. Check whether `~/.claude/.session-version` exists.
+   - If **absent**: no active session is stamped — proceed normally to step 1 below.
+   - If **present**: read its contents as the **stamped version** (e.g. `v2.10.0`).
+2. Fetch the canonical version from the remote manifest (or read from local `skills-manifest.json` if already resolved in a prior step) as the **canonical version**.
+   - If the canonical version cannot be determined yet at this point, continue to step 1 below and re-run this comparison after step 1 once the canonical version is known.
+3. Compare stamped version to canonical version:
+   - If they are **identical**: proceed normally — the update would not change the running version.
+   - If they **differ**: surface the following message and halt at Phase 5 Apply pending user confirmation:
+
+     > "Active session detected at **<stamped-version>**. Applying canonical **<canonical-version>** will update the skills for the next session. Proceed with update now, or cancel to update at next session start?"
+
+     - If the user replies to proceed: continue through all phases normally.
+     - If the user replies to cancel: stop after Phase 4 (do not apply any changes). Print: `Update deferred — skills unchanged. Re-run /update-agent-os at next session start.`
+
+This gate is informational, not a hard block. The user decides.
+
 1. Attempt to fetch the canonical manifest directly from GitHub:
    - Default URL: `https://raw.githubusercontent.com/designgrappler/agent-os/main/skills-manifest.json`
    - If a `skills-manifest.json` exists in the project root with a `canonical-registry` URL, that URL overrides the default above.
@@ -230,13 +248,104 @@ For each action the user approved, execute one at a time:
 - **Update (confirmed per-hook):** overwrite `.claude/hooks/<E>`. Print: `updated .claude/hooks/<E>`
 - **Remove (confirmed per-hook opt-in only):** delete `.claude/hooks/<E>`. Print: `removed .claude/hooks/<E>`
 - **Keep (default for Removed-from-canonical):** print: `skipped .claude/hooks/<E> (kept local)`
-- **Do NOT edit user-owned `.claude/settings.json` fields** (`permissions`, allow/deny lists, `mcpServers`, custom hooks). Canonical fields are patched if-absent by Phase 5.7 only. If a new hook was installed, print advisory: `note: verify .claude/settings.json PreToolUse wiring references .claude/hooks/<E>`
+- **Do NOT edit user-owned `.claude/settings.json` fields** (`permissions`, allow/deny lists, `mcpServers`, custom hooks). Canonical fields are patched if-absent by Phase 7 only. If a new hook was installed, print advisory: `note: verify .claude/settings.json PreToolUse wiring references .claude/hooks/<E>`
 
 Never apply an action the user did not explicitly approve.
 
+**Execution receipt:** On successful completion of Phase 5 Apply, append one line to `docs/context/skill-receipts.jsonl` (create the file if absent):
+```json
+{"skill":"update-agent-os","timestamp":"<ISO-8601 timestamp>","sprint":"<sprint-id>","version":"<release-version>","flags":[]}
+```
+- `timestamp`: current ISO-8601 datetime (e.g. `2026-09-02T14:30:00Z`)
+- `sprint`: read from `docs/context/plan.md` — match `## Current Sprint: <ID>` (e.g. `S81`); if not found use `"unknown"`
+- `version`: the canonical `release-version` resolved in Phase 1 (not the local installed version); if not available use `"unknown"`
+- Append only — never overwrite. Create the file and any missing parent directories silently if absent.
+
 ---
 
-## Phase 6: Summary
+## Phase 6: Connectors symlink
+
+**Condition:** Runs automatically on every update run (unconditional — not gated on actions applied).
+
+Ensures the project has a local pointer to the global connectors registry.
+
+1. Check whether `~/.claude/connectors.md` exists.
+   - If **absent**: skip this phase silently. Print: `Phase 6 skipped — ~/.claude/connectors.md not found.`
+2. Check whether `docs/context/connectors.md` already exists (as a symlink or file).
+   - If **present**: skip silently. Print: `connectors symlink   already present`
+3. If `~/.claude/connectors.md` exists and `docs/context/connectors.md` is absent:
+   - Create `docs/context/` if it does not exist.
+   - Run: `ln -sf ~/.claude/connectors.md docs/context/connectors.md`
+   - Add `docs/context/connectors.md` to `.gitignore` if not already present (only when a `.gitignore` file exists — do not create one).
+   - Print: `connectors symlink   created → docs/context/connectors.md`
+
+---
+
+## Phase 7: Canonical settings.json patch-if-absent
+
+**Condition:** Runs automatically after Phase 5 whenever at least one action was applied.
+
+Reads `.claude/settings.json` and adds **canonical** fields **only when they are absent**. This never overwrites an existing value and never touches a user-owned field.
+
+1. If `.claude/settings.json` does not exist, skip this phase entirely (the install path owns first creation). Do not create the file here.
+2. Read and parse `.claude/settings.json`. If it is malformed JSON, skip with advisory: `Phase 7 skipped — .claude/settings.json is not valid JSON; not modified.` Never rewrite a file you could not parse.
+3. For each canonical field below, patch **only if the field is absent**. If the field is present with any value, leave it untouched (no overwrite):
+   - **`worktree.baseRef`** — canonical value: `"head"`. If the `worktree` object is absent, create it with `{ "baseRef": "head" }`. If `worktree` exists but `baseRef` is absent, add `baseRef: "head"`. If `worktree.baseRef` already has a value, do nothing.
+   - **Standard `Stop` hook** — canonical value: the hygiene-reminder Stop hook block that `install-agent-scaffold` writes (section 4g of `install-agent-scaffold/SKILL.md`). If `hooks.Stop` is absent, add the standard block. If `hooks.Stop` already exists (any entry), do nothing — never append to or rewrite an existing Stop hook array.
+4. **Never read, write, add, remove, or reorder** `permissions`, allow/deny lists, `mcpServers`, or any hook other than an absent standard `Stop`. These are user-owned.
+5. Preserve all existing fields, key order where practical, and formatting. Write back only if at least one canonical field was added.
+6. Print a status block:
+   ```
+   Canonical settings.json patch-if-absent:
+     worktree.baseRef   added ("head")   |  already present (unchanged)
+     hooks.Stop         added            |  already present (unchanged)
+   ```
+   Status tokens: `added` / `already present (unchanged)` / `skipped — no settings.json` / `skipped — invalid JSON`.
+
+---
+
+## Phase 8: Global scaffold-check hook
+
+**Condition:** Runs unconditionally on every update run.
+
+Installs the Agent OS new-project detection hook globally so it fires in every project session.
+
+> Note: `agent-os-scaffold-check.sh` is intentionally **not** listed in `skills-manifest.json` `hooks[]`. That array enumerates project-scoped hooks installed to `.claude/hooks/`; scaffold-check is a global hook installed to `~/.claude/hooks/` by this phase alone. Its absence from `hooks[]` is correct — do not add it there.
+
+1. Check whether `~/.claude/hooks/` exists. If not, create it silently.
+2. Copy `claude/hooks/agent-os-scaffold-check.sh` from the canonical source to `~/.claude/hooks/agent-os-scaffold-check.sh`.
+3. Make the installed copy executable: `chmod +x ~/.claude/hooks/agent-os-scaffold-check.sh`.
+4. Patch `~/.claude/settings.json` **patch-if-absent**: add the `UserPromptSubmit` hook entry **only if `hooks.UserPromptSubmit` is absent**.
+   - Read `~/.claude/settings.json`. If it does not exist or is not valid JSON, skip the settings patch and print: `Phase 8 settings patch skipped — ~/.claude/settings.json absent or invalid JSON; not modified.`
+   - If `hooks.UserPromptSubmit` already exists (any value), do not touch it.
+   - If absent, add:
+     ```json
+     "UserPromptSubmit": [
+       {
+         "matcher": "",
+         "hooks": [
+           {
+             "type": "command",
+             "command": "~/.claude/hooks/agent-os-scaffold-check.sh"
+           }
+         ]
+       }
+     ]
+     ```
+     under the existing `hooks` object (or create `hooks` if absent). **Never overwrite any other hooks key.**
+   - **Security constraint:** `~/.claude/settings.json` may contain live secrets (`ANTHROPIC_AUTH_TOKEN`, API keys). Read, parse, patch one absent field, write back. Never log or surface secret values.
+5. Print a status block:
+   ```
+   Phase 8: Global scaffold-check hook
+     hook installed         ~/.claude/hooks/agent-os-scaffold-check.sh
+     UserPromptSubmit       added  |  already present (unchanged)  |  skipped — settings.json absent or invalid
+   ```
+
+> **Decision (T78.1b, S78):** `~/.claude/hooks/` is an authorized write target for this skill. The scaffold-check hook is the only file this skill writes there. The "Do NOT modify `~/.claude/hooks/`" constraint below carries an explicit exception for this file.
+
+---
+
+## Phase 9: Summary
 
 ```
 Refresh complete: N installed, N renamed, N removed, N updated, N skipped.
@@ -263,7 +372,7 @@ If no files were changed during Phase 5: skip this block silently.
 
 ---
 
-## Phase 6.5: Post-Update Health Check
+## Phase 10: Post-Update Health Check
 
 Runs automatically after Phase 5 whenever at least one action was applied.
 
@@ -284,95 +393,13 @@ A FAIL here does not block the summary — it is advisory, prompting the user to
 
 ---
 
-## Phase 7: CLAUDE.md Stale Reference Patch
+## Phase 11: CLAUDE.md Stale Reference Patch
 
 **Condition:** Runs unconditionally on every update run (cheap read-only scan — no diff required).
 
 Search `CLAUDE.md` for every `renames[].from` name. For each hit, show the line and proposed replacement. Apply only user-approved patches.
 
 If `CLAUDE.md` is absent: print `No CLAUDE.md in working directory — skipping stale-reference scan.`
-
----
-
-## Phase 5.6: Connectors symlink
-
-**Condition:** Runs automatically on every update run (unconditional — not gated on actions applied).
-
-Ensures the project has a local pointer to the global connectors registry.
-
-1. Check whether `~/.claude/connectors.md` exists.
-   - If **absent**: skip this phase silently. Print: `Phase 5.6 skipped — ~/.claude/connectors.md not found.`
-2. Check whether `docs/context/connectors.md` already exists (as a symlink or file).
-   - If **present**: skip silently. Print: `connectors symlink   already present`
-3. If `~/.claude/connectors.md` exists and `docs/context/connectors.md` is absent:
-   - Create `docs/context/` if it does not exist.
-   - Run: `ln -sf ~/.claude/connectors.md docs/context/connectors.md`
-   - Add `docs/context/connectors.md` to `.gitignore` if not already present (only when a `.gitignore` file exists — do not create one).
-   - Print: `connectors symlink   created → docs/context/connectors.md`
-
----
-
-## Phase 5.7: Canonical settings.json patch-if-absent
-
-**Condition:** Runs automatically after Phase 5 whenever at least one action was applied.
-
-Reads `.claude/settings.json` and adds **canonical** fields **only when they are absent**. This never overwrites an existing value and never touches a user-owned field.
-
-1. If `.claude/settings.json` does not exist, skip this phase entirely (the install path owns first creation). Do not create the file here.
-2. Read and parse `.claude/settings.json`. If it is malformed JSON, skip with advisory: `Phase 5.7 skipped — .claude/settings.json is not valid JSON; not modified.` Never rewrite a file you could not parse.
-3. For each canonical field below, patch **only if the field is absent**. If the field is present with any value, leave it untouched (no overwrite):
-   - **`worktree.baseRef`** — canonical value: `"head"`. If the `worktree` object is absent, create it with `{ "baseRef": "head" }`. If `worktree` exists but `baseRef` is absent, add `baseRef: "head"`. If `worktree.baseRef` already has a value, do nothing.
-   - **Standard `Stop` hook** — canonical value: the hygiene-reminder Stop hook block that `install-agent-scaffold` writes (section 4g of `install-agent-scaffold/SKILL.md`). If `hooks.Stop` is absent, add the standard block. If `hooks.Stop` already exists (any entry), do nothing — never append to or rewrite an existing Stop hook array.
-4. **Never read, write, add, remove, or reorder** `permissions`, allow/deny lists, `mcpServers`, or any hook other than an absent standard `Stop`. These are user-owned.
-5. Preserve all existing fields, key order where practical, and formatting. Write back only if at least one canonical field was added.
-6. Print a status block:
-   ```
-   Canonical settings.json patch-if-absent:
-     worktree.baseRef   added ("head")   |  already present (unchanged)
-     hooks.Stop         added            |  already present (unchanged)
-   ```
-   Status tokens: `added` / `already present (unchanged)` / `skipped — no settings.json` / `skipped — invalid JSON`.
-
----
-
-## Phase 5.8: Global scaffold-check hook
-
-**Condition:** Runs unconditionally on every update run.
-
-Installs the Agent OS new-project detection hook globally so it fires in every project session.
-
-> Note: `agent-os-scaffold-check.sh` is intentionally **not** listed in `skills-manifest.json` `hooks[]`. That array enumerates project-scoped hooks installed to `.claude/hooks/`; scaffold-check is a global hook installed to `~/.claude/hooks/` by this phase alone. Its absence from `hooks[]` is correct — do not add it there.
-
-1. Check whether `~/.claude/hooks/` exists. If not, create it silently.
-2. Copy `claude/hooks/agent-os-scaffold-check.sh` from the canonical source to `~/.claude/hooks/agent-os-scaffold-check.sh`.
-3. Make the installed copy executable: `chmod +x ~/.claude/hooks/agent-os-scaffold-check.sh`.
-4. Patch `~/.claude/settings.json` **patch-if-absent**: add the `UserPromptSubmit` hook entry **only if `hooks.UserPromptSubmit` is absent**.
-   - Read `~/.claude/settings.json`. If it does not exist or is not valid JSON, skip the settings patch and print: `Phase 5.8 settings patch skipped — ~/.claude/settings.json absent or invalid JSON; not modified.`
-   - If `hooks.UserPromptSubmit` already exists (any value), do not touch it.
-   - If absent, add:
-     ```json
-     "UserPromptSubmit": [
-       {
-         "matcher": "",
-         "hooks": [
-           {
-             "type": "command",
-             "command": "~/.claude/hooks/agent-os-scaffold-check.sh"
-           }
-         ]
-       }
-     ]
-     ```
-     under the existing `hooks` object (or create `hooks` if absent). **Never overwrite any other hooks key.**
-   - **Security constraint:** `~/.claude/settings.json` may contain live secrets (`ANTHROPIC_AUTH_TOKEN`, API keys). Read, parse, patch one absent field, write back. Never log or surface secret values.
-5. Print a status block:
-   ```
-   Phase 5.8: Global scaffold-check hook
-     hook installed         ~/.claude/hooks/agent-os-scaffold-check.sh
-     UserPromptSubmit       added  |  already present (unchanged)  |  skipped — settings.json absent or invalid
-   ```
-
-> **Decision (T78.1b, S78):** `~/.claude/hooks/` is an authorized write target for this skill. The scaffold-check hook is the only file this skill writes there. The "Do NOT modify `~/.claude/hooks/`" constraint below carries an explicit exception for this file.
 
 ---
 
@@ -391,20 +418,20 @@ Installs the Agent OS new-project detection hook globally so it fires in every p
 - **Write targets are enumerated.** This skill writes only to:
   1. `~/.claude/skills/<name>/SKILL.md`
   2. `~/.claude/agents/<name>.md`
-  3. `docs/context/connectors.md` — Phase 5.6 symlink only; never created as a regular file
+  3. `docs/context/connectors.md` — Phase 6 symlink only; never created as a regular file
   4. `.claude/hooks/<name>.sh` (confirm-required per-hook)
-  5. `CLAUDE.md` — reference updates only (Phase 5 and Phase 7, user-approved)
-  6. `.claude/settings.json` — Phase 5.7 patch-if-absent of canonical fields only (`worktree.baseRef`, standard `Stop` hook); never overwrites an existing value, never touches user-owned fields.
-  7. `~/.claude/hooks/agent-os-scaffold-check.sh` — Phase 5.8 only; **exception to the general `~/.claude/hooks/` prohibition.** This is the single authorized global hook write. Decision recorded in T78.1b (S78).
-  8. `~/.claude/settings.json` `hooks.UserPromptSubmit` — Phase 5.8 patch-if-absent only; adds the scaffold-check hook entry when absent; never overwrites if present.
-- **Never overwrite user-owned `.claude/settings.json` fields** (`permissions`, allow/deny lists, `mcpServers`, custom hooks). The only permitted `.claude/settings.json` writes are Phase 5.7 patch-if-absent of canonical fields (`worktree.baseRef`, standard `Stop` hook) and Phase 5.8 patch-if-absent of `hooks.UserPromptSubmit`. Never write any path not in the enumerated list above.
+  5. `CLAUDE.md` — reference updates only (Phase 5 and Phase 11, user-approved)
+  6. `.claude/settings.json` — Phase 7 patch-if-absent of canonical fields only (`worktree.baseRef`, standard `Stop` hook); never overwrites an existing value, never touches user-owned fields.
+  7. `~/.claude/hooks/agent-os-scaffold-check.sh` — Phase 8 only; **exception to the general `~/.claude/hooks/` prohibition.** This is the single authorized global hook write. Decision recorded in T78.1b (S78).
+  8. `~/.claude/settings.json` `hooks.UserPromptSubmit` — Phase 8 patch-if-absent only; adds the scaffold-check hook entry when absent; never overwrites if present.
+- **Never overwrite user-owned `.claude/settings.json` fields** (`permissions`, allow/deny lists, `mcpServers`, custom hooks). The only permitted `.claude/settings.json` writes are Phase 7 patch-if-absent of canonical fields (`worktree.baseRef`, standard `Stop` hook) and Phase 8 patch-if-absent of `hooks.UserPromptSubmit`. Never write any path not in the enumerated list above.
 - **Never delete a file the user has not explicitly approved for removal.**
-- **`CLAUDE.md` is never written by this skill** except for approved rename-reference patches (Phase 5 and Phase 7). The legacy-format `[claude.md]` row is informational only — it never triggers a write, overwrite, or modification of `CLAUDE.md`.
+- **`CLAUDE.md` is never written by this skill** except for approved rename-reference patches (Phase 5 and Phase 11). The legacy-format `[claude.md]` row is informational only — it never triggers a write, overwrite, or modification of `CLAUDE.md`.
 - **CLAUDE.md team table reconciliation rows require explicit user approval before edit. Never auto-update the team table.**
 - **Phase 3 Diff must prefer the manifest's `renames` array** over any name-similarity heuristic. Heuristic is suggestion-only.
 - **Compatibility window:** never treat a missing-but-defaultable frontmatter field as a hard error.
 - **CLAUDE.md scan is conditional:** fires only when diff contains at least one rename or removal.
-- **Phase 7 is unconditional:** runs on every update run, regardless of whether the diff produced changes.
+- **Phase 11 is unconditional:** runs on every update run, regardless of whether the diff produced changes.
 - **Absent directories are created silently.** No user message. No prompt. Error only if creation fails.
 - **Manifest cross-array invariant:** if a name appears in both `renames[].from` and the canonical `skills` or `agents` array, canonical membership is authoritative — never propose rename or removal. Surface a one-line diagnostic.
 
@@ -429,11 +456,11 @@ Installs the Agent OS new-project detection hook globally so it fires in every p
 - [ ] User confirmed before any file was modified
 - [ ] Outdated rows were NOT covered by "Approve all" — each required individual confirmation
 - [ ] Diff shown for each Outdated row before the user confirmed
-- [ ] Phase 6 summary printed with per-type counts
-- [ ] Phase 7 ran (unconditionally); CLAUDE.md checked against every renames[].from
-- [ ] Phase 5.6 ran; connectors symlink created if ~/.claude/connectors.md present and docs/context/connectors.md absent; skipped silently otherwise
+- [ ] Phase 9 summary printed with per-type counts
+- [ ] Phase 11 ran (unconditionally); CLAUDE.md checked against every renames[].from
+- [ ] Phase 6 ran; connectors symlink created if ~/.claude/connectors.md present and docs/context/connectors.md absent; skipped silently otherwise
 - [ ] Hooks phase: per-hook explicit confirmation required for each Outdated/New hook; no blanket "approve all" for hooks
 - [ ] Hooks phase: no hook with Removed-from-canonical status auto-removed; default was Keep
-- [ ] Hooks phase: no user-owned `.claude/settings.json` field (`permissions`, `mcpServers`, custom hooks) overwritten; any settings.json write was Phase 5.7 canonical patch-if-absent only
+- [ ] Hooks phase: no user-owned `.claude/settings.json` field (`permissions`, `mcpServers`, custom hooks) overwritten; any settings.json write was Phase 7 canonical patch-if-absent only
 - [ ] CLAUDE.md team table reconciliation ran when CLAUDE.md present; stale agent names surfaced as [claude.md] rows; user approval required before edit
 - [ ] Post-apply commit advisory shown when at least one file was changed; git commands surfaced or executed on user approval
