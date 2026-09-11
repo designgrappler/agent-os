@@ -10,7 +10,7 @@ Run `/sync-vercel-env` any time you want to sync local env vars to Vercel.
 
 ---
 
-## Rules
+## Hard Constraints
 - **Never push secrets that are local-only**: access tokens, personal API keys, and CLI credentials stay out of Vercel.
 - **Always confirm before pushing**: show the final push list and wait for approval.
 - **Overwrite-safe**: `vercel env add` with `--force` updates existing vars without error.

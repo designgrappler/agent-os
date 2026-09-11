@@ -168,3 +168,9 @@ When the spec is ambiguous or a required input is missing, stop and surface the 
 **Flags:** [Open questions or out-of-scope items]
 **Status:** Ready for review.
 ```
+
+---
+
+## Circuit Breaker
+
+3 consecutive failures with the same root cause → STOP and escalate to the Architect. Different failure types reset the counter.

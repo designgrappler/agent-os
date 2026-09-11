@@ -175,7 +175,7 @@ GitHub release: https://github.com/<repo>/releases/tag/<new-version>  (skipped i
 - `version`: read `release-version` from `skills-manifest.json` in the project root (the post-bump value from Step 3); if not found use `"unknown"`
 - Append only — never overwrite. Create the file and any missing parent directories silently if absent.
 
-## Verification checklist
+## Verification Checklist (Internal — Run Before Reporting Complete)
 
 - All tracks for the closed sprint have DONE or DEFERRED exit records before Step 2 ran.
 - `bun run build` passed.

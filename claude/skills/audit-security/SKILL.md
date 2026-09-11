@@ -12,11 +12,12 @@ Scans a project for security vulnerabilities, hardcoded secrets, insecure patter
 
 ---
 
-## Rules
+## Hard Constraints
 - **Read-only by default**: Do not modify source files. Report findings only — remediation is the developer's job.
 - **Zero-pause**: When you announce a scan step (e.g., "Running secrets sweep now"), trigger the tool call in the same turn.
 - **Severity discipline**: Every finding must carry a severity level. Do not pad with Low findings to appear thorough.
 - **Agent OS aware**: If `CLAUDE.md` exists, cross-reference findings against the project's declared security constraints. If it does not exist, skip that step.
+- **Never silently return CLEAR**: If a required scanner is absent, the step is SKIPPED — not passed. CLEAR verdicts require all steps to complete successfully.
 
 ---
 
@@ -25,15 +26,26 @@ Scans a project for security vulnerabilities, hardcoded secrets, insecure patter
 Run the following checks in order. Do not skip a step because a prior step found issues — complete all steps, then report.
 
 ### Step 1 — Secrets Sweep
-Search for hardcoded credentials, API keys, tokens, and passwords.
 
+**Scanner detection (run first):**
 ```bash
-# Patterns to grep for across all source files:
-grep -rn --include="*.{ts,tsx,js,jsx,py,go,rb,env,yaml,yml,json,toml}" \
-  -E "(api_key|apikey|secret|password|token|private_key|access_key)\s*=\s*['\"][^'\"]{8,}" .
+command -v gitleaks >/dev/null 2>&1 && echo "GITLEAKS_PRESENT" || echo "GITLEAKS_ABSENT"
 ```
 
-Also check:
+**If `GITLEAKS_PRESENT`:** run the sweep:
+```bash
+gitleaks detect --source . --no-banner
+```
+Capture all findings. Any detected secret is a Critical finding regardless of file type.
+
+**If `GITLEAKS_ABSENT`:** do NOT proceed with this step. Surface the following and mark Step 1 as SKIPPED in the report:
+```
+Step 1 SKIPPED — gitleaks not installed.
+Install: brew install gitleaks  (macOS)  |  https://github.com/gitleaks/gitleaks#installing
+Re-run /audit-security after installing to get a complete secrets scan.
+```
+
+Also check (regardless of gitleaks availability):
 - `.env` files committed to the repo (should be in `.gitignore`)
 - Any hardcoded URLs containing credentials (e.g., `postgres://user:pass@host`)
 
@@ -58,16 +70,24 @@ Check for insecure configuration patterns:
 - `console.log` statements that output sensitive data
 
 ### Step 4 — Code Pattern Scan
-Scan for common vulnerability patterns:
 
-| Pattern | Risk |
-|---|---|
-| `eval(`, `exec(`, `Function(` on user input | Remote code execution |
-| Unparameterized SQL strings | SQL injection |
-| `innerHTML =` / `dangerouslySetInnerHTML` | XSS |
-| `Math.random()` for tokens or IDs | Insecure randomness |
-| Missing `await` on auth checks | Auth bypass |
-| Unvalidated redirect URLs | Open redirect |
+**Scanner detection (run first):**
+```bash
+command -v semgrep >/dev/null 2>&1 && echo "SEMGREP_PRESENT" || echo "SEMGREP_ABSENT"
+```
+
+**If `SEMGREP_PRESENT`:** run the scan:
+```bash
+semgrep scan --config auto
+```
+Capture all findings. Map semgrep severity levels to the report tiers: ERROR → High or Critical (based on rule metadata); WARNING → Moderate; INFO → Low.
+
+**If `SEMGREP_ABSENT`:** do NOT proceed with this step. Surface the following and mark Step 4 as SKIPPED in the report:
+```
+Step 4 SKIPPED — semgrep not installed.
+Install: pip install semgrep  |  brew install semgrep  |  https://semgrep.dev/docs/getting-started/
+Re-run /audit-security after installing to get a complete code pattern scan.
+```
 
 ### Step 5 — Agent OS Gate (skip if Agent OS not installed)
 If `CLAUDE.md` exists:

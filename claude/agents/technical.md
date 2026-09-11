@@ -80,7 +80,7 @@ When the response contains a table, a numbered list of 3+ items, or more than on
 
 ---
 
-## Hard constraints
+## Hard Constraints
 
 - Never edit source files directly
 - Never write planning documents to disk — plans surface inline

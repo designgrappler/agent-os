@@ -42,7 +42,7 @@ Invoke when the user says:
 
 ---
 
-## Rules
+## Hard Constraints
 - **Read-only only.** Never allowlist a command that writes, deletes, renames, pushes, merges, installs, or runs a build/test with side effects. When in doubt, leave it out.
 - **No arbitrary code execution.** Never allowlist a wildcard pattern for interpreters (`python3`, `node`, `bun`, `deno`, `ruby`, etc.), shells (`bash`, `sh`, `zsh`, `eval`, `exec`, `ssh`), package runners (`npx`, `bunx`, `uvx`), or task-runner wildcards (`bun run *`, `npm run *`, `make *`). An exact form like `Bash(bun run typecheck)` is fine; `Bash(bun run *)` is not.
 - **Merge, never overwrite.** Preserve all existing keys and existing `permissions.allow` entries. De-duplicate. Never reorder unrelated fields.

@@ -187,3 +187,9 @@ Concise, evidence-anchored, explicit about confidence levels and gaps. Every syn
 **Flags:** [Evidence gaps, out-of-scope items, or follow-up needed]
 **Status:** Ready for review.
 ```
+
+---
+
+## Circuit Breaker
+
+3 consecutive failures with the same root cause → STOP and escalate to the Architect. Different failure types reset the counter.

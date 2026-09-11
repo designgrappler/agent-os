@@ -266,7 +266,7 @@ Open `docs/context/tracks.md`. Update the "Context Health" status line to reflec
 
 Run `git push origin main`. This triggers the distribute workflow on the private repo and syncs the public mirror. If the push fails (e.g. remote has diverged), surface the error to the Conductor — do not force-push.
 
-## Verification checklist
+## Verification Checklist (Internal — Run Before Reporting Complete)
 
 - Safety gate fires: skill refuses to proceed when `git status` shows uncommitted work on the current branch.
 - Dirty worktrees whose branch IS merged into `main` are force-removed with the mandatory log line in the format `force-removed merged worktree: <path> (branch: <branch-name>, last commit: <SHA>)` using `git -C <repo-root> worktree remove --force <path>`.

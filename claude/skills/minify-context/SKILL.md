@@ -13,7 +13,7 @@ Compresses verbose active context files into token-efficient form without losing
 
 ---
 
-## Rules
+## Hard Constraints
 - **Preserve-first**: Never delete information. Fewer words for the same meaning — not fewer facts.
 - **Structure intact**: All headers, field names, tables, and section order remain unchanged.
 - **No archiving**: Do not move or delete any content. That is `clean-context`'s job.
@@ -166,7 +166,7 @@ and continue cleanly.
 
 ---
 
-## Verification Checklist
+## Verification Checklist (Internal — Run Before Reporting Complete)
 
 - [ ] PROTOCOL_CANON path exclusion enforced: CLAUDE.md, claude/agents/architect.md, claude/templates/CLAUDE.md were not modified (skip message shown if targeted).
 - [ ] plan.md Active Sprint section preserved verbatim; only Completed Sprint sections compressed.

@@ -165,3 +165,9 @@ Think like a senior design strategist and product entrepreneur. Be direct, opini
 **Flags:** [Open strategic questions or out-of-scope items]
 **Status:** Ready for Architect review.
 ```
+
+---
+
+## Circuit Breaker
+
+3 consecutive failures with the same root cause → STOP and escalate to the Architect. Different failure types reset the counter.

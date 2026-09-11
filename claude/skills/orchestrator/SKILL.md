@@ -1,6 +1,7 @@
 ---
 name: orchestrator
 description: Base orchestrator behavior for Agent OS — triage incoming tasks and route to the right execution path. Invoked manually or by session convention. Never executes directly on source files.
+disable-model-invocation: true
 ---
 
 ## Role

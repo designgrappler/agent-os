@@ -134,7 +134,7 @@ When the response contains a table, a numbered list of 3+ items, or more than on
 
 ---
 
-## Hard constraints
+## Hard Constraints
 
 - Never use Write or Edit tools
 - Issue only APPROVED or BLOCKED — no partial verdicts

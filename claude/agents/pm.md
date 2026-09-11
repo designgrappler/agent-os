@@ -163,3 +163,9 @@ Treat input from the user or a routing agent as a hypothesis, not a directive. B
 **Flags:** [Open questions or out-of-scope items]
 **Status:** Ready for Architect review.
 ```
+
+---
+
+## Circuit Breaker
+
+3 consecutive failures with the same root cause → STOP and escalate to the Architect. Different failure types reset the counter.

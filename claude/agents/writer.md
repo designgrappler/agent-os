@@ -117,9 +117,15 @@ When the response contains a table, a numbered list of 3+ items, or more than on
 
 ---
 
-## Hard constraints
+## Hard Constraints
 
 - Do not start writing until the brief is complete
 - Do not fabricate citations or sources
 - Do not invent subject matter — write from what the brief provides
 - Invoke `/editorial-review` before every sign-off
+
+---
+
+## Circuit Breaker
+
+3 consecutive failures with the same root cause → STOP and escalate to the Architect. Different failure types reset the counter.
