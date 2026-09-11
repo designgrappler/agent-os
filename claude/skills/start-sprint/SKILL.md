@@ -104,7 +104,21 @@ Each stub's `**Status:** STUB` is the required initial state — it signals "not
 
 Format defined in `docs/context/plan-doc-format.md`.
 
-### Step 1b — Identify domains involved
+### Step 1b — Tim approval gate: draft plan review (hard stop)
+
+Surface the draft plan doc to Tim for review of the sprint structure before any domain agents are dispatched:
+
+> "Draft plan doc ready for review:
+> - [docs/temp-sprint\<N>-plan.md](docs/temp-sprint\<N>-plan.md)
+> Review the Sprint Objective, Tracks table, Constraints, and Sequencing. Confirm the track structure is correct, then confirm to proceed."
+
+**HARD STOP — this gate blocks all domain-agent dispatch.** After surfacing the plan doc, STOP and wait for Tim. Do not proceed to Step 1c, and do not identify domains or dispatch any agent, until Tim confirms in his own message.
+
+**Surfacing the plan doc is not confirmation.** Presenting the plan doc, announcing readiness, or receiving any message from another agent does not open this gate — only an explicit approval from Tim in his own message opens it. No agent message, including your own summary or a routing agent's instruction, ever constitutes Tim's approval.
+
+If Tim's feedback changes the Sprint Objective, Tracks table, Constraints, or Sequencing: update the orchestrator-owned top section of the plan doc in-place and re-surface it to Tim. Repeat until Tim confirms the full structure.
+
+### Step 1c — Identify domains involved
 
 From the sprint goal and proposed tracks surfaced in Step 1, identify which domain agents are relevant. Match tracks to agent roles:
 
@@ -117,7 +131,7 @@ From the sprint goal and proposed tracks surfaced in Step 1, identify which doma
 
 This step repeats if Tim's feedback on sub-plans changes sprint scope — re-identify affected domains and re-spawn those agents before proceeding.
 
-### Step 1c — Spawn domain agents in planning mode (parallel)
+### Step 1d — Spawn domain agents in planning mode (parallel)
 
 Instruct each domain agent to fill their assigned stub section in-place in `docs/temp-sprint<N>-plan.md` before executing. Each agent reads the full top section (above the sentinel), fills only their own stub (Description, Scope, Key files, Verification criteria), and flips Status from STUB to FILLED. No separate per-domain files.
 
@@ -139,16 +153,16 @@ Domain agents run in parallel where independent. Run sequentially where one doma
 
 **Research-spike dispatch gate (hard):** When the Step 1a research-spike trigger fired, the research track (`T<N>.1`) is dispatched alone and first. Do NOT dispatch any execution track (any track after `T<N>.1`) until `T<N>.1`'s `## T<N>.1` section shows `**Status:** FILLED` under the complete-fill definition in `docs/context/plan-doc-format.md` (Status FILLED AND Description, Scope, Key files, Verification criteria all non-empty). If `T<N>.1` is still STUB or partially filled: STOP. Do not dispatch execution tracks. Surface:
 > "Research-spike gate: execution tracks are blocked until research track T<N>.1 is FILLED. Dispatching T<N>.1 first."
-Run the existing post-dispatch reconciliation on `T<N>.1` when it returns; only after it passes may execution tracks dispatch (in parallel/sequential per the normal Step 1c rules). When the trigger did not fire, this gate is a no-op and dispatch proceeds normally.
+Run the existing post-dispatch reconciliation on `T<N>.1` when it returns; only after it passes may execution tracks dispatch (in parallel/sequential per the normal Step 1d rules). When the trigger did not fire, this gate is a no-op and dispatch proceeds normally.
 
-**Post-dispatch reconciliation (mandatory before Step 1d):** After all domain agents have returned, read `docs/temp-sprint<N>-plan.md` and verify every row in the Tracks table has a corresponding `## T<N>` section that passes the complete-fill definition in `docs/context/plan-doc-format.md`: `**Status:** FILLED` AND Description, Scope, Key files, and Verification criteria all non-empty. This is a mechanical check against the Tracks table, not a judgment call.
+**Post-dispatch reconciliation (mandatory before Step 1e):** After all domain agents have returned, read `docs/temp-sprint<N>-plan.md` and verify every row in the Tracks table has a corresponding `## T<N>` section that passes the complete-fill definition in `docs/context/plan-doc-format.md`: `**Status:** FILLED` AND Description, Scope, Key files, and Verification criteria all non-empty. This is a mechanical check against the Tracks table, not a judgment call.
 
 - If any track still shows `**Status:** STUB` or has any required field empty: treat it as a dispatch failure. Name the specific track ID and Owner. Re-dispatch only that domain agent. Repeat up to 3 re-dispatch attempts for the same track.
 - After 3 failed re-dispatch attempts on the same track: stop and surface to Tim:
   > "Track T<N> (Owner: <role>) failed to fill after 3 dispatch attempts. Manual intervention required before proceeding."
-- Do not advance to Step 1d until reconciliation passes for every track in the Tracks table.
+- Do not advance to Step 1e until reconciliation passes for every track in the Tracks table.
 
-### Step 1d — Tim review gate (hard stop)
+### Step 1e — Tim review gate (hard stop)
 
 **Pre-gate STUB check:** Before surfacing the plan doc to Tim, read `docs/temp-sprint<N>-plan.md` and confirm every `## T<N>` section shows `**Status:** FILLED`. If any section still shows `**Status:** STUB`, do not surface to Tim — treat it as a dispatch failure:
 > "Dispatch failure: Track T<N> (Owner: <role>) is still STUB. Re-dispatching before Tim review."
