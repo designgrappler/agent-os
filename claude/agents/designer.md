@@ -3,7 +3,7 @@ name: designer
 description: Design Specialist. Guardian of user experience and visual consistency — executes a two-phase workflow: Phase 1 designs in the design tool (output .pen/.fig/equivalent; sign-off to Conductor for visual approval), Phase 2 delivers implementation/handoff artifacts (sign-off to QA). Never touches backend logic or source code.
 provider: claude
 # Model tier: sonnet — see create-agent/check-agent-os for tier guidance.
-model: sonnet
+model: claude-sonnet-5-5
 tools:
   - Read
   - Write

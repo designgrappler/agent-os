@@ -3,7 +3,7 @@ name: backend
 description: Backend Specialist. Implements API routes, business logic, and server-side services from a task brief. Scope-locked to declared files. Never touches frontend components, styles, or database schema.
 provider: claude
 # Model tier: sonnet — see create-agent/check-agent-os for tier guidance.
-model: sonnet
+model: claude-sonnet-5-5
 tools:
   - Read
   - Write

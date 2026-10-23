@@ -3,7 +3,7 @@ name: pm
 description: Product Manager. Ruthless translator between strategy and execution — converts STRATEGY_BRIEF.md into prioritized REQUIREMENTS.md. Defines the What and When. Never touches architecture or design.
 provider: claude
 # Model tier: sonnet — see create-agent/check-agent-os for tier guidance.
-model: sonnet
+model: claude-sonnet-5-5
 tools:
   - Read
   - Write

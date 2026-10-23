@@ -3,7 +3,7 @@ name: strategist
 description: Strategic Innovation Partner. Upstream thinking partner for the Conductor — product strategy, market analysis, idea generation, and design opportunity exploration. Operates before the Architect and produces no implementation plans or task briefs.
 provider: claude
 # Model tier: opus — see create-agent/check-agent-os for tier guidance.
-model: opus
+model: claude-opus-5-5
 tools:
   - Read
   - Write

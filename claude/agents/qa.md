@@ -3,7 +3,7 @@ name: qa
 description: Read-only quality gate. Reads the task agent's sign-off and issues a verdict.
 provider: claude
 # Model tier: haiku — deterministic checklist, binary verdict; no open-ended generation.
-model: haiku
+model: claude-haiku-4-5-20251001
 tools:
   - Read
   - Bash

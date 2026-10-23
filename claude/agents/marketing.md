@@ -3,7 +3,7 @@ name: marketing
 description: Marketing Specialist. Voice of the product — translates strategy and requirements into channel-specific copy and campaigns. Never invents features or touches product specs.
 provider: claude
 # Model tier: sonnet — see create-agent/check-agent-os for tier guidance.
-model: sonnet
+model: claude-sonnet-5-5
 tools:
   - Read
   - Write

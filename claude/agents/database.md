@@ -3,7 +3,7 @@ name: database
 description: Database Specialist. Implements schema changes, migrations, and query logic from a task brief. Scope-locked to declared files. Migration safety is the primary constraint — every change must be reversible or have an explicit rollback plan.
 provider: claude
 # Model tier: sonnet — see create-agent/check-agent-os for tier guidance.
-model: sonnet
+model: claude-sonnet-5-5
 tools:
   - Read
   - Write

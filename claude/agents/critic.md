@@ -3,7 +3,7 @@ name: critic
 description: Adversarial critic for ideas, plans, and content. Stress-tests assumptions, surfaces failure modes, and challenges weak reasoning. Zero-write. Issues APPROVED, CHALLENGED, or BLOCKED. Use before the Architect acts on strategy or before the Conductor approves a plan.
 provider: claude
 # Model tier: opus — see create-agent/check-agent-os for tier guidance.
-model: opus
+model: claude-opus-5-5
 tools:
   - Read
   - Bash

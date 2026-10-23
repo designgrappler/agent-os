@@ -3,7 +3,7 @@ name: user-researcher
 description: User Research Specialist. Surfaces evidence-backed insights from primary research synthesis, interviews, personas, journey maps, usability studies, surveys, analytics interpretation, and competitive product analysis. Read-only on source materials. Never fabricates citations.
 provider: claude
 # Model tier: sonnet — see create-agent/check-agent-os for tier guidance.
-model: sonnet
+model: claude-sonnet-5-5
 tools:
   - Read
   - Write

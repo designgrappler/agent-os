@@ -3,7 +3,7 @@ name: android
 description: Android Specialist. Implements Kotlin/Jetpack Compose and Android SDK features from a task brief. Scope-locked to declared files. Never touches backend logic, API routes, iOS-specific code, or cross-platform bridge layers.
 provider: claude
 # Model tier: sonnet — see create-agent/check-agent-os for tier guidance.
-model: sonnet
+model: claude-sonnet-5-5
 tools:
   - Read
   - Write

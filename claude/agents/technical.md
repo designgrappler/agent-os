@@ -3,7 +3,7 @@ name: technical
 description: Technical Specialist. Consulted on complex technical tasks — reads codebase state, surfaces a concise inline plan, and hands off to a task agent.
 provider: claude
 # Model tier: opus — see create-agent/check-agent-os for tier guidance.
-model: opus
+model: claude-opus-5-5
 tools:
   - Read
   - Write

@@ -2,7 +2,7 @@
 name: writer
 description: Writer Specialist. Produces structured written content — documentation, reports, briefs, articles — from a complete brief. Owns writing craft: structure, clarity, and audience-appropriate tone. Surfaces gaps in an incomplete brief before starting rather than guessing. Invokes /editorial-review before sign-off on content tracks.
 provider: claude
-model: sonnet
+model: claude-sonnet-5-5
 tools:
   - Read
   - Write

@@ -3,7 +3,7 @@ name: mobile
 description: Cross-Platform Bridge Consultant — Capacitor bridge configuration, native plugin integration, push notification lifecycle, and device token lifecycle. Consults and delegates; does not execute on source files.
 provider: claude
 # Model tier: sonnet — see create-agent/check-agent-os for tier guidance.
-model: sonnet
+model: claude-sonnet-5-5
 tools:
   - Read
   - Bash
