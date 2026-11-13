@@ -88,7 +88,15 @@ Run these checks in order — stop at the first match:
 ```
 
 - If output contains `INITIALIZED` → **route to the Existing Project Path** section below. Do not continue with the new-project steps.
-- If output contains neither `SETUP_EXISTS` nor `YML_EXISTS` → go to Step 2.
+- If output contains neither `SETUP_EXISTS` nor `YML_EXISTS` (not mid-flight), run the **existing-code signal probe** before routing to the New Project Path:
+  ```bash
+  ls src app lib 2>/dev/null | head -1
+  [ -f README.md ] && echo "HAS_README"
+  ls package.json pyproject.toml Cargo.toml 2>/dev/null | head -1
+  git log --oneline -1 2>/dev/null
+  ```
+  If any command produces output (any signal fires) → **route to the Existing Project Path** section below. The EP Phase 2 Conflict Check remains the overwrite gate.
+  If no signals fire → go to Step 2 (blank new project).
 - If output contains `SETUP_EXISTS` but not `YML_EXISTS` → go to Step 2b.
 - If output contains both `SETUP_EXISTS` and `YML_EXISTS` → go to Step 3.
 
@@ -441,14 +449,48 @@ No active tracks. Add tracks as work begins.
 
 ---
 
+### 4e-b. `docs/backlog.md`
+
+Always write (new project has no prior backlog):
+
+```markdown
+# Backlog
+
+## Open
+
+<!-- Add pending items here. -->
+
+## Deferred
+
+<!-- Items postponed for a future sprint. -->
+
+## Closed
+
+<!-- Completed or cancelled items. -->
+
+---
+
+*Last updated: [TODAY'S DATE]*
+```
+
+---
+
 ### 4f. `skills-manifest.json`
 
-Create `skills-manifest.json` at the project root pointing to the canonical registry:
+Create `skills-manifest.json` at the project root pointing to the canonical registry. Determine `RELEASE_VERSION` at run time using the following fallback chain:
+
+1. **Registry (primary):** fetch `https://raw.githubusercontent.com/designgrappler/agent-os/main/skills-manifest.json` and read the `release-version` field. If the fetch succeeds and the field is present, set `RELEASE_VERSION` to that value.
+2. **Local cache (fallback):** if the fetch fails or returns a non-200 response, read `~/.claude/skills-manifest.json` and use its `release-version` field. If present, set `RELEASE_VERSION` to that value.
+3. **Unknown (offline fallback):** if both sources are unavailable or lack the field, set `RELEASE_VERSION` to `"unknown"`.
+
+The install must not hard-fail when offline — `"unknown"` is an acceptable stamp.
+
+Write the file with the resolved value:
 
 ```json
 {
   "canonical-registry": "https://raw.githubusercontent.com/designgrappler/agent-os/main/skills-manifest.json",
-  "release-version": "v2.0.0"
+  "release-version": "<RELEASE_VERSION>"
 }
 ```
 
@@ -740,11 +782,22 @@ If this file does not exist in the project, create it by copying from the canoni
 
 Fetch the following agent files and write them to `.claude/agents/` if not already present:
 
-- `technical-architect.md`
+- `android.md`
+- `backend.md`
+- `critic.md`
+- `database.md`
+- `designer.md`
+- `frontend.md`
+- `ios.md`
+- `marketing.md`
+- `mobile.md`
+- `ops.md`
+- `pm.md`
 - `qa.md`
-- `task-coder.md`
-- `task-researcher.md`
-- `task-writer.md`
+- `strategist.md`
+- `technical.md`
+- `user-researcher.md`
+- `writer.md`
 
 **Fetch strategy — for each file, in order:**
 
@@ -784,6 +837,30 @@ Initialize with:
 - `docs/context/product.md` (new)
 - `.claude/agents/` (populated)
 - `.claude/settings.json` (new or updated)
+```
+
+### EP 4e-b. `docs/backlog.md`
+
+Skip if the file already exists. Otherwise create:
+
+```markdown
+# Backlog
+
+## Open
+
+<!-- Add pending items here. -->
+
+## Deferred
+
+<!-- Items postponed for a future sprint. -->
+
+## Closed
+
+<!-- Completed or cancelled items. -->
+
+---
+
+*Last updated: [TODAY'S DATE]*
 ```
 
 ### EP 4f. `docs/context/product.md`

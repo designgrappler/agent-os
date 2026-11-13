@@ -12,11 +12,11 @@ Read `docs/context/tracks.md`. For each track belonging to the current sprint:
 
 - **Work complete, exit record not yet written (OPEN with completed work):** invoke `/track-close <track-id> "<outcome>"` to write the exit record. Do not write the exit record inline — `/track-close` is the sole mechanism for writing DONE exit records.
 - **Explicitly deferred:** record a DEFERRED note in the track's exit record manually (deferral is not a DONE close; `/track-close` only writes DONE).
-- **Still OPEN or BLOCKED with no completed work:** surface the list and stop:
+- **Still OPEN or BLOCKED with no completed work:** surface the list as a warning and request inline confirmation:
 
-  > The following tracks are not yet resolved: [list]. Resolve or explicitly defer each before closing the sprint.
+  > **Warning:** The following tracks are not yet resolved: [list]. Closing the sprint now will leave them unresolved. Confirm to proceed, or cancel and resolve them first.
 
-  Wait for confirmation before continuing.
+  The owner may confirm-and-proceed in the same turn. Invocation of `/close-sprint` is the owner's authorization — do not require a second invocation.
 
 ### Step 1b — Backlog audit
 
@@ -39,7 +39,7 @@ Run `bun run build`. If it fails, surface the error and stop. Do not continue un
 
 ### Step 3 — Bump version in `skills-manifest.json` (agent-os only)
 
-**If the `claude/skills/` directory does not exist in the project root, skip this step silently — this project consumes agent-os but is not the agent-os repo.**
+**If the `claude/skills/` directory does not exist in the project root, skip this step silently — this project consumes agent-os but is not the agent-os repo. Do NOT mention this step, its evaluation, or its skip in any output or narration.**
 
 Read `skills-manifest.json` and determine the appropriate version bump:
 - **Patch** — bug fixes, copy corrections, non-behavioral edits only
@@ -116,7 +116,7 @@ Note: use `git -C <repo-root>` form for all git commands in this step, where `<r
 
 ### Step 8 — Create GitHub release and push (agent-os only)
 
-**If the `claude/skills/` directory does not exist in the project root, skip the release creation: run `git push` only and continue — this project consumes agent-os but is not the agent-os repo.**
+**If the `claude/skills/` directory does not exist in the project root, skip the release creation: run `git push` only and continue — this project consumes agent-os but is not the agent-os repo. Do NOT mention this step, its evaluation, or its skip in any output or narration.**
 
 Before creating the release, derive the release notes from the sprint archive doc at `docs/archive/plan-docs/S<N>.md`. Use the "What changed" section (or equivalent) as the release body. Do not use a fallback string — if the archive doc is missing or has no substantive content, stop and ask the user for release notes before proceeding.
 
@@ -142,29 +142,31 @@ After the push succeeds, invoke `/clean-context`. This sweeps bridge files, merg
 
 `/clean-context` runs its own safety check (uncommitted work, dirty worktrees) and will bail with a warning if anything is unresolved — surface any bail messages to the user and do not proceed to Step 10 until the issue is resolved.
 
-### Step 9b — Definition of Done (non-skippable)
+### Step 9b — Pre-close checklist
 
-Verify every item before writing the sprint close record. If any item is unchecked, surface it and stop — do not close the sprint until all items are verified.
+Verify every item before writing the sprint close record. For each unchecked item, surface it as a warning with an explicit one-line confirm-to-override; the owner may confirm-and-proceed in the same turn. The Step 2 build gate is the only non-overridable hard stop — all other items may be overridden by the owner with an explicit confirm.
 
 - [ ] All tracks have exit records (MERGED, NO-OP, or DEFERRED with reason)
-- [ ] Build passes (`bun run build` clean)
-- [ ] (agent-os only) GitHub issues addressed this sprint are closed on the public mirror — skip if the `claude/skills/` directory does not exist in the project root
+- [ ] Build passes (`bun run build` clean) — **non-overridable; enforced in Step 2**
+- [ ] (agent-os only) GitHub issues addressed this sprint are closed on the public mirror — skip if `claude/skills/` does not exist in the project root; do NOT mention this item, its evaluation, or its skip in any output or narration when the skip condition fires
 - [ ] No new tools, trackers, or third-party dependencies introduced outside an approved track
 - [ ] QA APPROVED on all tracks
 
-### Step 10 — Confirm
+### Step 10 — Sprint Close Summary
 
-Output a short confirmation:
+Output a Sprint Close Summary. For each conditional section, when the condition is false omit it entirely with no mention of its absence.
 
-```
-Sprint S<N> closed.
+**Always include:**
+- Sprint header: `Sprint S<N> closed · <YYYY-MM-DD>`
+- Track outcomes (one line per track, sourced from exit records written in Step 1): `T<N>.<X> — <track title> — MERGED | NO-OP | DEFERRED · QA: APPROVED | SKIPPED | N/A`
+- Build status: `Build: bun run build — PASS`
+- Notes / Deferrals: any deferred tracks, out-of-scope items flagged, or new backlog entries created; write `None.` if empty
+- Archive pointer: `Archive: docs/archive/plan-docs/S<N>.md`
 
-Version bumped to: <new-version>
-Archive: docs/archive/plan-docs/S<N>.md
-plan.md and tracks.md reset.
-GitHub release: https://github.com/<repo>/releases/tag/<new-version>  (skipped if not an agent-os project)
-/clean-context: complete
-```
+**Agent-os only — include these lines when `claude/skills/` exists in the project root; omit them entirely otherwise with no mention of their absence:**
+- Version: `Version bumped to: <new-version>`
+- Issues closed: `Issues closed: #<N> — <issue title>` (one line per issue)
+- GitHub release: `GitHub release: https://github.com/<repo>/releases/tag/<new-version>`
 
 **Execution receipt:** On successful completion of all steps above, append one line to `docs/context/skill-receipts.jsonl` (create the file if absent):
 ```json
