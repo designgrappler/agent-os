@@ -82,6 +82,8 @@ Immediately after the sentinel, append one Element (c) stub per Tracks table row
 
 **Owner:** <role-key>
 **Status:** STUB
+<!-- PLANNING ONLY — fill Description, Scope, Key files, and Verification criteria; do NOT edit target files. Execution begins only after Tim approves at Step 1e. -->
+<!-- Non-deterministic frontend/UI tracks only — add: **Track type:** non-deterministic -->
 
 <!-- <role-key>: fill this section before executing -->
 
@@ -103,6 +105,52 @@ Do not write any track content. The stub is the full orchestrator contribution b
 Each stub's `**Status:** STUB` is the required initial state — it signals "not yet planned." Domain agents are responsible for flipping it to `**Status:** FILLED` when they complete their section. The STUB/FILLED state in the plan doc is the coordination primitive; do not create a separate manifest file.
 
 Format defined in `docs/context/plan-doc-format.md`.
+
+### Step 1a.1 — Foundational file gate
+
+**This step fires only when at least one track in the sprint carries `**Track type:** non-deterministic` (added by Step 1a.2).** If no non-deterministic tracks are present, skip this step silently.
+
+When non-deterministic tracks are present, check that all three foundational files exist and are non-stub:
+
+- `docs/context/ui-components.md`
+- `docs/context/ui-rules.md`
+- `docs/context/ui-design.md`
+
+A file is non-stub if it exists and contains ≥ 10 non-blank, non-heading lines. If any file is absent or a stub, block sprint open and surface:
+
+> "Sprint contains non-deterministic tracks but the following foundational file(s) are missing or stub. Create them before continuing:
+> - [missing file path]"
+
+Do not proceed to Step 1b until all three files exist and are non-stub.
+
+### Step 1a.2 — Track classification + PRP gate
+
+**Classification (§9.1.2).** For each track in the sprint, evaluate whether it is non-deterministic: work where many valid outputs exist and correctness cannot be verified by tests alone — frontend components, UI layout, visual design, copy. Schema, migrations, API routes, and type definitions are deterministic.
+
+For each non-deterministic track, append `**Track type:** non-deterministic` to its track stub in `docs/temp-sprint<N>-plan.md`, in the same block as `**Owner:**` and `**Status:**`. The field value must be the exact string `non-deterministic` — spelling or casing variation silently disables the close-sprint gate.
+
+**PRP gate (§9.1.3).** For each track marked `**Track type:** non-deterministic`:
+
+1. The track stub must declare the page source file it touches (e.g. `src/pages/GoalsPage.tsx`). If not declared, add a `**Page source:** [path]` line to the stub and surface to Tim before proceeding.
+2. Derive the expected PRP path: `docs/context/prp-[page-slug]-page.md`, where `[page-slug]` is the lowercase-hyphenated filename (e.g. `GoalsPage.tsx` → `prp-goals-page.md`).
+3. If the PRP does not exist at that path, append a PRP authoring task to the sprint plan doc (placed before the execution track stub it gates) with this structure:
+
+   ```
+   ## T<N>.0 — PRP authoring: [PageName]
+
+   **Owner:** @Plan
+   **Status:** OPEN
+   **Blocks:** T<N> (execution dispatch blocked until this task is complete)
+
+   Read `[page source path]` and the three foundational files, then author the PRP at `docs/context/prp-[page-slug]-page.md` using the template in `docs/context/prp-spec.md` §3. All load-bearing sections must be populated.
+
+   **PRP approved:** _(Orchestrator fills this line when PRP is reviewed and approved)_
+   ```
+
+4. Record the blocking dependency in the execution track stub by adding this line to the stub:
+   ```
+   **Blocked by:** PRP authoring task T<N>.0 (dispatch blocked until PRP exists and `**PRP approved:**` line is present)
+   ```
 
 ### Step 1b — Tim approval gate: draft plan review (hard stop)
 
@@ -154,6 +202,11 @@ Domain agents run in parallel where independent. Run sequentially where one doma
 **Research-spike dispatch gate (hard):** When the Step 1a research-spike trigger fired, the research track (`T<N>.1`) is dispatched alone and first. Do NOT dispatch any execution track (any track after `T<N>.1`) until `T<N>.1`'s `## T<N>.1` section shows `**Status:** FILLED` under the complete-fill definition in `docs/context/plan-doc-format.md` (Status FILLED AND Description, Scope, Key files, Verification criteria all non-empty). If `T<N>.1` is still STUB or partially filled: STOP. Do not dispatch execution tracks. Surface:
 > "Research-spike gate: execution tracks are blocked until research track T<N>.1 is FILLED. Dispatching T<N>.1 first."
 Run the existing post-dispatch reconciliation on `T<N>.1` when it returns; only after it passes may execution tracks dispatch (in parallel/sequential per the normal Step 1d rules). When the trigger did not fire, this gate is a no-op and dispatch proceeds normally.
+
+**PRP dispatch gate (hard):** For any non-deterministic execution track (one carrying `**Track type:** non-deterministic`): do NOT dispatch until (a) the PRP file exists at `docs/context/prp-[page-slug]-page.md` AND (b) the `**PRP approved:** [date]` line is present in the PRP authoring task for that track. If either condition is unmet, block dispatch and surface:
+> "PRP gate: execution track T<N> is blocked until its PRP exists at [path] and the Orchestrator approval record (`**PRP approved:** [date]`) is present in the authoring task."
+
+**Planning mode scope (hard):** Domain agents dispatched in Step 1d are in planning mode only. The dispatch brief must not contain execution instructions (no "edit this file", no "create this file", no "make these changes"). Agents fill their stub section and stop — writing Description, Scope, Key files, and Verification criteria is the complete deliverable. Editing skill files, source files, or any file outside the plan doc is not permitted. Execution begins only after Tim approves at Step 1e. An agent that both fills a stub and executes has violated this gate; treat it as a dispatch failure and re-dispatch in planning mode.
 
 **Post-dispatch reconciliation (mandatory before Step 1e):** After all domain agents have returned, read `docs/temp-sprint<N>-plan.md` and verify every row in the Tracks table has a corresponding `## T<N>` section that passes the complete-fill definition in `docs/context/plan-doc-format.md`: `**Status:** FILLED` AND Description, Scope, Key files, and Verification criteria all non-empty. This is a mechanical check against the Tracks table, not a judgment call.
 

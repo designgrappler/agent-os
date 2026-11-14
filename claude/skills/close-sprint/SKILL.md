@@ -33,11 +33,24 @@ Match on: items explicitly tagged with the track ID (e.g. `(T53.1)`), or items w
 
 **Removal:** if confirmed, remove the matched line(s) from `docs/backlog.md`. Do not remove section headers or surrounding items.
 
-### Step 2 — Run build
+### Step 1c — Non-deterministic sync-record pre-flight
+
+Read the sprint plan doc `docs/temp-sprint<N>-plan.md` (where `<N>` is the current sprint number) and scan for any track stub containing `**Track type:** non-deterministic`.
+
+- **If no track carries `**Track type:** non-deterministic`:** skip silently. Do not mention this step in output. (Keeps the gate non-punishing for deterministic-only sprints and sprints predating the classification mechanism.)
+- **If at least one track carries `**Track type:** non-deterministic`:** look for a `## /sync-guidance — S<N>` section in the same plan doc.
+  - **Section present:** proceed with the existing pre-flight (continue to Step 3).
+  - **Section absent:** block sprint close. Surface this message verbatim and stop — do not proceed to any subsequent step (build, version bump, archival, commit, push):
+
+    > Sprint contains non-deterministic tracks but no `/sync-guidance` completion record found. Run `/sync-guidance` before closing the sprint.
+
+This gate keys on presence of the sync record when the classification field is present; it must not block on absence of the classification field itself. This is a non-overridable hard stop placed before any irreversible action.
+
+### Step 3 — Run build
 
 Run `bun run build`. If it fails, surface the error and stop. Do not continue until the build passes.
 
-### Step 3 — Bump version in `skills-manifest.json` (agent-os only)
+### Step 4 — Bump version in `skills-manifest.json` (agent-os only)
 
 **If the `claude/skills/` directory does not exist in the project root, skip this step silently — this project consumes agent-os but is not the agent-os repo. Do NOT mention this step, its evaluation, or its skip in any output or narration.**
 
@@ -50,7 +63,7 @@ See `docs/context/versioning-policy.md` for the canonical definition of each tie
 
 Increment `"release-version"` accordingly (e.g. `"v0.20.0"` → `"v0.20.1"` for patch, `"v0.21.0"` for minor). Write the updated value back to `skills-manifest.json`.
 
-### Step 4 — Plan doc archival (rolling window)
+### Step 5 — Plan doc archival (rolling window)
 
 **Plan doc archival (rolling window):** Move `docs/temp-sprint<N>-plan.md` to `docs/archive/plan-docs/S<N>.md`. Then check `docs/archive/plan-docs/` — delete any entries older than the 3-sprint window (keep current sprint + 2 prior). Git history retains all older content.
 
@@ -67,11 +80,11 @@ Log each additional file removed. This catches spike docs, test results, editori
 
 If `docs/archive/plan-docs/` does not exist, create it silently before moving.
 
-### Step 5 — Archive the sprint plan
+### Step 6 — Archive the sprint plan
 
-Read `docs/context/plan.md` and locate the `## Current Sprint: S<N>` section. Copy its full content (all headings, goals, and notes under it) to `docs/archive/plan-docs/S<N>.md` if the file does not already exist from Step 4.
+Read `docs/context/plan.md` and locate the `## Current Sprint: S<N>` section. Copy its full content (all headings, goals, and notes under it) to `docs/archive/plan-docs/S<N>.md` if the file does not already exist from Step 5.
 
-### Step 6 — Reset context files
+### Step 7 — Reset context files
 
 **`docs/context/plan.md`:** Replace the current sprint section with a single archived pointer line:
 
@@ -89,18 +102,18 @@ Preserve all prior completed sprint pointer lines below it.
 
 Preserve any tracks from other sprints.
 
-### Step 7 — Commit sprint close
+### Step 8 — Commit sprint close
 
 Stage and commit the version bump, archive file, and context reset:
 
 ```bash
 git add docs/archive/plan-docs/S<N>.md docs/context/plan.md docs/context/tracks.md
-# If skills-manifest.json was updated in Step 3, stage it too:
+# If skills-manifest.json was updated in Step 4, stage it too:
 # git add skills-manifest.json
 git commit -m "chore(S<N>): sprint close — <new-version>, archive plan, reset context"
 ```
 
-### Step 7b — Merged worktree sweep
+### Step 8b — Merged worktree sweep
 
 After the sprint close commit, sweep merged worktrees:
 
@@ -114,7 +127,7 @@ After the sprint close commit, sweep merged worktrees:
 
 Note: use `git -C <repo-root>` form for all git commands in this step, where `<repo-root>` is the project root directory. This avoids the shell loop git-not-in-PATH issue that affects subshell environments.
 
-### Step 8 — Create GitHub release and push (agent-os only)
+### Step 9 — Create GitHub release and push (agent-os only)
 
 **If the `claude/skills/` directory does not exist in the project root, skip the release creation: run `git push` only and continue — this project consumes agent-os but is not the agent-os repo. Do NOT mention this step, its evaluation, or its skip in any output or narration.**
 
@@ -136,23 +149,23 @@ git fetch origin <new-version>
 
 Note: `gh release create` pushes the tag to the remote. `git fetch origin <new-version>` syncs it locally. Do not run `git push origin <new-version>` — the tag already exists on the remote after `gh release create`.
 
-### Step 9 — Run /clean-context
+### Step 10 — Run /clean-context
 
 After the push succeeds, invoke `/clean-context`. This sweeps bridge files, merged worktrees, merged branches, and scratchpads automatically as the final act of sprint close.
 
-`/clean-context` runs its own safety check (uncommitted work, dirty worktrees) and will bail with a warning if anything is unresolved — surface any bail messages to the user and do not proceed to Step 10 until the issue is resolved.
+`/clean-context` runs its own safety check (uncommitted work, dirty worktrees) and will bail with a warning if anything is unresolved — surface any bail messages to the user and do not proceed to Step 11 until the issue is resolved.
 
-### Step 9b — Pre-close checklist
+### Step 10b — Pre-close checklist
 
-Verify every item before writing the sprint close record. For each unchecked item, surface it as a warning with an explicit one-line confirm-to-override; the owner may confirm-and-proceed in the same turn. The Step 2 build gate is the only non-overridable hard stop — all other items may be overridden by the owner with an explicit confirm.
+Verify every item before writing the sprint close record. For each unchecked item, surface it as a warning with an explicit one-line confirm-to-override; the owner may confirm-and-proceed in the same turn. The Step 3 build gate is the only non-overridable hard stop — all other items may be overridden by the owner with an explicit confirm.
 
 - [ ] All tracks have exit records (MERGED, NO-OP, or DEFERRED with reason)
-- [ ] Build passes (`bun run build` clean) — **non-overridable; enforced in Step 2**
+- [ ] Build passes (`bun run build` clean) — **non-overridable; enforced in Step 3**
 - [ ] (agent-os only) GitHub issues addressed this sprint are closed on the public mirror — skip if `claude/skills/` does not exist in the project root; do NOT mention this item, its evaluation, or its skip in any output or narration when the skip condition fires
 - [ ] No new tools, trackers, or third-party dependencies introduced outside an approved track
 - [ ] QA APPROVED on all tracks
 
-### Step 10 — Sprint Close Summary
+### Step 11 — Sprint Close Summary
 
 Output a Sprint Close Summary. For each conditional section, when the condition is false omit it entirely with no mention of its absence.
 
@@ -174,18 +187,18 @@ Output a Sprint Close Summary. For each conditional section, when the condition 
 ```
 - `timestamp`: current ISO-8601 datetime (e.g. `2026-09-02T14:30:00Z`)
 - `sprint`: read from `docs/context/plan.md` — match `## Current Sprint: <ID>` or the sprint just closed (e.g. `S81`); if not found use `"unknown"`
-- `version`: read `release-version` from `skills-manifest.json` in the project root (the post-bump value from Step 3); if not found use `"unknown"`
+- `version`: read `release-version` from `skills-manifest.json` in the project root (the post-bump value from Step 4); if not found use `"unknown"`
 - Append only — never overwrite. Create the file and any missing parent directories silently if absent.
 
 ## Verification Checklist (Internal — Run Before Reporting Complete)
 
-- All tracks for the closed sprint have DONE or DEFERRED exit records before Step 2 ran.
+- All tracks for the closed sprint have DONE or DEFERRED exit records before Step 3 ran.
 - `bun run build` passed.
 - `skills-manifest.json` version bumped to the correct next version (agent-os only — skip if `claude/skills/` directory does not exist in the project root).
 - Sprint plan doc archived to `docs/archive/plan-docs/S<N>.md`.
 - `docs/context/plan.md` current sprint block collapsed to a single pointer line.
 - `docs/context/tracks.md` sprint block collapsed to a single pointer line.
 - Sprint close commit created with the correct message format.
-- Merged worktrees swept (Step 7b): merged ones removed, non-merged ones logged.
+- Merged worktrees swept (Step 8b): merged ones removed, non-merged ones logged.
 - GitHub release created; `git push` and `git fetch origin <new-version>` ran without error.
 - `/clean-context` invoked after push and completed without bail (or bail message surfaced to user if it fired).
