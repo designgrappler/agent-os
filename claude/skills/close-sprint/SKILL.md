@@ -163,12 +163,6 @@ git fetch origin <new-version>
 
 Note: `gh release create` pushes the tag to the remote. `git fetch origin <new-version>` syncs it locally. Do not run `git push origin <new-version>` — the tag already exists on the remote after `gh release create`.
 
-### Step 10 — Run /clean-context
-
-After the push succeeds, invoke `/clean-context`. This sweeps bridge files, merged worktrees, merged branches, and scratchpads automatically as the final act of sprint close.
-
-`/clean-context` runs its own safety check (uncommitted work, dirty worktrees) and will bail with a warning if anything is unresolved — surface any bail messages to the user and do not proceed to Step 11 until the issue is resolved.
-
 ### Step 10b — Pre-close checklist
 
 Verify every item before writing the sprint close record. For each unchecked item, surface it as a warning with an explicit one-line confirm-to-override; the owner may confirm-and-proceed in the same turn. The Step 3 build gate is the only non-overridable hard stop — all other items may be overridden by the owner with an explicit confirm.
@@ -205,6 +199,12 @@ Output a Sprint Close Summary. For each conditional section, when the condition 
 - `version`: read `release-version` from `skills-manifest.json` in the project root (the post-bump value from Step 4); if not found use `"unknown"`
 - Append only — never overwrite. Create the file and any missing parent directories silently if absent.
 
+### Step 12 — Run /clean-context
+
+After the Sprint Close Summary is output, invoke `/clean-context`. This sweeps bridge files, merged worktrees, merged branches, and scratchpads automatically as the final act of sprint close.
+
+`/clean-context` runs its own safety check (uncommitted work, dirty worktrees) and will bail with a warning if anything is unresolved — surface any bail messages to the user.
+
 ## QA Smoke Checklist
 
 Use this template as the required output format for Bandit's smoke checklist. Checkbox-only format — no prose, no narrative.
@@ -239,4 +239,5 @@ Use this template as the required output format for Bandit's smoke checklist. Ch
 - Sprint close commit created with the correct message format.
 - Merged worktrees swept (Step 8b): merged ones removed, non-merged ones logged.
 - GitHub release created; `git push` and `git fetch origin <new-version>` ran without error.
-- `/clean-context` invoked after push and completed without bail (or bail message surfaced to user if it fired).
+- Sprint Close Summary output (Step 11) before `/clean-context` ran.
+- `/clean-context` invoked as final step (Step 12) and completed without bail (or bail message surfaced to user if it fired).
