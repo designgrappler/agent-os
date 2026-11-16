@@ -98,6 +98,14 @@ Immediately after the sentinel, append one Element (c) stub per Tracks table row
 
 Do not write any track content. The stub is the full orchestrator contribution below the sentinel.
 
+**Compiled-binary HITL flag (hard):** When a track's `asset_type` is `compiled-binary` — set either in the dispatch brief or declared as part of the sprint goal — append the following line immediately after `**Status:** STUB` in that track's stub block:
+
+```
+**Requires HITL smoke test:** true
+```
+
+Exact string match required. The close-sprint scanner matches this string literally — a casing or spacing difference silently disables the HITL gate. Do not paraphrase. Include only on `compiled-binary` tracks; omit for all other tracks.
+
 **Research-spike gate — trigger (hard):** The sprint touches enforcement-sensitive infrastructure if the Sprint Objective text OR any Tracks-table row references any of: `claude/skills/`, `claude/agents/`, a lifecycle skill (`/start-sprint`, `/close-sprint`, `/clean-context`), or the word "hook"/"hooks". This is failure-closed: if the signal is ambiguous, treat the trigger as fired.
 
 **When the trigger fires:** the first row of the Tracks table MUST be a research/benchmarking track (`T<N>.1`) whose deliverable is the design basis (a research artifact under `docs/context/`) for the sprint's execution tracks. The orchestrator adds this row itself; it is not optional and it is not a downstream agent's to propose. Do not seat any execution track as track #1 when the trigger fires. Emit a corresponding `## T<N>.1` STUB below the sentinel like any other track.
@@ -191,6 +199,14 @@ Expected outcome: <track-level definition of done for this agent's assigned trac
 ```
 
 Do not dispatch a domain agent without both fields. An agent briefed with only a scoped instruction plans against that instruction in isolation and may miss sprint-level scope.
+
+For execution-track briefs where the track's primary deliverable is a compiled binary (e.g. a macOS app, CLI binary, or IPA), also include:
+
+```
+asset_type: compiled-binary
+```
+
+Omit `asset_type` for source-code, text, or skill-file tracks. This field is documentation-only in planning-mode briefs — do not add execution instructions to planning-mode stubs on its basis.
 
 Domain agents run in parallel where independent. Run sequentially where one domain's scope depends on another (e.g. strategist or pm before technical or frontend).
 

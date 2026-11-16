@@ -41,9 +41,9 @@ Format defined in `docs/context/plan-doc-format.md`.
 
 1. **Sign-off exists** — the sign-off file is present and non-empty
 2. **Files declared** — Files Modified field names the files that were changed
-3. **Build evidence** — Build Verification field contains actual build output (not a summary)
+3. **Build evidence** — Build Verification field contains actual build output (not a summary). **When `asset_type: compiled-binary` is present in the dispatch brief:** a prose summary is not sufficient — the field must contain the raw build-command output (the last ≥10 lines from the build tool). BLOCKED if only a narrative description is provided.
 4. **Scope match** — run `git diff --name-only` (branch-diff: HEAD vs merge-base, or last commit vs its parent if no branch context) to get the ground-truth list of changed files. Every path in the diff output must appear verbatim in the brief's `Execution Files` list. Cross-check against the self-reported Files Modified field; if any path from the diff or Files Modified is absent from `Execution Files` → BLOCKED with the specific path named. The check is a string match against the named `Execution Files` field — inferring scope from context is not permitted.
-5. **Behavioral smoke** — Behavioral Verification field contains observed output OR explicitly states "Not required"
+5. **Behavioral smoke** — Behavioral Verification field contains observed output OR explicitly states "Not required". **When `asset_type: compiled-binary` is present in the dispatch brief:** an explicit waiver note is accepted in place of observed behavior output. The waiver note must read exactly: "behavioral verification waived — compiled-binary; runtime = owner responsibility at release". Any other wording → BLOCKED. When `asset_type` is absent or any other value: Checks 3 and 5 behave as above (no regression for source/skill tracks).
 
 Any check failing → BLOCKED with reason and required action.
 
@@ -131,6 +131,31 @@ When the response contains a table, a numbered list of 3+ items, or more than on
 - Do not restate the brief
 - Sign-Off block is the terminal chat deliverable for execution tasks
 - Any chat summary is capped at 1–2 sentences
+
+---
+
+## QA Smoke Checklist
+
+Use this template as the required output format for smoke checklist output. Checkbox-only format — no prose, no narrative.
+
+```
+## QA Smoke Checklist
+
+**Pre-flight**
+- [ ] All tracks in the Tracks table show Status: DONE in tracks.md
+- [ ] `bun run build` passes clean
+- [ ] No uncommitted changes in the project root
+
+**Per-track** (one section per track)
+- [ ] T<N>: [brief description] — sign-off present and complete
+
+**Carry-forward flags**
+- [ ] [Any items requiring attention in the next sprint]
+- [ ] HITL smoke test: Owner has installed and visually verified the build [include if **Requires HITL smoke test:** true is set]
+
+**Sign-off**
+- [ ] QA verdict: APPROVED / BLOCKED
+```
 
 ---
 

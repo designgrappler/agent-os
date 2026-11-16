@@ -445,7 +445,11 @@ If no files were changed during Phase 5: skip this block silently.
 
 Runs automatically after Phase 5 whenever at least one action was applied.
 
-1. Confirm `skills-manifest.json` `release-version` matches the canonical version surfaced in Phase 4.
+1. **`release-version` stamp (check-and-write):** Read `skills-manifest.json` at the project root.
+   - **File exists, version differs:** Rewrite the `release-version` field to the canonical version (surfaced in Phase 4). Preserve all other fields and their key order. Report: `skills-manifest.json release-version updated → [canonical version]`.
+   - **File exists, version matches:** No write. Report: `skills-manifest.json release-version already current — no write`.
+   - **File absent:** Skip. Report: `skills-manifest.json not found — skipping (install path owns first creation)`.
+   - **File present but malformed JSON:** Skip with advisory: `skills-manifest.json is malformed JSON — skipping release-version stamp. Run /install-agent-scaffold or fix manually.`
 2. Confirm the orchestrator skill exists at `claude/skills/orchestrator/SKILL.md`.
 3. Confirm `CLAUDE.md` contains `## Orchestrator Behavior`.
 
@@ -495,6 +499,7 @@ If `CLAUDE.md` is absent: print `No CLAUDE.md in working directory — skipping 
   8. `~/.claude/settings.json` `hooks.UserPromptSubmit` — Phase 8 patch-if-absent only; adds the scaffold-check hook entry when absent; never overwrites if present.
   9. `~/.claude/agent-os-manifest.json` — global hash-manifest for skills and agents; written/updated by Phase 5 after all writes complete; upsert only (never removes entries for files not touched this run); created if absent.
   10. `.claude/agent-os-manifest.json` — project hash-manifest for hooks; written/updated by Phase 5 after all writes complete; upsert only; created if absent.
+  11. `skills-manifest.json` (project root) — `release-version` field only; written/updated by Phase 10 check-and-write (if version differs from canonical); **never created if absent** (install path owns first creation); never modifies any other field.
 - **Never overwrite user-owned `.claude/settings.json` fields** (`permissions`, allow/deny lists, `mcpServers`, custom hooks). The only permitted `.claude/settings.json` writes are Phase 7 patch-if-absent of canonical fields (`worktree.baseRef`, standard `Stop` hook) and Phase 8 patch-if-absent of `hooks.UserPromptSubmit`. Never write any path not in the enumerated list above.
 - **Never delete a file the user has not explicitly approved for removal.**
 - **`CLAUDE.md` is never written by this skill** except for approved rename-reference patches (Phase 5 and Phase 11). The legacy-format `[claude.md]` row is informational only — it never triggers a write, overwrite, or modification of `CLAUDE.md`.
@@ -542,3 +547,4 @@ If `CLAUDE.md` is absent: print `No CLAUDE.md in working directory — skipping 
 - [ ] Phase 5 hash manifest written only after all writes complete (not per-file); not written if Phase 5 produced no writes
 - [ ] Manifest entries use the installed file path as key; hash is SHA-256 computed from the written file immediately after write
 - [ ] Manifest upsert preserves existing entries for files not touched this run; invalid JSON manifest skipped with advisory message
+- [ ] Phase 10 `release-version` stamp: updated when version differed, no-op when already current, skipped cleanly when `skills-manifest.json` was absent or contained malformed JSON

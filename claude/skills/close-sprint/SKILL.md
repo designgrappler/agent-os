@@ -46,6 +46,20 @@ Read the sprint plan doc `docs/temp-sprint<N>-plan.md` (where `<N>` is the curre
 
 This gate keys on presence of the sync record when the classification field is present; it must not block on absence of the classification field itself. This is a non-overridable hard stop placed before any irreversible action.
 
+### Step 1d — HITL smoke test gate
+
+Read the sprint plan doc `docs/temp-sprint<N>-plan.md` and scan for any track stub containing `**Requires HITL smoke test:** true`.
+
+- **If absent:** skip silently. Do not mention this step in output. (Keeps the gate non-punishing for sprints without compiled-binary tracks.)
+- **If present:** surface the following blocking checklist item and halt. This is an owner-confirmable halt — do not proceed to Step 3 (build) until the owner explicitly confirms the item is complete:
+
+  > **HITL smoke test required:**
+  > - [ ] Owner has installed and visually verified the build
+  >
+  > Confirm the above item is complete to proceed with sprint close.
+
+  The owner may confirm-and-proceed in the same turn. Do not require a second `/close-sprint` invocation.
+
 ### Step 3 — Run build
 
 Run `bun run build`. If it fails, surface the error and stop. Do not continue until the build passes.
@@ -164,6 +178,7 @@ Verify every item before writing the sprint close record. For each unchecked ite
 - [ ] (agent-os only) GitHub issues addressed this sprint are closed on the public mirror — skip if `claude/skills/` does not exist in the project root; do NOT mention this item, its evaluation, or its skip in any output or narration when the skip condition fires
 - [ ] No new tools, trackers, or third-party dependencies introduced outside an approved track
 - [ ] QA APPROVED on all tracks
+- [ ] HITL smoke test: Owner has installed and visually verified the build — include this item only if `**Requires HITL smoke test:** true` was set in any track stub; skip silently otherwise (Step 1d is the enforcing gate; this item records the outcome)
 
 ### Step 11 — Sprint Close Summary
 
@@ -189,6 +204,29 @@ Output a Sprint Close Summary. For each conditional section, when the condition 
 - `sprint`: read from `docs/context/plan.md` — match `## Current Sprint: <ID>` or the sprint just closed (e.g. `S81`); if not found use `"unknown"`
 - `version`: read `release-version` from `skills-manifest.json` in the project root (the post-bump value from Step 4); if not found use `"unknown"`
 - Append only — never overwrite. Create the file and any missing parent directories silently if absent.
+
+## QA Smoke Checklist
+
+Use this template as the required output format for Bandit's smoke checklist. Checkbox-only format — no prose, no narrative.
+
+```
+## QA Smoke Checklist
+
+**Pre-flight**
+- [ ] All tracks in the Tracks table show Status: DONE in tracks.md
+- [ ] `bun run build` passes clean
+- [ ] No uncommitted changes in the project root
+
+**Per-track** (one section per track)
+- [ ] T<N>: [brief description] — sign-off present and complete
+
+**Carry-forward flags**
+- [ ] [Any items requiring attention in the next sprint]
+- [ ] HITL smoke test: Owner has installed and visually verified the build [include if **Requires HITL smoke test:** true is set]
+
+**Sign-off**
+- [ ] QA verdict: APPROVED / BLOCKED
+```
 
 ## Verification Checklist (Internal — Run Before Reporting Complete)
 

@@ -241,6 +241,7 @@ Every spawn brief dispatched to a specialist or task agent must open with three 
 - **Sprint goal:** one sentence from the sprint plan (the sprint-level objective, not the track description).
 - **Expected outcome:** the track-level definition of done — what "complete" looks like for this specific track.
 - **Execution Files:** a structured list of file paths the agent is authorized to modify. Explicit repo-relative or absolute paths only — no globs. This is the authoritative write-scope boundary; QA Check 4 is a string match against this field, not a judgment call.
+- **asset_type** _(optional)_: set to `compiled-binary` when the track's primary deliverable is a compiled binary (e.g. a macOS app, CLI binary, or IPA). Omit for source-code, text, or skill-file tracks. When set, downstream agents (qa.md) branch on this field for sign-off behavior: Check 3 requires raw build-command output, and Check 5 accepts an explicit waiver note in place of observed behavioral output.
 
 Include these fields verbatim at the top of every brief:
 
@@ -250,6 +251,7 @@ Expected outcome: <track-level definition of done>
 Execution Files:
 - <repo-relative or absolute file path>
 - <repo-relative or absolute file path>
+asset_type: compiled-binary   # omit this line for non-binary tracks
 ```
 
 An agent that receives only a scoped instruction plans against that instruction in isolation. Sprint goal and expected outcome anchor the agent to the sprint context and prevent planning drift. Execution Files makes the write-scope explicit and machine-verifiable at QA.
